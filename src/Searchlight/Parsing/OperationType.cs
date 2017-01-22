@@ -1,0 +1,29 @@
+﻿namespace Searchlight.Parsing
+{
+    /// <summary>
+    /// Defines the operation type for a clause
+    /// </summary>
+    public enum OperationType
+    {
+        /// <summary>
+        /// Simple operations
+        /// </summary>
+        Equals,
+        GreaterThan,
+        GreaterThanOrEqual,
+        LessThan,
+        LessThanOrEqual,
+        NotEqual,
+
+        /// <summary>
+        /// Complex Operations
+        /// </summary>
+        Between,
+        In,
+        Like,
+        Contains,
+        StartsWith,
+        EndsWith,
+        IsNull,
+    }
+}

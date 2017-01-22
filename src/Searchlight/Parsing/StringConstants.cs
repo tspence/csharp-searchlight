@@ -15,33 +15,33 @@ namespace Searchlight.Parsing
         /// The "KEY" represents the value we allow the user to provide.
         /// The "VALUE" represents the actual string we will place in the SQL.
         /// </summary>
-        public static readonly Dictionary<string, string> RECOGNIZED_QUERY_EXPRESSIONS = new Dictionary<string, string> 
+        public static readonly Dictionary<string, OperationType> RECOGNIZED_QUERY_EXPRESSIONS = new Dictionary<string, OperationType> 
         {
             // Basic SQL query expressions
-            { "=",  " = "  },
-            { ">",  " > "  },
-            { ">=", " >= " },
-            { "<>", " <> " },
-            { "!=", " <> " },
-            { "<",  " < "  },
-            { "<=", " <= " },
+            { "=",  OperationType.Equals  },
+            { ">",  OperationType.GreaterThan  },
+            { ">=", OperationType.GreaterThanOrEqual },
+            { "<>", OperationType.NotEqual },
+            { "!=", OperationType.NotEqual },
+            { "<",  OperationType.LessThan },
+            { "<=", OperationType.LessThanOrEqual },
 
             // Microsoft's published REST standard alternatives for query expressions
-            { "EQ", " = "  },
-            { "GT", " > "  },
-            { "GE", " >= " },
-            { "NE", " <> " },
-            { "LT", " < "  },
-            { "LE", " <= " },
+            { "EQ", OperationType.Equals },
+            { "GT", OperationType.GreaterThan  },
+            { "GE", OperationType.GreaterThanOrEqual },
+            { "NE", OperationType.NotEqual },
+            { "LT", OperationType.LessThan },
+            { "LE", OperationType.LessThanOrEqual },
 
             // Slightly less common query expressions
-            { "BETWEEN",        " BETWEEN "     },
-            { "IN",             " IN "          },
-            { "LIKE",           " LIKE "        },
-            { "STARTSWITH",     " LIKE "        },
-            { "CONTAINS",       " LIKE "        },
-            { "ENDSWITH",       " LIKE "        },
-            { "IS",             " IS "          },
+            { "BETWEEN",        OperationType.Between     },
+            { "IN",             OperationType.In          },
+            { "LIKE",           OperationType.Like        },
+            { "STARTSWITH",     OperationType.StartsWith  },
+            { "CONTAINS",       OperationType.Contains    },
+            { "ENDSWITH",       OperationType.EndsWith    },
+            { "IS",             OperationType.IsNull      },
         };
 
         /// <summary>
