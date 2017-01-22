@@ -1,0 +1,98 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace Searchlight.Parsing
+{
+    /// <summary>
+    /// This class contains all whitelisted SQL tokens that can be placed into a legitimate SQL string
+    /// </summary>
+    public class StringConstants
+    {
+        /// <summary>
+        /// Represents the list of query expressions we would recognize if the user passed them in a filter.
+        /// The "KEY" represents the value we allow the user to provide.
+        /// The "VALUE" represents the actual string we will place in the SQL.
+        /// </summary>
+        public static readonly Dictionary<string, string> RECOGNIZED_QUERY_EXPRESSIONS = new Dictionary<string, string> 
+        {
+            // Basic SQL query expressions
+            { "=",  " = "  },
+            { ">",  " > "  },
+            { ">=", " >= " },
+            { "<>", " <> " },
+            { "!=", " <> " },
+            { "<",  " < "  },
+            { "<=", " <= " },
+
+            // Microsoft's published REST standard alternatives for query expressions
+            { "EQ", " = "  },
+            { "GT", " > "  },
+            { "GE", " >= " },
+            { "NE", " <> " },
+            { "LT", " < "  },
+            { "LE", " <= " },
+
+            // Slightly less common query expressions
+            { "BETWEEN",        " BETWEEN "     },
+            { "IN",             " IN "          },
+            { "LIKE",           " LIKE "        },
+            { "STARTSWITH",     " LIKE "        },
+            { "CONTAINS",       " LIKE "        },
+            { "ENDSWITH",       " LIKE "        },
+            { "IS",             " IS "          },
+        };
+
+        /// <summary>
+        /// Represents the list of query expressions we would recognize if the user passed them in a filter
+        /// </summary>
+
+        /// <summary>
+        /// Represents the list of tokens that can close an "IN" clause
+        /// </summary>
+        public static readonly string[] SAFE_LIST_TOKENS = new string[] { ",", ")" };
+
+        /// <summary>
+        /// Represents the list of conjunctions that can occur between tests, and the insertion values that we should apply
+        /// </summary>
+        public static readonly Dictionary<string, string> SAFE_CONJUNCTIONS = new Dictionary<string, string>
+        {
+            { "(", "(" },
+            { ")", ")" },
+            { "AND", " AND " },
+            { "OR", " OR " },
+            { "NOT", " NOT " },
+        };
+
+        /// <summary>
+        /// Represents the list of conjunctions that can safely terminate a statement
+        /// </summary>
+        public static readonly string[] SAFE_ENDING_CONJUNCTIONS = new string[] { ")" };
+
+        /// <summary>
+        /// Represents the list of single-character operators for tokenization
+        /// </summary>
+        public static readonly char[] SINGLE_CHARACTER_OPERATORS = new char[] { '=', '>', '<', '(', ')', ',', '!' };
+
+        /// <summary>
+        /// Represents the list of allowed sort-by orders
+        /// </summary>
+        public static readonly string[] SAFE_SORT_BY = new string[] { "ASC", "DESC" };
+
+        /// <summary>
+        /// Represents a single quote character for tokenization of strings
+        /// </summary>
+        public static readonly char SINGLE_QUOTE = '\'';
+
+        /// <summary>
+        /// Represents an open parenthesis character for tokenization of strings
+        /// </summary>
+        public static readonly string OPEN_PARENTHESIS = "(";
+
+        /// <summary>
+        /// Represents a close parenthesis character for tokenization of strings
+        /// </summary>
+        public static readonly string CLOSE_PARENTHESIS = ")";
+    }
+}
