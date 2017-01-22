@@ -34,7 +34,7 @@ namespace Searchlight.Tests.Parsing
         public void IncorrectFieldValueType()
         {
             string originalFilter = "a = 'test' and b = 'Hello!'";
-            var ex = Assert.Throws<FieldValueException>(() => SafeQueryParser.ParseFilter(originalFilter, _source);
+            var ex = Assert.Throws<FieldValueException>(() => SafeQueryParser.ParseFilter(originalFilter, _source));
             Assert.AreEqual("b", ex.FieldName);
             Assert.AreEqual("System.Int32", ex.FieldType);
             Assert.AreEqual("Hello!", ex.FieldValue);
@@ -56,13 +56,29 @@ namespace Searchlight.Tests.Parsing
         }
 
         [Test(Description = "Parser.OrderByParseTest")]
-        public void OrderByParseTest()
+        [TestCase("a, b DESC")]
+        [TestCase("a AsC, b DESc")]
+        [TestCase("a asc   , b    DESC    ")]
+        public void OrderByParseTest(string orderby)
         {
-            var result = SafeQueryParser.ParseOrderBy("a, b DESC", _source);
-            Assert.AreEqual("a", result[0].Column
-            Assert.AreEqual("a ASC, b DESC", result.Expression);
+            var result = SafeQueryParser.ParseOrderBy(orderby, _source);
+            Assert.AreEqual("a", result[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Ascending, result[0].Direction);
+            Assert.AreEqual("b", result[1].Column.FieldName);
+            Assert.AreEqual(SortDirection.Descending, result[1].Direction);
+        }
 
+        [Test(Description = "Parser.OrderByExceptions")]
+        public void OrderByExceptionsTest()
+        {
+            // Field doesn't exist
             Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseOrderBy("c, d ASC", _source));
+
+            // No comma between fields
+            Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseOrderBy("a b DESC", _source));
+
+            // Trailing comma
+            Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseOrderBy("a, b,", _source));
         }
 
         [Test(Description = "Parser.FilterParseTest")]
