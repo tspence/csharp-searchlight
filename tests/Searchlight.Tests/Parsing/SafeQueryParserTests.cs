@@ -7,16 +7,18 @@ using Searchlight.Parsing;
 using Searchlight.Query;
 using Searchlight.Exceptions;
 using NUnit.Framework;
+using Searchlight.DataSource;
 
 namespace Searchlight.Tests.Parsing
 {
     public class SafeQueryParserTests
     {
-        private SafeQueryParser _parser;
+        private SearchlightDataSource _source;
 
         public SafeQueryParserTests()
         {
-            var safeColumns = new CustomColumnDefinition()
+            _source = new SearchlightDataSource();
+            _source.ColumnDefinitions = new CustomColumnDefinition()
                 .WithColumn("a", typeof(String), null)
                 .WithColumn("b", typeof(Int32), null)
                 .WithColumn("colLong", typeof(Int64), null)
@@ -24,28 +26,15 @@ namespace Searchlight.Tests.Parsing
                 .WithColumn("colULong", typeof(UInt64), null)
                 .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
                 .WithColumn("colGuid", typeof(Guid), null);
-            var columnify = new NoColumnify();
-
-            _parser = new SafeQueryParser(safeColumns,
-                columnify,
-                DatabaseType.Mysql);
-        }
-
-        [Test(Description = "Parser.DefaultSelectClauseParsing")]
-        public void DefaultSelectClauseParsing()
-        {
-            SelectClause allColumns = new SelectClause();
-            allColumns.SelectFieldList = new List<string> { "a", "b", "colLong", "colNullableGuid", "colULong", "colNullableULong", "colGuid" };
-            Assert.AreEqual(allColumns, _parser.ParseSelectClause(""));
-            Assert.AreEqual(allColumns, _parser.ParseSelectClause("*"));
-            Assert.AreEqual(allColumns, _parser.ParseSelectClause(null));
+            _source.Columnifier = new NoColumnify();
+            _source.DatabaseType = DatabaseType.Mysql;
         }
 
         [Test(Description = "Parser.IncorrectFieldValueType")]
         public void IncorrectFieldValueType()
         {
             string originalFilter = "a = 'test' and b = 'Hello!'";
-            var ex = Assert.Throws<FieldValueException>(() => _parser.ParseWhereClause(originalFilter));
+            var ex = Assert.Throws<FieldValueException>(() => SafeQueryParser.ParseFilter(originalFilter, _source);
             Assert.AreEqual("b", ex.FieldName);
             Assert.AreEqual("System.Int32", ex.FieldType);
             Assert.AreEqual("Hello!", ex.FieldValue);
@@ -56,36 +45,24 @@ namespace Searchlight.Tests.Parsing
         public void AllParenthesis()
         {
             // Basic problem: if you never close a parenthesis that's a syntax error
-            var ex1 = Assert.Throws<TrailingConjunctionException>(() => _parser.ParseWhereClause("((((((((((("));
+            var ex1 = Assert.Throws<TrailingConjunctionException>(() => SafeQueryParser.ParseFilter("(((((((((((", _source));
 
             // If you unbalance your parenthesis, that's a syntax error
-            var ex2 = Assert.Throws<OpenClauseException>(() => _parser.ParseWhereClause("((((((((((()))"));
-            var ex3 = Assert.Throws<OpenClauseException>(() => _parser.ParseWhereClause("((())))))))))))"));
+            var ex2 = Assert.Throws<OpenClauseException>(() => SafeQueryParser.ParseFilter("((((((((((()))", _source));
+            var ex3 = Assert.Throws<OpenClauseException>(() => SafeQueryParser.ParseFilter("((())))))))))))", _source));
 
             // If you forget to supply any actual criteria, that's a syntax error
-            var ex4 = Assert.Throws<NoFilterCriteriaException>(() => _parser.ParseWhereClause("()"));
-        }
-
-        [Test(Description = "Parser.SelectClauseParseTest")]
-        public void SelectClauseParseTest()
-        {
-            SelectClause expected = new SelectClause();
-            expected.SelectFieldList = new List<string> { "a", "b" };
-            Assert.AreEqual(expected, _parser.ParseSelectClause("a,b"));
-            Assert.AreEqual(expected, _parser.ParseSelectClause(" a , b "));
-            Assert.AreEqual(expected, _parser.ParseSelectClause(" a , b , *"));
-
-            FieldNameException ex = Assert.Throws<FieldNameException>(() => _parser.ParseSelectClause("a, missing"));
-            Assert.AreEqual(ex.FieldName, "missing");
+            var ex4 = Assert.Throws<EmptyClauseException>(() => SafeQueryParser.ParseFilter("()", _source));
         }
 
         [Test(Description = "Parser.OrderByParseTest")]
         public void OrderByParseTest()
         {
-            var result = _parser.ParseOrderByClause("a, b DESC", "a");
+            var result = SafeQueryParser.ParseOrderBy("a, b DESC", _source);
+            Assert.AreEqual("a", result[0].Column
             Assert.AreEqual("a ASC, b DESC", result.Expression);
 
-            Assert.Throws<FieldNameException>(() => _parser.ParseOrderByClause("c, d ASC", "a"));
+            Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseOrderBy("c, d ASC", _source));
         }
 
         [Test(Description = "Parser.FilterParseTest")]

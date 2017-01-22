@@ -29,20 +29,18 @@ namespace Searchlight.Parsing
         public static QueryData Parse(string include, string filter, string orderBy, SearchlightDataSource source)
         {
             QueryData query = new QueryData();
-            query.Includes = InternalParseIncludes(include, source);
-            query.Filter = InternalParseFilter(filter, source);
-            query.OrderBy = InternalParseOrderBy(orderBy, source);
+            query.Includes = ParseIncludes(include, source);
+            query.Filter = ParseFilter(filter, source);
+            query.OrderBy = ParseOrderBy(orderBy, source);
             return query;
         }
-        #endregion
 
-        #region Implementation
         /// <summary>
         /// Parse the include statements
         /// </summary>
         /// <param name="includes"></param>
         /// <param name="source"></param>
-        private static List<OptionalCommand> InternalParseIncludes(string includes, SearchlightDataSource source)
+        public static List<OptionalCommand> ParseIncludes(string includes, SearchlightDataSource source)
         {
             // Retrieve the list of possibilities
             List<OptionalCommand> list = new List<OptionalCommand>();
@@ -50,11 +48,6 @@ namespace Searchlight.Parsing
             if (raw != null) {
                 list.AddRange(raw);
             }
-
-            // Start constructing the result
-            SelectClause clause = new SelectClause();
-            clause.SelectFieldList = new List<string>();
-            clause.SubtableList = new List<string>();
 
             // First check the field are from valid entity fields
             if (!String.IsNullOrWhiteSpace(includes)) {
@@ -89,32 +82,59 @@ namespace Searchlight.Parsing
         /// <param name="orderBy"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        private static List<SortInfo> InternalParseOrderBy(string orderBy, SearchlightDataSource source)
+        public static List<SortInfo> ParseOrderBy(string orderBy, SearchlightDataSource source)
         {
+            List<SortInfo> list = new List<SortInfo>();
+
             // Shortcut for case where user gives us an empty string
             if (String.IsNullOrWhiteSpace(orderBy)) {
-                var list = new List<SortInfo>();
                 list.Add(new SortInfo() {
                     Direction = SortDirection.Ascending,
-                    Fieldname = source.DefaultSortField
+                    Column = source.ColumnDefinitions.IdentifyColumn(source.DefaultSortField)
                 });
                 return list;
             }
 
-            // Okay, let's tokenize the user's input
-            var tokens = Tokenizer.TokenizeOrderBy(orderBy);
+            // Okay, let's tokenize the orderBy statement and begin parsing
+            var tokens = Tokenizer.GenerateTokens(orderBy);
+            SortInfo si = null;
+            while (tokens.Count > 0) {
+                si = new SortInfo();
+                si.Direction = SortDirection.Ascending;
+                list.Add(si);
 
-            // Now, go through each token and ensure it represents a valid column
-            StringBuilder sql = new StringBuilder();
-            foreach (var token in tokens) {
-                var col = source.ColumnDefinitions.IdentifyColumn(token.Fieldname);
+                // Identify the field being sorted
+                var colName = tokens.Dequeue();
+                var col = source.ColumnDefinitions.IdentifyColumn(colName);
                 if (col == null) {
-                    throw new FieldNameException(token.Fieldname, "");
+                    throw new FieldNameException(colName, orderBy);
                 }
+
+                // Was that the last token?
+                if (tokens.Count == 0) break;
+
+                // Next, we allow ASC, DESC, or a comma (indicating another sort).
+                // First, check for the case of a comma
+                var token = tokens.Dequeue();
+                if (token == StringConstants.COMMA) continue;
+
+                // Allow ASC or DESC
+                var tokenUpper = token.ToUpperInvariant();
+                if (tokenUpper == StringConstants.ASCENDING) {
+                    si.Direction = SortDirection.Ascending;
+                } else if (tokenUpper == StringConstants.DESCENDING) {
+                    si.Direction = SortDirection.Descending;
+                }
+
+                // Are we at the end?
+                if (tokens.Count == 0) break;
+
+                // Otherwise, we must next have a comma
+                Expect(StringConstants.COMMA, tokens.Dequeue(), orderBy);
             }
 
-            // Here's your order by clause
-            return tokens;
+            // Here's your sort info
+            return list;
         }
 
         /// <summary>
@@ -123,164 +143,172 @@ namespace Searchlight.Parsing
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        public List<BaseClause> InternalParseFilter(string filter, SearchlightDataSource source)
+        public static List<BaseClause> ParseFilter(string filter, SearchlightDataSource source)
         {
             // Shortcut for no filter
-            var working = new List<BaseClause>();
             if (string.IsNullOrEmpty(filter)) {
-                return working;
+                return new List<BaseClause>();
             }
 
-            // First parse the incoming filter into tokens, then start iterating over them
-            bool is_started = false;
+            // First parse the incoming filter into tokens
             Queue<string> tokens = Tokenizer.GenerateTokens(filter);
-            int clauseDepth = 0;
-            bool anyActualCriteria = false;
+
+            // Parse a sequene of tokens
+            return ParseClauseList(filter, tokens, source, false);
+        }
+        #endregion
+
+        #region Implementation
+        /// <summary>
+        /// Parse a list of tokens separated by conjunctions
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="tokens"></param>
+        /// <param name="source"></param>
+        /// <param name="expectCloseParenthesis"></param>
+        /// <returns></returns>
+        private static List<BaseClause> ParseClauseList(string filter, Queue<string> tokens, SearchlightDataSource source, bool expectCloseParenthesis)
+        {
+            var working = new List<BaseClause>();
             while (tokens.Count > 0) {
 
-                // Consume one token - this is the field
-                string fieldToken = tokens.Dequeue();
+                // Identify one clause and add it
+                var clause = ParseOneClause(filter, tokens, source);
+                working.Add(clause);
 
-                // Allow the user to put as many connectors in as they like.  Connectors can't cause the query to be sql-injection-vulnerable.
-                bool any_conjunctions = false;
-                while (true) {
+                // Is this the end of the filter?
+                if (tokens.Count == 0) break;
 
-                    // Find this match; if no more conjunctions, exit
-                    var upperToken = fieldToken.ToUpperInvariant();
-                    string insertToken = null;
-                    if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out insertToken)) {
-                        break;
-                    }
+                // Let's see what the next token is
+                var token = tokens.Dequeue();
 
-                    // Count number of open or closed parenthesis
-                    if (fieldToken == StringConstants.OPEN_PARENTHESIS) {
-                        clauseDepth++;
-                    } else if (fieldToken == StringConstants.CLOSE_PARENTHESIS) {
-                        clauseDepth--;
-                    }
-
-                    // We had at least one conjunction, insert it
-                    any_conjunctions = true;
-                    working.FilterSql.Append(insertToken);
-
-                    // Is that the end of our filter?
-                    if (tokens.Count == 0) {
-
-                        // If the user attempted to end on an "OR" clause without continuing, throw that error
-                        if (!StringConstants.SAFE_ENDING_CONJUNCTIONS.Contains(fieldToken)) {
-                            throw new TrailingConjunctionException(filter);
-                        }
-
-                        // It's okay to end the query here
-                        fieldToken = null;
-                        break;
-                    }
-
-                    // Next token!
-                    fieldToken = tokens.Dequeue();
+                // Do we end on a close parenthesis?
+                if (expectCloseParenthesis && token == StringConstants.CLOSE_PARENTHESIS) {
+                    return working;
                 }
 
-                // If we're done
-                if (fieldToken == null) break;
-
-                // If we are in the middle of the filter, and there were no conjunctions between fields, throw an error
-                if (!any_conjunctions && is_started) {
-                    throw new ParserSyntaxException(fieldToken, StringConstants.SAFE_CONJUNCTIONS.Keys, filter);
-                }
-                is_started = true;
-
-                // Identify the fieldname -- is it on the approved list?
-                var columnInfo = _safeColumnDefinition.IdentifyColumn(fieldToken);
-                if (columnInfo == null) {
-                    throw new FieldNameException(fieldToken, filter);
+                // If not, we must have a conjunction
+                string conjunction;
+                if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(token.ToUpperInvariant(), out conjunction)) {
+                    throw new ExpectedConjunctionException(token, filter);
                 }
 
-                // Append the column to our result
-                working.FilterSql.Append(_columnifier.Columnify(columnInfo.DatabaseColumn, ClauseType.Where));
-                anyActualCriteria = true;
-
-                // Allow "NOT" tokens here
-                string user_operation_token = tokens.Dequeue().ToUpper();
-                if (user_operation_token == "NOT") {
-                    working.FilterSql.Append(" ");
-                    working.FilterSql.Append(user_operation_token);
-                    working.FilterSql.Append(" ");
-                    user_operation_token = tokens.Dequeue().ToUpper();
-                }
-
-                // Next is the operation; must validate it against our list of safe tokens.  Case insensitive.
-                string sql_operation_token = null;
-                if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(user_operation_token, out sql_operation_token)) {
-                    throw new ParserSyntaxException(user_operation_token, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys, filter);
-                }
-                working.FilterSql.Append(sql_operation_token);
-
-                // Safe syntax for a "BETWEEN" expression is "BETWEEN (param1) AND (param2)"
-                if (sql_operation_token == " BETWEEN ") {
-                    AddParameter(columnInfo.DatabaseColumn, tokens.Dequeue(), columnInfo.FieldType, columnInfo.EnumType, filter, working);
-                    Expect("AND", tokens.Dequeue(), filter);
-                    working.FilterSql.Append(" AND ");
-                    AddParameter(columnInfo.DatabaseColumn, tokens.Dequeue(), columnInfo.FieldType, columnInfo.EnumType, filter, working);
-
-                // Safe syntax for an "IN" expression is "IN (param[, param][, param]...)"
-                } else if (sql_operation_token == " IN ") {
-                    Expect("(", tokens.Dequeue(), filter);
-                    working.FilterSql.Append("(");
-                    while (true) {
-                        AddParameter(columnInfo.DatabaseColumn, tokens.Dequeue(), columnInfo.FieldType, columnInfo.EnumType, filter, working);
-                        string comma_or_paren = tokens.Dequeue();
-                        if (!StringConstants.SAFE_LIST_TOKENS.Contains(comma_or_paren)) {
-                            throw new ParserSyntaxException(comma_or_paren, StringConstants.SAFE_LIST_TOKENS, filter);
-                        }
-                        if (comma_or_paren == ")") break;
-                        working.FilterSql.Append(", ");
-                    }
-                    working.FilterSql.Append(")");
-
-                // Safe syntax for an "IS NULL" expression is "IS [NOT] NULL"
-                } else if (sql_operation_token == " IS ") {
-                    string next = tokens.Dequeue();
-
-                    if (string.Equals(next, "NOT", StringComparison.OrdinalIgnoreCase)) {
-                        working.FilterSql.Append("NOT ");
-                        next = tokens.Dequeue();
-                    }
-
-                    Expect("NULL", next, filter);
-                    working.FilterSql.Append("NULL");
-
-                // Safe syntax for all other recognized expressions is "op param"
-                } else {
-
-                    // Convert synthetic "like" commands into real "like" commands
-                    var val = tokens.Dequeue();
-                    if (user_operation_token == "STARTSWITH") {
-                        val = val + "%";
-                    } else if (user_operation_token == "CONTAINS") {
-                        val = "%" + val + "%";
-                    } else if (user_operation_token == "ENDSWITH") {
-                        val = "%" + val;
-                    }
-
-                    // Go to normal operations
-                    AddParameter(columnInfo.DatabaseColumn, val, columnInfo.FieldType, columnInfo.EnumType, filter, working);
+                // Is this the end of the filter?  If so that's a trailing conjunction error
+                if (tokens.Count == 0) {
+                    throw new TrailingConjunctionException(filter);
                 }
             }
 
-            // If that last one wasn't a safe ending, throw an exception!
-            if (clauseDepth != 0) {
+            // If we expected to end with a parenthesis, but didn't, throw an exception here
+            if (expectCloseParenthesis) {
                 throw new OpenClauseException(filter);
             }
 
-            // If the user never actually sent any filter criteria, that's a different exception
-            if (!anyActualCriteria) {
-                throw new NoFilterCriteriaException(filter);
-            }
-
-            // Here's your safely parsed query
-            return working.ToSafeQuery();
+            // Here's your clause!
+            return working;
         }
 
+        /// <summary>
+        /// Parse one single clause
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="tokens"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        private static BaseClause ParseOneClause(string filter, Queue<string> tokens, SearchlightDataSource source)
+        {
+            // First token is allowed to be a parenthesis or a field name
+            string fieldToken = tokens.Dequeue();
+
+            // Is it a parenthesis?  If so, parse a compound clause list
+            if (fieldToken == StringConstants.OPEN_PARENTHESIS) {
+                var compound = new CompoundClause();
+                compound.Children = ParseClauseList(filter, tokens, source, true);
+                if (compound.Children == null || compound.Children.Count == 0) {
+                    throw new EmptyClauseException(filter);
+                }
+                return compound;
+            }
+
+            // Identify the fieldname -- is it on the approved list?
+            var columnInfo = source.ColumnDefinitions.IdentifyColumn(fieldToken);
+            if (columnInfo == null) {
+                throw new FieldNameException(fieldToken, filter);
+            }
+
+            // Allow "NOT" tokens here
+            bool negated = false;
+            var operationToken = tokens.Dequeue().ToUpperInvariant();
+            if (operationToken == StringConstants.NOT) {
+                negated = true;
+                operationToken = tokens.Dequeue().ToUpperInvariant();
+            }
+
+            // Next is the operation; must validate it against our list of safe tokens.  Case insensitive.
+            OperationType op = OperationType.Unknown;
+            if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out op)) {
+                throw new ParserSyntaxException(operationToken, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys, filter);
+            }
+
+            // Safe syntax for a "BETWEEN" expression is "column BETWEEN (param1) AND (param2)"
+            if (op == OperationType.Between) {
+                BetweenClause c = new BetweenClause();
+                c.Negated = negated;
+                c.Column = columnInfo;
+                c.LowerValue = ParseParameter(columnInfo, tokens.Dequeue(), filter);
+                Expect(StringConstants.AND, tokens.Dequeue(), filter);
+                c.UpperValue = ParseParameter(columnInfo, tokens.Dequeue(), filter);
+                return c;
+
+            // Safe syntax for an "IN" expression is "column IN (param[, param][, param]...)"
+            } else if (op == OperationType.In) {
+                InClause c = new InClause();
+                c.Column = columnInfo;
+                c.Negated = negated;
+                c.Values = new List<object>();
+                Expect(StringConstants.OPEN_PARENTHESIS, tokens.Dequeue(), filter);
+                while (true) {
+                    c.Values.Add(ParseParameter(columnInfo, tokens.Dequeue(), filter));
+                    string comma_or_paren = tokens.Dequeue();
+                    if (!StringConstants.SAFE_LIST_TOKENS.Contains(comma_or_paren)) {
+                        throw new ParserSyntaxException(comma_or_paren, StringConstants.SAFE_LIST_TOKENS, filter);
+                    }
+                    if (comma_or_paren == StringConstants.CLOSE_PARENTHESIS) break;
+                }
+                return c;
+
+            // Safe syntax for an "IS NULL" expression is "column IS [NOT] NULL"
+            } else if (op == OperationType.IsNull) {
+                IsNullClause c = new IsNullClause();
+                c.Column = columnInfo;
+
+                // Allow "not" to come either before or after the "IS"
+                string next = tokens.Dequeue().ToUpperInvariant();
+                if (next == StringConstants.NOT) {
+                    negated = true;
+                    next = tokens.Dequeue();
+                }
+                c.Negated = negated;
+                Expect(StringConstants.NULL, next, filter);
+                return c;
+
+            // Safe syntax for all other recognized expressions is "column op param"
+            } else {
+                CriteriaClause c = new CriteriaClause();
+                c.Negated = negated;
+                c.Operation = op;
+                c.Column = columnInfo;
+                c.Value = ParseParameter(columnInfo, tokens.Dequeue(), filter);
+                return c;
+            }
+        }
+
+        /// <summary>
+        /// Verify that the next token is an expected token
+        /// </summary>
+        /// <param name="expected_token"></param>
+        /// <param name="actual"></param>
+        /// <param name="originalFilter"></param>
         private static void Expect(string expected_token, string actual, string originalFilter)
         {
             if (!String.Equals(expected_token, actual, StringComparison.OrdinalIgnoreCase)) {
@@ -288,19 +316,17 @@ namespace Searchlight.Parsing
             }
         }
 
-        private void AddParameter(string fieldName, string fieldValueToken, Type fieldType, Type enumType, string originalFilter, WorkingResults workingResults)
+        /// <summary>
+        /// Parse one value out of a token
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="valueToken"></param>
+        /// <param name="originalFilter"></param>
+        private static object ParseParameter(ColumnInfo column, string valueToken, string originalFilter)
         {
-            // SQL Server statements have a limit of 2000 parameters per query
-            if (_databaseType == DatabaseType.SqlServer && workingResults.NumParameters > 1999) {
-                throw new TooManyParametersException(originalFilter);
-            }
-
-            // Figure out what parameter number we are
-            string pname = "@p" + workingResults.NumParameters;
-            workingResults.NumParameters++;
-            workingResults.FilterSql.Append(pname);
-
             // Attempt to cast this item to the specified type
+            var fieldType = column.FieldType;
+            var enumType = column.EnumType;
             object pvalue;
             try {
 
@@ -309,7 +335,7 @@ namespace Searchlight.Parsing
                 // The only way to test against null is to use the special query expression "<field> IS NULL" or "<field> IS NOT NULL".
                 // The proper way to unroll this is to reconsider the field type as the first generic argument to the nullable object
                 if (Nullable.GetUnderlyingType(fieldType) != null) {
-                    fieldType = fieldType.GetGenericArguments()[0];
+                    fieldType = column.FieldType.GetGenericArguments()[0];
                 }
 
                 // If this is an object that must be parsed as an enum, permit the user to specify the enum as a string
@@ -317,34 +343,34 @@ namespace Searchlight.Parsing
                     if (Nullable.GetUnderlyingType(enumType) != null) {
                         enumType = enumType.GetGenericArguments()[0];
                     }
-                    var o = Enum.Parse(enumType, fieldValueToken);
+                    var o = Enum.Parse(enumType, valueToken);
                     pvalue = Convert.ChangeType(o, fieldType);
 
                 // Guid parsing
                 } else if (fieldType == typeof(Guid)) {
-                    pvalue = Guid.Parse(fieldValueToken);
+                    pvalue = Guid.Parse(valueToken);
 
                 // Special handling for UINT64 to handle certain database servers
                 } else if (fieldType == typeof(UInt64)) {
                     bool boolVal;
-                    if (bool.TryParse(fieldValueToken, out boolVal)) {
+                    if (bool.TryParse(valueToken, out boolVal)) {
                         pvalue = boolVal ? 1UL : 0;
                     } else {
-                        pvalue = Convert.ChangeType(fieldValueToken, fieldType);
+                        pvalue = Convert.ChangeType(valueToken, fieldType);
                     }
 
                 // All others use the default behavior
                 } else {
-                    pvalue = Convert.ChangeType(fieldValueToken, fieldType);
+                    pvalue = Convert.ChangeType(valueToken, fieldType);
                 }
 
             // Value could not be converted to the specified type
             } catch {
-                throw new FieldValueException(fieldName, fieldType.ToString(), fieldValueToken, originalFilter);
+                throw new FieldValueException(column.FieldName, fieldType.ToString(), valueToken, originalFilter);
             }
 
             // Put this into an SQL Parameter list
-            workingResults.SqlParameters.Add(pname, pvalue);
+            return pvalue;
         }
         #endregion
     }

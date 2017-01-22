@@ -9,17 +9,17 @@ namespace Searchlight.Query
     /// <summary>
     /// Represents a simple one-operator clause
     /// </summary>
-    public class SimpleOperationClause : BaseClause
+    public class CriteriaClause : BaseClause
     {
         /// <summary>
         /// The field being tested
         /// </summary>
-        public string FieldName { get; set; }
+        public ColumnInfo Column { get; set; }
 
         /// <summary>
         /// Operation for testing
         /// </summary>
-        public string Operation { get; set; }
+        public OperationType Operation { get; set; }
 
         /// <summary>
         /// Value to test against

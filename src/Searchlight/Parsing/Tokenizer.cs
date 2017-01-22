@@ -7,9 +7,17 @@ using Searchlight.Query;
 
 namespace Searchlight.Parsing
 {
+    /// <summary>
+    /// Parse tokens out of a line
+    /// </summary>
     public static class Tokenizer
     {
-        public static Queue<string> GenerateTokens(string filter)
+        /// <summary>
+        /// Generate tokens out of a line
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        public static Queue<string> GenerateTokens(string line)
         {
             Queue<string> tokens = new Queue<string>();
             StringBuilder sb = new StringBuilder();
@@ -18,8 +26,8 @@ namespace Searchlight.Parsing
             int i = 0;
             bool in_token = false;
 
-            while (i < filter.Length) {
-                char c = filter[i];
+            while (i < line.Length) {
+                char c = line[i];
 
                 // Whitespace characters always end a token)
                 if (Char.IsWhiteSpace(c)) {
@@ -42,20 +50,20 @@ namespace Searchlight.Parsing
                     // If the token is actually part of a >= or <= block, add the equal sign to it.
                     string s = c.ToString();
                     if (c == '!') {
-                        if (filter[i + 1] == '=') {
-                            s += filter[i + 1];
+                        if (line[i + 1] == '=') {
+                            s += line[i + 1];
                             i++;
                         }
                     }
                     if (c == '<') {
-                        if (filter[i + 1] == '>') {
-                            s += filter[i + 1];
+                        if (line[i + 1] == '>') {
+                            s += line[i + 1];
                             i++;
                         }
                     }
                     if (c == '>' || c == '<') {
-                        if (filter[i + 1] == '=') {
-                            s += filter[i + 1];
+                        if (line[i + 1] == '=') {
+                            s += line[i + 1];
                             i++;
                         }
                     }
@@ -68,12 +76,12 @@ namespace Searchlight.Parsing
                 if (c == StringConstants.SINGLE_QUOTE) {
                     bool in_string = true;
 
-                    while (++i < filter.Length) {
-                        c = filter[i];
+                    while (++i < line.Length) {
+                        c = line[i];
                         if (c == StringConstants.SINGLE_QUOTE) {
 
                             // If there's a double apostrophe, treat it as a single one
-                            if ((i + 1 <= filter.Length - 1) && (filter[i + 1] == StringConstants.SINGLE_QUOTE)) {
+                            if ((i + 1 <= line.Length - 1) && (line[i + 1] == StringConstants.SINGLE_QUOTE)) {
                                 sb.Append(StringConstants.SINGLE_QUOTE);
                                 i++;
                             } else {
@@ -90,7 +98,7 @@ namespace Searchlight.Parsing
 
                     // If the string failed to end properly, throw an error
                     if (in_string) {
-                        throw new UnterminatedValueException(filter);
+                        throw new UnterminatedValueException(line);
                     }
 
                     // Normal characters just get added to the token
@@ -112,49 +120,6 @@ namespace Searchlight.Parsing
 
             // Here's your tokenized list
             return tokens;
-        }
-
-        /// <summary>
-        /// Turn a $orderby string into a list of SortInfo values
-        /// </summary>
-        /// <param name="orderby_and_direction_string"></param>
-        /// <returns></returns>
-        public static List<SortInfo> TokenizeOrderBy(string orderby_and_direction_string)
-        {
-            List<SortInfo> list = new List<SortInfo>();
-
-            // Did the user give a sort string?  If so, break it apart by commas
-            if (!String.IsNullOrEmpty(orderby_and_direction_string)) {
-                foreach (var s in orderby_and_direction_string.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    string[] order_items = s.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (order_items.Length == 2) {
-                        if (order_items[1].StartsWith(StringConstants.DESCENDING, StringComparison.OrdinalIgnoreCase)) {
-                            list.Add(new SortInfo()
-                            {
-                                Fieldname = order_items[0],
-                                Direction = SortDirection.Descending
-                            }));
-                        } else if (order_items[1].StartsWith(StringConstants.ASCENDING, StringComparison.OrdinalIgnoreCase)) {
-                            list.Add(new SortInfo()
-                            {
-                                Fieldname = order_items[0],
-                                Direction = SortDirection.Ascending
-                            });
-                        } else {
-                            throw new ParserSyntaxException(order_items[1], StringConstants.SAFE_SORT_BY, orderby_and_direction_string);
-                        }
-
-                    // Append this to the sort criteria
-                    } else {
-                        list.Add(new SortInfo()
-                        {
-                            Fieldname = order_items[0],
-                            Direction = SortDirection.Ascending
-                        });
-                    }
-                }
-            }
-            return list;
         }
 
         /// <summary>

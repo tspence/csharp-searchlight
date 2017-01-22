@@ -6,13 +6,17 @@ using System.Linq;
 namespace Searchlight.Configuration.Default
 {
     /// <summary>
-    /// Represents a class that parses a model and looks for "Filterable" annotations on fields.
+    /// Use this class if your API presents a different list of columns to the API caller
+    /// than you store in the data source.
+    /// 
+    /// For each column on your API model that is searchable, add the "Filterable" annotation
+    /// and specify the underlying column name in the data source.
     /// </summary>
     public class ModelColumnDefinitions : CustomColumnDefinition
     {
         /// <summary>
         /// Constructs a list of column definitions based on an API model rather than a database entity.
-        /// Only works with properties that use the "Filterable" annotation.
+        /// Validates that all properties used in the filter must use the "Filterable" annotation.
         /// Supports column renaming from the model's variable name to the database column.
         /// </summary>
         /// <param name="modelType"></param>

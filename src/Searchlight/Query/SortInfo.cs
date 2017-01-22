@@ -1,3 +1,5 @@
+using Searchlight.Parsing;
+
 namespace Searchlight.Query
 {
     /// <summary>
@@ -6,9 +8,9 @@ namespace Searchlight.Query
     public class SortInfo
     {
         /// <summary>
-        /// The fieldname of the field that is being sorted
+        /// The field that is being sorted
         /// </summary>
-        public string Fieldname { get; set; }
+        public ColumnInfo Column { get; set; }
 
         /// <summary>
         /// The direction the field is sorted

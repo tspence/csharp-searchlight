@@ -104,5 +104,25 @@ namespace Searchlight.Parsing
         /// Represents ascending sort
         /// </summary>
         public static readonly string ASCENDING = "ASC";
+
+        /// <summary>
+        /// User specified an inverse operation
+        /// </summary>
+        public static readonly string NOT = "NOT";
+
+        /// <summary>
+        /// Used for the "BETWEEN" clause parsing
+        /// </summary>
+        public static readonly string AND = "AND";
+
+        /// <summary>
+        /// Used for parsing the "IS [NOT] NULL" command
+        /// </summary>
+        public static readonly string NULL = "NULL";
+
+        /// <summary>
+        /// Used for identifying the separator in a list
+        /// </summary>
+        public static readonly string COMMA = ",";
     }
 }

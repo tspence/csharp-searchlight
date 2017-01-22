@@ -1,4 +1,10 @@
 namespace Searchlight.Query
 {
-    public enum SortDirection { Ascending, Descending };
+    /// <summary>
+    /// Specifies the sort direction for an $orderBy clause element.
+    /// </summary>
+    public enum SortDirection {
+        Ascending,
+        Descending
+    };
 }

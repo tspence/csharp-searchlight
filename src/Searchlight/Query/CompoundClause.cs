@@ -8,7 +8,7 @@ namespace Searchlight.Query
     /// <summary>
     /// Represents a compound clause, one surrounded in (parenthesis)
     /// </summary>
-    public class CompoundClause
+    public class CompoundClause : BaseClause
     {
         /// <summary>
         /// The children of this compound clause

@@ -6,6 +6,11 @@
     public enum OperationType
     {
         /// <summary>
+        /// Failed to parse
+        /// </summary>
+        Unknown,
+
+        /// <summary>
         /// Simple operations
         /// </summary>
         Equals,

@@ -6,10 +6,10 @@ using System.Text;
 using Searchlight.Configuration.Default;
 using Searchlight.Nesting;
 using Searchlight.Parsing;
-using Searchlight.Base;
 
 namespace Searchlight.Query
 {
+    /*
     /// <summary>
     /// Database helper
     /// </summary>
@@ -220,4 +220,5 @@ namespace Searchlight.Query
         public static event EventHandler GlobalDbHelperHook;
         #endregion
     }
+    */
 }
