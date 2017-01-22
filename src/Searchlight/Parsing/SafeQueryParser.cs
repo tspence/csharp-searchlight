@@ -8,6 +8,7 @@ using Dapper;
 using System.Reflection;
 using Searchlight.Nesting;
 using Searchlight.Exceptions;
+using Searchlight.DataSource;
 
 namespace Searchlight.Parsing
 {
@@ -16,115 +17,118 @@ namespace Searchlight.Parsing
     /// </summary>
     public class SafeQueryParser
     {
-        private readonly ISafeColumnDefinition _safeColumnDefinition;
-        private readonly IColumnify _columnifier;
-        private readonly DatabaseType _databaseType;
-
-        public SafeQueryParser(ISafeColumnDefinition safeColumnDefinition, IColumnify columnifier, DatabaseType databaseType)
+        #region Interface
+        /// <summary>
+        /// Parse a query and return only the validated information.  If any illegal values or text
+        /// was provided, this function will throw a SearchlightException.
+        /// </summary>
+        /// <param name="include"></param>
+        /// <param name="filter"></param>
+        /// <param name="orderBy"></param>
+        /// <returns></returns>
+        public static QueryData Parse(string include, string filter, string orderBy, SearchlightDataSource source)
         {
-            _safeColumnDefinition = safeColumnDefinition;
-            _columnifier = columnifier;
-            _databaseType = databaseType;
+            QueryData query = new QueryData();
+            query.Includes = InternalParseIncludes(include, source);
+            query.Filter = InternalParseFilter(filter, source);
+            query.OrderBy = InternalParseOrderBy(orderBy, source);
+            return query;
         }
+        #endregion
 
-        public SelectClause ParseSelectClause(string fieldsToLoad, IEnumerable<OptionalCommand> commands = null)
+        #region Implementation
+        /// <summary>
+        /// Parse the include statements
+        /// </summary>
+        /// <param name="includes"></param>
+        /// <param name="source"></param>
+        private static List<OptionalCommand> InternalParseIncludes(string includes, SearchlightDataSource source)
         {
+            // Retrieve the list of possibilities
+            List<OptionalCommand> list = new List<OptionalCommand>();
+            var raw = source.Commands();
+            if (raw != null) {
+                list.AddRange(raw);
+            }
+
+            // Start constructing the result
             SelectClause clause = new SelectClause();
             clause.SelectFieldList = new List<string>();
             clause.SubtableList = new List<string>();
 
             // First check the field are from valid entity fields
-            if (!string.IsNullOrEmpty(fieldsToLoad) && !fieldsToLoad.Equals("*")) {
-                string[] fieldNames = fieldsToLoad.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var fieldName in fieldNames.Select(x => x.Trim())) {
-                    if (fieldName == "*") continue;
-                    var col = _safeColumnDefinition.IdentifyColumn(fieldName);
+            if (!String.IsNullOrWhiteSpace(includes)) {
+                string[] commandNames = includes.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var name in commandNames.Select(x => x.Trim())) {
 
-                    // Was this field recognized as a valid field in the table?
-                    if (col != null) {
-                        clause.SelectFieldList.Add(_columnifier.Columnify(col.DatabaseColumn, ClauseType.Select));
-                    } else {
-
-                        // Check to see if this is a recognized subtable that is allowed
-                        bool found_command = false;
-                        if (commands != null) {
-
-                            // Find a match!
-                            foreach (var command in commands) {
-                                if (command.IsNameMatch(fieldName)) {
-                                    command.IsIncluded = true;
-                                    found_command = true;
-                                    break;
-                                }
-                            }
+                    // Check to see if this is a recognized subtable that is allowed
+                    bool found_command = false;
+                    foreach (var command in list) {
+                        if (command.IsNameMatch(name)) {
+                            command.IsIncluded = true;
+                            found_command = true;
+                            break;
                         }
+                    }
 
-                        // This is not recognized - throw an exception and refuse to process further
-                        if (!found_command) {
-                            throw new FieldNameException(fieldName, fieldsToLoad);
-                        }
+                    // This is not recognized - throw an exception and refuse to process further
+                    if (!found_command) {
+                        throw new FieldNameException(name, includes);
                     }
                 }
             }
 
-            // List all fields
-            if (clause.SelectFieldList.Count == 0) {
-                foreach (var column in _safeColumnDefinition.GetColumnDefinitions()) {
-                    clause.SelectFieldList.Add(_columnifier.Columnify(column.DatabaseColumn, ClauseType.Select));
-                }
-            }
-
-            return clause;
+            // Here is the list of tested and validated commands
+            return list;
         }
 
         /// <summary>
-        /// Parses the orderBy clause requested, or if null, uses the default
+        /// Parses the orderBy clause requested, or if null, uses the default to ensure
+        /// that pagination works
         /// </summary>
         /// <param name="orderBy"></param>
-        /// <param name="defaultOrderBy"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
-        public OrderByClause ParseOrderByClause(string orderBy, string defaultOrderBy)
+        private static List<SortInfo> InternalParseOrderBy(string orderBy, SearchlightDataSource source)
         {
             // Shortcut for case where user gives us an empty string
             if (String.IsNullOrWhiteSpace(orderBy)) {
-                orderBy = defaultOrderBy;
+                var list = new List<SortInfo>();
+                list.Add(new SortInfo() {
+                    Direction = SortDirection.Ascending,
+                    Fieldname = source.DefaultSortField
+                });
+                return list;
             }
 
             // Okay, let's tokenize the user's input
-            OrderByClause orderByClause = new OrderByClause();
-            orderByClause.SortInfoList = Tokenizer.TokenizeOrderBy(orderBy);
+            var tokens = Tokenizer.TokenizeOrderBy(orderBy);
 
-            // Now, go through each token and parse it into a valid column
+            // Now, go through each token and ensure it represents a valid column
             StringBuilder sql = new StringBuilder();
-            foreach (var order in orderByClause.SortInfoList) {
-                var col = _safeColumnDefinition.IdentifyColumn(order.Fieldname);
+            foreach (var token in tokens) {
+                var col = source.ColumnDefinitions.IdentifyColumn(token.Fieldname);
                 if (col == null) {
-                    throw new FieldNameException(order.Fieldname, "");
+                    throw new FieldNameException(token.Fieldname, "");
                 }
-                sql.Append(_columnifier.Columnify(col.DatabaseColumn, ClauseType.OrderBy));
-                sql.Append((order.Direction == SortDirection.Ascending ? " ASC" : " DESC"));
-                sql.Append(", ");
             }
 
-            // There is always at least one item in this list, so remove the last comma
-            sql.Length -= 2;
-
             // Here's your order by clause
-            orderByClause.Expression = sql.ToString();
-            return orderByClause;
+            return tokens;
         }
 
         /// <summary>
-        /// Parse this "WHERE" clause and only allow specific whitelisted query expressions
+        /// Parse the $filter parameter and turn it into a list of validated, whitelisted clauses that can 
+        /// then be parsed into SQL or a LINQ statement
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        public WhereClause ParseWhereClause(string filter)
+        public List<BaseClause> InternalParseFilter(string filter, SearchlightDataSource source)
         {
             // Shortcut for no filter
-            WorkingResults working = new WorkingResults();
+            var working = new List<BaseClause>();
             if (string.IsNullOrEmpty(filter)) {
-                return working.ToSafeQuery();
+                return working;
             }
 
             // First parse the incoming filter into tokens, then start iterating over them
@@ -342,21 +346,6 @@ namespace Searchlight.Parsing
             // Put this into an SQL Parameter list
             workingResults.SqlParameters.Add(pname, pvalue);
         }
-
-        private class WorkingResults
-        {
-            public readonly StringBuilder FilterSql = new StringBuilder();
-            public readonly DynamicParameters SqlParameters = new DynamicParameters();
-            public int NumParameters = 1; // why start at 1? Seems like working around some off by 1 error somewhere
-
-            public WhereClause ToSafeQuery()
-            {
-                return new WhereClause
-                {
-                    SqlParameters = SqlParameters,
-                    ValidatedFilter = FilterSql.ToString()
-                };
-            }
-        }
+        #endregion
     }
 }

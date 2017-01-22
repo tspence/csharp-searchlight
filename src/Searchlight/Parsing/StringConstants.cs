@@ -94,5 +94,15 @@ namespace Searchlight.Parsing
         /// Represents a close parenthesis character for tokenization of strings
         /// </summary>
         public static readonly string CLOSE_PARENTHESIS = ")";
+
+        /// <summary>
+        /// Represents descending sort
+        /// </summary>
+        public static readonly string DESCENDING = "DESC";
+
+        /// <summary>
+        /// Represents ascending sort
+        /// </summary>
+        public static readonly string ASCENDING = "ASC";
     }
 }

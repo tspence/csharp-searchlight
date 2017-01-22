@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Searchlight.Nesting;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,9 +12,9 @@ namespace Searchlight.Query
     public class QueryData
     {
         /// <summary>
-        /// Represents commands specified by the "$include" parameter
+        /// Represents commands that were specified by the "$include" parameter
         /// </summary>
-        public List<string> Includes { get; set; }
+        public List<OptionalCommand> Includes { get; set; }
 
         /// <summary>
         /// The prioritized list of sort statements specified by the "$orderBy" parameter

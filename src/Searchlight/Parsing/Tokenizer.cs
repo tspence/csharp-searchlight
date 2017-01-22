@@ -114,6 +114,11 @@ namespace Searchlight.Parsing
             return tokens;
         }
 
+        /// <summary>
+        /// Turn a $orderby string into a list of SortInfo values
+        /// </summary>
+        /// <param name="orderby_and_direction_string"></param>
+        /// <returns></returns>
         public static List<SortInfo> TokenizeOrderBy(string orderby_and_direction_string)
         {
             List<SortInfo> list = new List<SortInfo>();
@@ -123,17 +128,29 @@ namespace Searchlight.Parsing
                 foreach (var s in orderby_and_direction_string.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)) {
                     string[] order_items = s.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (order_items.Length == 2) {
-                        if (order_items[1].StartsWith("DESC", StringComparison.OrdinalIgnoreCase)) {
-                            list.Add(new SortInfo(order_items[0], SortDirection.Descending));
-                        } else if (order_items[1].StartsWith("ASC", StringComparison.OrdinalIgnoreCase)) {
-                            list.Add(new SortInfo(order_items[0], SortDirection.Ascending));
+                        if (order_items[1].StartsWith(StringConstants.DESCENDING, StringComparison.OrdinalIgnoreCase)) {
+                            list.Add(new SortInfo()
+                            {
+                                Fieldname = order_items[0],
+                                Direction = SortDirection.Descending
+                            }));
+                        } else if (order_items[1].StartsWith(StringConstants.ASCENDING, StringComparison.OrdinalIgnoreCase)) {
+                            list.Add(new SortInfo()
+                            {
+                                Fieldname = order_items[0],
+                                Direction = SortDirection.Ascending
+                            });
                         } else {
                             throw new ParserSyntaxException(order_items[1], StringConstants.SAFE_SORT_BY, orderby_and_direction_string);
                         }
 
-                        // Append this to the sort criteria
+                    // Append this to the sort criteria
                     } else {
-                        list.Add(new SortInfo(order_items[0], SortDirection.Ascending));
+                        list.Add(new SortInfo()
+                        {
+                            Fieldname = order_items[0],
+                            Direction = SortDirection.Ascending
+                        });
                     }
                 }
             }
