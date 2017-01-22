@@ -24,7 +24,7 @@ namespace Searchlight.Tests.Parsing
                 .WithColumn("colULong", typeof(UInt64), null)
                 .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
                 .WithColumn("colGuid", typeof(Guid), null);
-            var columnify = new FullyQualifyColumnNames("test", DatabaseType.SqlServer);
+            var columnify = new NoColumnify();
 
             _parser = new SafeQueryParser(safeColumns,
                 columnify,
@@ -105,13 +105,13 @@ namespace Searchlight.Tests.Parsing
                 .WithColumn("a", typeof(String), null)
                 .WithColumn("b", typeof(Int32), null);
 
-            _parser = new SafeQueryParser(safeColumns,
+            var p2 = new SafeQueryParser(safeColumns,
                 new FullyQualifyColumnNames("MyTable", DatabaseType.Mysql),
                 DatabaseType.Mysql);
 
-            Assert.AreEqual("`MyTable`.`a`, `MyTable`.`b`", _parser.ParseSelectClause("a, b").Expression);
-            Assert.AreEqual("`MyTable`.`a` = @p1 AND `MyTable`.`b` <> @p2", _parser.ParseWhereClause("a = 'booya' AND b != 2").ValidatedFilter);
-            Assert.AreEqual("`MyTable`.`a` ASC, `MyTable`.`b` DESC", _parser.ParseOrderByClause("a ASC, b DESC", "a").Expression);
+            Assert.AreEqual("`MyTable`.`a`, `MyTable`.`b`", p2.ParseSelectClause("a, b").Expression);
+            Assert.AreEqual("`MyTable`.`a` = @p1 AND `MyTable`.`b` <> @p2", p2.ParseWhereClause("a = 'booya' AND b != 2").ValidatedFilter);
+            Assert.AreEqual("`MyTable`.`a` ASC, `MyTable`.`b` DESC", p2.ParseOrderByClause("a ASC, b DESC", "a").Expression);
         }
 
         [Test(Description = "Parser.FullyQualifySelectWhereAndOrderBy.SQLServer")]
@@ -121,13 +121,13 @@ namespace Searchlight.Tests.Parsing
                 .WithColumn("a", typeof(String), null)
                 .WithColumn("b", typeof(Int32), null);
 
-            _parser = new SafeQueryParser(safeColumns,
+            var p2 = new SafeQueryParser(safeColumns,
                 new FullyQualifyColumnNames("MyTable", DatabaseType.SqlServer),
                 DatabaseType.SqlServer);
 
-            Assert.AreEqual("[MyTable].[a], [MyTable].[b]", _parser.ParseSelectClause("a, b").Expression);
-            Assert.AreEqual("[MyTable].[a] = @p1 AND [MyTable].[b] <> @p2", _parser.ParseWhereClause("a = 'booya' AND b != 2").ValidatedFilter);
-            Assert.AreEqual("[MyTable].[a] ASC, [MyTable].[b] DESC", _parser.ParseOrderByClause("a ASC, b DESC", "a").Expression);
+            Assert.AreEqual("[MyTable].[a], [MyTable].[b]", p2.ParseSelectClause("a, b").Expression);
+            Assert.AreEqual("[MyTable].[a] = @p1 AND [MyTable].[b] <> @p2", p2.ParseWhereClause("a = 'booya' AND b != 2").ValidatedFilter);
+            Assert.AreEqual("[MyTable].[a] ASC, [MyTable].[b] DESC", p2.ParseOrderByClause("a ASC, b DESC", "a").Expression);
         }
 
         [Test(Description = "Parser.NullInWhereClause")]

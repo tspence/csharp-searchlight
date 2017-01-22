@@ -16,7 +16,7 @@ namespace Searchlight.Tests.Parsing
             var safeColumns = new CustomColumnDefinition()
                 .WithColumn("a", typeof(String), null)
                 .WithColumn("b", typeof(Int32), null);
-            var columnify = new FullyQualifyColumnNames("test", DatabaseType.SqlServer);
+            var columnify = new NoColumnify();
 
             _parser = new SafeQueryParser(safeColumns,
                 columnify,
