@@ -6,7 +6,9 @@
         "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
         "NETStandard.Library": "1.6.0",
         "Searchlight": "1.0.0-*",
-        "NUnit": "3.4.0"
+        "NUnit": "3.4.0",
+        "OpenCover": "4.6.519",
+        "ReportGenerator": "2.5.2"
     },
 
     "testRunner": "nunit",
