@@ -84,7 +84,8 @@ namespace Searchlight.Tests.Parsing
         [Test(Description = "Parser.FilterParseTest")]
         public void FilterParseTest()
         {
-            WhereClause actual = _parser.ParseWhereClause("a = 'booya' AND b != 1");
+            var actual = SafeQueryParser.ParseFilter("a = 'booya' AND b != 1");
+            Assert.AreEqual("a", actual[0].
             Assert.AreEqual("a = @p1 AND b <> @p2", actual.ValidatedFilter);
             Assert.AreEqual(2, actual.SqlParameters.ParameterNames.Count());
 
