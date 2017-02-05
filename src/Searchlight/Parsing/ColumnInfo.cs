@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 
 namespace Searchlight.Parsing
 {
@@ -53,5 +54,10 @@ namespace Searchlight.Parsing
         /// If the end user thinks of this column as an enum, this is the type it should be parsed as
         /// </summary>
         public Type EnumType { get; private set; }
+
+        /// <summary>
+        /// Reflection property for this column; useful for retrieving or saving to an object
+        /// </summary>
+        public PropertyInfo Property { get; private set; }
     }
 }

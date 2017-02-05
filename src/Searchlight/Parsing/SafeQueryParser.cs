@@ -188,9 +188,19 @@ namespace Searchlight.Parsing
                 }
 
                 // If not, we must have a conjunction
+                string upperToken = token.ToUpperInvariant();
                 string conjunction;
-                if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(token.ToUpperInvariant(), out conjunction)) {
+                if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out conjunction)) {
                     throw new ExpectedConjunctionException(token, filter);
+                }
+
+                // Store the value of the conjunction
+                if (String.Equals(StringConstants.AND, upperToken)) {
+                    clause.Conjunction = ConjunctionType.AND;
+                } else if (String.Equals(StringConstants.AND, upperToken)) {
+                    clause.Conjunction = ConjunctionType.OR;
+                } else {
+                    throw new UnknownConjunctionException(filter, upperToken);
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error

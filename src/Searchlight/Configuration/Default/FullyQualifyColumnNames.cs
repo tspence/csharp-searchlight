@@ -9,10 +9,10 @@ namespace Searchlight.Configuration.Default
     /// </summary>
     public class FullyQualifyColumnNames : IColumnify
     {
-        private readonly DatabaseType _databaseType;
+        private readonly DataSourceType _databaseType;
         private readonly string _tableNamePrefix;
 
-        public FullyQualifyColumnNames(string tableName, DatabaseType databaseType)
+        public FullyQualifyColumnNames(string tableName, DataSourceType databaseType)
         {
             _databaseType = databaseType;
 
@@ -20,13 +20,13 @@ namespace Searchlight.Configuration.Default
 
             // surround the tablenameprefix with the appropriate characters by database type
             switch (databaseType) {
-                case DatabaseType.SqlServer:
+                case DataSourceType.SqlServer:
                     tablePrefixBuilder.Replace(".", "].[");
                     tablePrefixBuilder.Insert(0, "[");
                     tablePrefixBuilder.Append("]");
                     break;
 
-                case DatabaseType.Mysql:
+                case DataSourceType.Mysql:
                     tablePrefixBuilder.Replace(".", "`.`");
                     tablePrefixBuilder.Insert(0, "`");
                     tablePrefixBuilder.Append("`");
@@ -40,9 +40,9 @@ namespace Searchlight.Configuration.Default
         {
             switch (_databaseType)
             {
-                case DatabaseType.SqlServer:
+                case DataSourceType.SqlServer:
                     return string.Format("{0}.[{1}]", _tableNamePrefix, columnName);
-                case DatabaseType.Mysql:
+                case DataSourceType.Mysql:
                     return string.Format("{0}.`{1}`", _tableNamePrefix, columnName);
                 default:
                     throw new ArgumentOutOfRangeException("Unknown databaset type: " + _databaseType);
