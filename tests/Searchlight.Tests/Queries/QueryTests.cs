@@ -94,5 +94,28 @@ namespace Searchlight.Tests.Queries
                 Assert.True(e.paycheck == 800.0m || e.paycheck == 1200.0m);
             }
         }
+
+        [Test]
+        public void BetweenQuery()
+        {
+            var list = GetTestList();
+
+            // Note that the "between" clause is inclusive
+            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
+            var query = SafeQueryParser.ParseFilter("id between 2 and 4", src);
+            Assert.AreEqual(1, query.Count());
+            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
+            Assert.AreEqual("id", ((BetweenClause)query[0]).Column.FieldName);
+            Assert.AreEqual(2, ((BetweenClause)query[0]).LowerValue);
+            Assert.AreEqual(4, ((BetweenClause)query[0]).UpperValue);
+
+            // Execute the query and ensure that each result matches
+            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            Assert.True(results.Count() == 3);
+            foreach (var e in results) {
+                Assert.True(e.id > 1);
+                Assert.True(e.id < 5);
+            }
+        }
     }
 }

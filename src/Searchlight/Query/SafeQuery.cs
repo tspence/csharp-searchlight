@@ -115,6 +115,17 @@ namespace Searchlight.Query
                 }
             }
 
+            // Is this a between clause?
+            var between = clause as BetweenClause;
+            if (between != null) {
+                Expression field = Expression.Property(select, between.Column.FieldName);
+                Expression lowerValue = Expression.Constant(between.LowerValue, between.Column.FieldType);
+                Expression upperValue = Expression.Constant(between.UpperValue, between.Column.FieldType);
+                Expression lower = Expression.GreaterThanOrEqual(field, lowerValue);
+                Expression upper = Expression.LessThanOrEqual(field, upperValue);
+                return Expression.And(lower, upper);
+            }
+
             // Check if this is a compound clause and build it nested
             var compound = clause as CompoundClause;
             if (compound != null) {
