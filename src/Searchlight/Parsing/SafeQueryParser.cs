@@ -105,8 +105,8 @@ namespace Searchlight.Parsing
 
                 // Identify the field being sorted
                 var colName = tokens.Dequeue();
-                var col = source.ColumnDefinitions.IdentifyColumn(colName);
-                if (col == null) {
+                si.Column = source.ColumnDefinitions.IdentifyColumn(colName);
+                if (si.Column == null) {
                     throw new FieldNameException(colName, orderBy);
                 }
 

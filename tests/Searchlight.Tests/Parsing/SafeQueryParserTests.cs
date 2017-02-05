@@ -57,11 +57,11 @@ namespace Searchlight.Tests.Parsing
             var ex4 = Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseFilter("()", _source));
         }
 
-        [Test(Description = "Parser.OrderByParseTest")]
+        [Test(Description = "Parser.OrderByCasingAndSpacing")]
         [TestCase("a, b DESC")]
         [TestCase("a AsC, b DESc")]
         [TestCase("a asc   , b    DESC    ")]
-        public void OrderByParseTest(string orderby)
+        public void OrderByCasingAndSpacing(string orderby)
         {
             var result = SafeQueryParser.ParseOrderBy(orderby, _source);
             Assert.AreEqual("a", result[0].Column.FieldName);
