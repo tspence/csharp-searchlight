@@ -5,7 +5,7 @@ A lightweight, secure framework for searching through databases and in-memory co
 
 Travis CI:
 
-https://travis-ci.org/tspence/csharp-searchlight.svg?branch=master&style=plastic
+[![Travis](https://travis-ci.org/tspence/csharp-searchlight.svg?branch=master&style=plastic)](https://travis-ci.org/tspence/csharp-searchlight)
 
 NuGet:
 
