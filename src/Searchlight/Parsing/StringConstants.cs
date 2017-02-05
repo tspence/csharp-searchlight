@@ -111,9 +111,14 @@ namespace Searchlight.Parsing
         public static readonly string NOT = "NOT";
 
         /// <summary>
-        /// Used for the "BETWEEN" clause parsing
+        /// Used for the "BETWEEN" clause parsing and boolean AND clauses
         /// </summary>
         public static readonly string AND = "AND";
+
+        /// <summary>
+        /// Used for boolean OR clauses
+        /// </summary>
+        public static readonly string OR = "OR";
 
         /// <summary>
         /// Used for parsing the "IS [NOT] NULL" command

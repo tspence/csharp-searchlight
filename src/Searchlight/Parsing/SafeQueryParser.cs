@@ -200,7 +200,7 @@ namespace Searchlight.Parsing
                 // Store the value of the conjunction
                 if (String.Equals(StringConstants.AND, upperToken)) {
                     clause.Conjunction = ConjunctionType.AND;
-                } else if (String.Equals(StringConstants.AND, upperToken)) {
+                } else if (String.Equals(StringConstants.OR, upperToken)) {
                     clause.Conjunction = ConjunctionType.OR;
                 } else {
                     throw new UnknownConjunctionException(filter, upperToken);

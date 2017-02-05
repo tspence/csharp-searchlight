@@ -85,13 +85,14 @@ namespace Searchlight.Query
         /// <returns></returns>
         private static Expression BuildOneExpression(ParameterExpression select, BaseClause clause, SearchlightDataSource src)
         {
-            if (clause is CriteriaClause) {
-                var c = clause as CriteriaClause;
+            // Check if this is a basic criteria clause
+            var criteria = clause as CriteriaClause;
+            if (criteria != null) {
 
                 // Obtain a parameter from this object
-                Expression field = Expression.Property(select, c.Column.FieldName);
-                Expression value = Expression.Constant(c.Value, c.Column.FieldType);
-                switch (c.Operation) {
+                Expression field = Expression.Property(select, criteria.Column.FieldName);
+                Expression value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
+                switch (criteria.Operation) {
                     case OperationType.Equals:
                         return Expression.Equal(field, value);
                     case OperationType.GreaterThan:
@@ -113,6 +114,14 @@ namespace Searchlight.Query
                         throw new NotImplementedException();
                 }
             }
+
+            // Check if this is a compound clause and build it nested
+            var compound = clause as CompoundClause;
+            if (compound != null) {
+                return BuildExpression(select, compound.Children, src);
+            }
+
+            // We didn't understand the clause!
             throw new NotImplementedException();
         }
     }

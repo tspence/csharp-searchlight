@@ -59,5 +59,40 @@ namespace Searchlight.Tests.Queries
                 Assert.True(e.paycheck <= 1000.0m);
             }
         }
+
+
+        [Test]
+        public void NestedClauseQuery()
+        {
+            var list = GetTestList();
+
+            // Construct a simple query and check that it comes out correct
+            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
+            var query = SafeQueryParser.ParseFilter("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)", src);
+            Assert.AreEqual(2, query.Count());
+            Assert.AreEqual(ConjunctionType.AND, query[0].Conjunction);
+            Assert.AreEqual("id", ((CriteriaClause)query[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause)query[0]).Operation);
+            Assert.AreEqual(1, ((CriteriaClause)query[0]).Value);
+
+            // Did we get a nested clause?
+            var cc = query[1] as CompoundClause;
+            Assert.NotNull(cc);
+            Assert.AreEqual(2, cc.Children.Count);
+            Assert.AreEqual("paycheck", ((CriteriaClause)cc.Children[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.LessThan, ((CriteriaClause)cc.Children[0]).Operation);
+            Assert.AreEqual(1000.0m, ((CriteriaClause)cc.Children[0]).Value);
+            Assert.AreEqual("paycheck", ((CriteriaClause)cc.Children[1]).Column.FieldName);
+            Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause)cc.Children[1]).Operation);
+            Assert.AreEqual(1000.0m, ((CriteriaClause)cc.Children[1]).Value);
+
+            // Execute the query and ensure that each result matches
+            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            Assert.True(results.Count() == 2);
+            foreach (var e in results) {
+                Assert.True(e.id > 1);
+                Assert.True(e.paycheck == 800.0m || e.paycheck == 1200.0m);
+            }
+        }
     }
 }
