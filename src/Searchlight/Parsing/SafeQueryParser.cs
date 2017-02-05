@@ -116,7 +116,10 @@ namespace Searchlight.Parsing
                 // Next, we allow ASC, DESC, or a comma (indicating another sort).
                 // First, check for the case of a comma
                 var token = tokens.Dequeue();
-                if (token == StringConstants.COMMA) continue;
+                if (token == StringConstants.COMMA) {
+                    if (tokens.Count == 0) throw new TrailingConjunctionException(orderBy);
+                    continue;
+                }
 
                 // Allow ASC or DESC
                 var tokenUpper = token.ToUpperInvariant();

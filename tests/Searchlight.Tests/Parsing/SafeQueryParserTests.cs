@@ -45,14 +45,16 @@ namespace Searchlight.Tests.Parsing
         public void AllParenthesis()
         {
             // Basic problem: if you never close a parenthesis that's a syntax error
-            var ex1 = Assert.Throws<TrailingConjunctionException>(() => SafeQueryParser.ParseFilter("(((((((((((", _source));
+            var ex1 = Assert.Throws<OpenClauseException>(() => SafeQueryParser.ParseFilter("(((((((((((", _source));
 
             // If you unbalance your parenthesis, that's a syntax error
-            var ex2 = Assert.Throws<OpenClauseException>(() => SafeQueryParser.ParseFilter("((((((((((()))", _source));
-            var ex3 = Assert.Throws<OpenClauseException>(() => SafeQueryParser.ParseFilter("((())))))))))))", _source));
+            var ex2 = Assert.Throws<OpenClauseException>(() => SafeQueryParser.ParseFilter("(((((((((((a = 'hi')))", _source));
 
-            // If you forget to supply any actual criteria, that's a syntax error
-            var ex4 = Assert.Throws<EmptyClauseException>(() => SafeQueryParser.ParseFilter("()", _source));
+            // if you have too many closing parens, it would expect AND or OR instead of another close paren
+            var ex3 = Assert.Throws<UnknownConjunctionException>(() => SafeQueryParser.ParseFilter("(((a = 'hi'))))))))))))", _source));
+
+            // If you forget to supply any actual criteria, it reads the closing paren and thinks its a field name
+            var ex4 = Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseFilter("()", _source));
         }
 
         [Test(Description = "Parser.OrderByParseTest")]
@@ -75,10 +77,10 @@ namespace Searchlight.Tests.Parsing
             Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseOrderBy("c, d ASC", _source));
 
             // No comma between fields
-            Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseOrderBy("a b DESC", _source));
+            Assert.Throws<ParserSyntaxException>(() => SafeQueryParser.ParseOrderBy("a b DESC", _source));
 
             // Trailing comma
-            Assert.Throws<FieldNameException>(() => SafeQueryParser.ParseOrderBy("a, b,", _source));
+            Assert.Throws<TrailingConjunctionException>(() => SafeQueryParser.ParseOrderBy("a, b,", _source));
         }
 
         [Test(Description = "Parser.FilterParseTest")]
