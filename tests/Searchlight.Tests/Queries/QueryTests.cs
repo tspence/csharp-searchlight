@@ -117,5 +117,72 @@ namespace Searchlight.Tests.Queries
                 Assert.True(e.id < 5);
             }
         }
+
+        [Test]
+        public void StartsWithQuery()
+        {
+            var list = GetTestList();
+
+            // Note that the "between" clause is inclusive
+            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
+            var query = SafeQueryParser.ParseFilter("name startswith 'A'", src);
+            Assert.AreEqual(1, query.Count());
+            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.StartsWith, ((CriteriaClause)query[0]).Operation);
+            Assert.AreEqual("A", ((CriteriaClause)query[0]).Value);
+
+            // Execute the query and ensure that each result matches
+            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            Assert.True(results.Count() == 1);
+            foreach (var e in results) {
+                Assert.True(e.name[0] == 'A');
+            }
+        }
+
+        [Test]
+        public void EndsWithQuery()
+        {
+            var list = GetTestList();
+
+            // Note that the "between" clause is inclusive
+            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
+            var query = SafeQueryParser.ParseFilter("name endswith 's'", src);
+            Assert.AreEqual(1, query.Count());
+            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.EndsWith, ((CriteriaClause)query[0]).Operation);
+            Assert.AreEqual("s", ((CriteriaClause)query[0]).Value);
+
+            // Execute the query and ensure that each result matches
+            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            Assert.True(results.Count() == 2);
+            foreach (var e in results) {
+                Assert.True(e.name.EndsWith("s"));
+            }
+        }
+
+
+        [Test]
+        public void ContainsQuery()
+        {
+            var list = GetTestList();
+
+            // Note that the "between" clause is inclusive
+            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
+            var query = SafeQueryParser.ParseFilter("name contains 's'", src);
+            Assert.AreEqual(1, query.Count());
+            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.Contains, ((CriteriaClause)query[0]).Operation);
+            Assert.AreEqual("s", ((CriteriaClause)query[0]).Value);
+
+            // Execute the query and ensure that each result matches
+            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            Assert.True(results.Count() == 3);
+            foreach (var e in results) {
+                Assert.True(e.name.Contains("s"));
+            }
+        }
     }
 }

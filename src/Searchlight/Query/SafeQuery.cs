@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Searchlight.DataSource;
 using Searchlight.Parsing;
+using System.Reflection;
 
 namespace Searchlight.Query
 {
@@ -103,14 +104,17 @@ namespace Searchlight.Query
                         return Expression.LessThan(field, value);
                     case OperationType.LessThanOrEqual:
                         return Expression.LessThanOrEqual(field, value);
-                    case OperationType.Between:
-                    case OperationType.Contains:
+                    case OperationType.StartsWith:
+                        return Expression.Call(field, typeof(string).GetMethod("StartsWith", new Type[] { typeof(string) }), value);
                     case OperationType.EndsWith:
+                        return Expression.Call(field, typeof(string).GetMethod("EndsWith", new Type[] { typeof(string) }), value);
+                    case OperationType.Contains:
+                        return Expression.Call(field, typeof(string).GetMethod("Contains", new Type[] { typeof(string) }), value);
                     case OperationType.In:
                     case OperationType.IsNull:
                     case OperationType.Like:
                     case OperationType.NotEqual:
-                    case OperationType.StartsWith:
+                    case OperationType.Between:
                         throw new NotImplementedException();
                 }
             }
