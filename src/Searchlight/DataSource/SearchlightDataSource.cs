@@ -38,6 +38,11 @@ namespace Searchlight.DataSource
         /// </summary>
         public OptionalCommand[] Commands { get; set; }
 
+        /// <summary>
+        /// Some data sources can only handle a specified number of parameters.
+        /// </summary>
+        public int MaximumParameters { get; set; }
+
 
         /// <summary>
         /// Create a searchlight data source based on an in-memory collection
@@ -66,6 +71,7 @@ namespace Searchlight.DataSource
         public QueryData Parse(string include, string filter, string orderBy)
         {
             QueryData query = new QueryData();
+            query.OriginalFilter = filter;
             query.Includes = ParseIncludes(include);
             query.Filter = ParseFilter(filter);
             query.OrderBy = ParseOrderBy(orderBy);
@@ -81,7 +87,9 @@ namespace Searchlight.DataSource
         {
             // Retrieve the list of possibilities
             List<OptionalCommand> list = new List<OptionalCommand>();
-            list.AddRange(Commands);
+            if (Commands != null) {
+                list.AddRange(Commands);
+            }
 
             // First check the field are from valid entity fields
             if (!String.IsNullOrWhiteSpace(includes))

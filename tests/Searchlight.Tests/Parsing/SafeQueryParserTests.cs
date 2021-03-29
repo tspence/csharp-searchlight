@@ -1,16 +1,14 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight.Configuration;
 using Searchlight.Configuration.Default;
 using Searchlight.DataSource;
 using Searchlight.Exceptions;
 using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Searchlight.Tests.Parsing
 {
+    [TestClass]
     public class SafeQueryParserTests
     {
         private SearchlightDataSource _source;
@@ -30,7 +28,7 @@ namespace Searchlight.Tests.Parsing
             _source.DatabaseType = DataSourceType.Mysql;
         }
 
-        [TestMethod("Parser.IncorrectFieldValueType")]
+        [TestMethod]
         public void IncorrectFieldValueType()
         {
             string originalFilter = "a = 'test' and b = 'Hello!'";
@@ -41,7 +39,7 @@ namespace Searchlight.Tests.Parsing
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
         }
 
-        [TestMethod("Parser.AllParenthesis")]
+        [TestMethod]
         public void AllParenthesis()
         {
             // Basic problem: if you never close a parenthesis that's a syntax error
@@ -70,7 +68,7 @@ namespace Searchlight.Tests.Parsing
             Assert.AreEqual(SortDirection.Descending, result[1].Direction);
         }
 
-        [TestMethod("Parser.OrderByExceptions")]
+        [TestMethod]
         public void OrderByExceptionsTest()
         {
             // Field doesn't exist
@@ -83,7 +81,7 @@ namespace Searchlight.Tests.Parsing
             Assert.ThrowsException<TrailingConjunctionException>(() => _source.ParseOrderBy("a, b,"));
         }
 
-        [TestMethod("Parser.FilterParseTest")]
+        [TestMethod]
         public void FilterParseTest()
         {
             //var actual = SafeQueryParser.ParseFilter("a = 'booya' AND b != 1");
@@ -93,7 +91,7 @@ namespace Searchlight.Tests.Parsing
         }
 
 
-        [TestMethod("Parser.NullInWhereClause")]
+        [TestMethod]
         public void NullInWhereClause()
         {
             //Assert.AreEqual("a IS NULL", _parser.ParseWhereClause("a is null").ValidatedFilter);
@@ -101,11 +99,11 @@ namespace Searchlight.Tests.Parsing
             //Assert.AreEqual("(a IS NOT NULL) OR (a IS NULL)", _parser.ParseWhereClause("(a is not null) or (a is null)").ValidatedFilter);
         }
 
-        [TestMethod("Parser.OnlyConjunctions")]
+        [TestMethod]
         public void OnlyConjunctions()
         {
             // Silly example
-            Assert.ThrowsException<TrailingConjunctionException>(() =>
+            Assert.ThrowsException<FieldNameException>(() =>
             {
                 var clauses = _source.ParseFilter("AND ( ) OR ");
             });
@@ -127,7 +125,7 @@ namespace Searchlight.Tests.Parsing
             Assert.AreEqual(cc.Children[1].Conjunction, ConjunctionType.NONE);
         }
 
-        [TestMethod("Parser.AllQueryExpressions")]
+        [TestMethod]
         public void AllQueryExpressions()
         {
             //string s;
@@ -159,7 +157,7 @@ namespace Searchlight.Tests.Parsing
             //Assert.ThrowsException<ParserSyntaxException>(() => s = _parser.ParseWhereClause("a !<= 'test'").ValidatedFilter);
         }
 
-        [TestMethod("Parser.TypeComparisons")]
+        [TestMethod]
         public void TypeComparisons()
         {
             //// Test the Int64

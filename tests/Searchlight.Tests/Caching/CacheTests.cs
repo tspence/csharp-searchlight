@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Searchlight.Tests.Caching
 {
+    [TestClass]
     public class CacheTests
     {
         private class SimpleCacheTest : ObjectCache<string>

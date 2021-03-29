@@ -12,6 +12,11 @@ namespace Searchlight.Query
     public class QueryData
     {
         /// <summary>
+        /// The original filter that was provided to the query, for reference
+        /// </summary>
+        public string OriginalFilter { get; set; }
+
+        /// <summary>
         /// Represents commands that were specified by the "$include" parameter
         /// </summary>
         public List<OptionalCommand> Includes { get; set; }

@@ -3,13 +3,15 @@ namespace Searchlight.Exceptions
 {
     public class TooManyParametersException : SearchlightException
     {
+        public int MaximumParameterCount { get; set; }
         /// <summary>
         /// SETEC ASTRONOMY
         /// </summary>
         /// <param name="originalFilter"></param>
-        public TooManyParametersException(string originalFilter)
+        public TooManyParametersException(int maxParams, string originalFilter)
             : base(originalFilter)
         {
+            this.MaximumParameterCount = maxParams;
         }
     }
 }

@@ -8,18 +8,18 @@ using System.Linq;
 
 namespace Searchlight.Tests.Parsing
 {
+    [TestClass]
     public class TokenizerTests
     {
         [DataTestMethod]
         [DataRow("WHERE field1 = 'value AND Id = 123")]
-        [DataRow("WHERE field1 = \"value AND Id = 123")]
         public void NonterminatedString(string filter)
         {
             var ex = Assert.ThrowsException<UnterminatedValueException>(() => Tokenizer.GenerateTokens(filter));
             Assert.AreEqual(filter, ex.OriginalFilter);
         }
 
-        [TestMethod("Tokenizer.CheckStandardFilters")]
+        [TestMethod]
         public void CheckStandardFilters()
         {
             // Parse a date time pattern

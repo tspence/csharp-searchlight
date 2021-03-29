@@ -61,7 +61,7 @@ namespace Searchlight.Configuration.Default
         public ColumnInfo IdentifyColumn(string filterToken)
         {
             ColumnInfo ci = null;
-            _fieldDict.TryGetValue(filterToken.ToUpper(), out ci);
+            _fieldDict.TryGetValue(filterToken?.ToUpper(), out ci);
             return ci;
         }
         #endregion
