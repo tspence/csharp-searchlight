@@ -41,7 +41,7 @@ namespace Searchlight.Tests.Queries
 
             // Construct a simple query and check that it comes out correct
             SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
-            var query = SafeQueryParser.ParseFilter("id gt 1 and paycheck le 1000", src);
+            var query = src.ParseFilter("id gt 1 and paycheck le 1000");
             Assert.AreEqual(2, query.Count());
             Assert.AreEqual(ConjunctionType.AND, query[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause)query[0]).Column.FieldName);
@@ -69,7 +69,7 @@ namespace Searchlight.Tests.Queries
 
             // Construct a simple query and check that it comes out correct
             SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
-            var query = SafeQueryParser.ParseFilter("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)", src);
+            var query = src.ParseFilter("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
             Assert.AreEqual(2, query.Count());
             Assert.AreEqual(ConjunctionType.AND, query[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause)query[0]).Column.FieldName);
@@ -104,7 +104,7 @@ namespace Searchlight.Tests.Queries
 
             // Note that the "between" clause is inclusive
             SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
-            var query = SafeQueryParser.ParseFilter("id between 2 and 4", src);
+            var query = src.ParseFilter("id between 2 and 4");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
             Assert.AreEqual("id", ((BetweenClause)query[0]).Column.FieldName);
@@ -128,7 +128,7 @@ namespace Searchlight.Tests.Queries
 
             // Note that the "between" clause is inclusive
             SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
-            var query = SafeQueryParser.ParseFilter("name startswith 'A'", src);
+            var query = src.ParseFilter("name startswith 'A'");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
@@ -151,7 +151,7 @@ namespace Searchlight.Tests.Queries
 
             // Note that the "between" clause is inclusive
             SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
-            var query = SafeQueryParser.ParseFilter("name endswith 's'", src);
+            var query = src.ParseFilter("name endswith 's'");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
@@ -175,7 +175,7 @@ namespace Searchlight.Tests.Queries
 
             // Note that the "between" clause is inclusive
             SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
-            var query = SafeQueryParser.ParseFilter("name contains 's'", src);
+            var query = src.ParseFilter("name contains 's'");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);

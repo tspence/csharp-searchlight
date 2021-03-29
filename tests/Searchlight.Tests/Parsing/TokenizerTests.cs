@@ -12,6 +12,7 @@ namespace Searchlight.Tests.Parsing
     {
         [DataTestMethod]
         [DataRow("WHERE field1 = 'value AND Id = 123")]
+        [DataRow("WHERE field1 = \"value AND Id = 123")]
         public void NonterminatedString(string filter)
         {
             var ex = Assert.ThrowsException<UnterminatedValueException>(() => Tokenizer.GenerateTokens(filter));
@@ -134,27 +135,6 @@ namespace Searchlight.Tests.Parsing
             Assert.AreEqual("UserName", list[0]);
             Assert.AreEqual("=", list[1]);
             Assert.AreEqual("Bob'", list[2]);
-        }
-
-        [TestMethod("Tokenizer.TokenizeOrderBy")]
-        public void TokenizeOrderBy()
-        {
-            //Assert.AreEqual(ToSortInfos(Asc("Column")), Tokenizer.TokenizeOrderBy("Column ASC"));
-            //Assert.AreEqual(ToSortInfos(Asc("Column")), Tokenizer.TokenizeOrderBy("Column"));
-            //Assert.AreEqual(ToSortInfos(Desc("Column")), Tokenizer.TokenizeOrderBy("Column DESC"));
-
-            //Assert.AreEqual(ToSortInfos(Asc("Column"), Asc("Second")), Tokenizer.TokenizeOrderBy("Column ASC, Second ASC"));
-            //Assert.AreEqual(ToSortInfos(Asc("Column"), Asc("Second")), Tokenizer.TokenizeOrderBy("Column, Second"));
-            //Assert.AreEqual(ToSortInfos(Desc("Column"), Asc("Second")), Tokenizer.TokenizeOrderBy("Column DESC, Second ASC"));
-
-            //// case insenistive
-            //Assert.AreEqual(ToSortInfos(Desc("Column")), Tokenizer.TokenizeOrderBy("Column desc"));
-
-            //Assert.IsEmpty(Tokenizer.TokenizeOrderBy(""));
-            //Assert.IsEmpty(Tokenizer.TokenizeOrderBy(null));
-
-            //var ex = Assert.ThrowsException<ParserSyntaxException>(() => Tokenizer.TokenizeOrderBy("Column INV"));
-            //Assert.AreEqual("INV", ex.BadToken);
         }
     }
 }

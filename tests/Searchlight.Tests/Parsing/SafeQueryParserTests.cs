@@ -34,7 +34,7 @@ namespace Searchlight.Tests.Parsing
         public void IncorrectFieldValueType()
         {
             string originalFilter = "a = 'test' and b = 'Hello!'";
-            var ex = Assert.ThrowsException<FieldValueException>(() => SafeQueryParser.ParseFilter(originalFilter, _source));
+            var ex = Assert.ThrowsException<FieldValueException>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual("b", ex.FieldName);
             Assert.AreEqual("System.Int32", ex.FieldType);
             Assert.AreEqual("Hello!", ex.FieldValue);
@@ -45,16 +45,16 @@ namespace Searchlight.Tests.Parsing
         public void AllParenthesis()
         {
             // Basic problem: if you never close a parenthesis that's a syntax error
-            var ex1 = Assert.ThrowsException<OpenClauseException>(() => SafeQueryParser.ParseFilter("(((((((((((", _source));
+            var ex1 = Assert.ThrowsException<OpenClauseException>(() => _source.ParseFilter("((((((((((("));
 
             // If you unbalance your parenthesis, that's a syntax error
-            var ex2 = Assert.ThrowsException<OpenClauseException>(() => SafeQueryParser.ParseFilter("(((((((((((a = 'hi')))", _source));
+            var ex2 = Assert.ThrowsException<OpenClauseException>(() => _source.ParseFilter("(((((((((((a = 'hi')))"));
 
             // if you have too many closing parens, it would expect AND or OR instead of another close paren
-            var ex3 = Assert.ThrowsException<UnknownConjunctionException>(() => SafeQueryParser.ParseFilter("(((a = 'hi'))))))))))))", _source));
+            var ex3 = Assert.ThrowsException<UnknownConjunctionException>(() => _source.ParseFilter("(((a = 'hi'))))))))))))"));
 
             // If you forget to supply any actual criteria, it reads the closing paren and thinks its a field name
-            var ex4 = Assert.ThrowsException<FieldNameException>(() => SafeQueryParser.ParseFilter("()", _source));
+            var ex4 = Assert.ThrowsException<FieldNameException>(() => _source.ParseFilter("()"));
         }
 
         [DataTestMethod]
@@ -63,7 +63,7 @@ namespace Searchlight.Tests.Parsing
         [DataRow("a asc   , b    DESC    ")]
         public void OrderByCasingAndSpacing(string orderby)
         {
-            var result = SafeQueryParser.ParseOrderBy(orderby, _source);
+            var result = _source.ParseOrderBy(orderby);
             Assert.AreEqual("a", result[0].Column.FieldName);
             Assert.AreEqual(SortDirection.Ascending, result[0].Direction);
             Assert.AreEqual("b", result[1].Column.FieldName);
@@ -74,13 +74,13 @@ namespace Searchlight.Tests.Parsing
         public void OrderByExceptionsTest()
         {
             // Field doesn't exist
-            Assert.ThrowsException<FieldNameException>(() => SafeQueryParser.ParseOrderBy("c, d ASC", _source));
+            Assert.ThrowsException<FieldNameException>(() => _source.ParseOrderBy("c, d ASC"));
 
             // No comma between fields
-            Assert.ThrowsException<ParserSyntaxException>(() => SafeQueryParser.ParseOrderBy("a b DESC", _source));
+            Assert.ThrowsException<ParserSyntaxException>(() => _source.ParseOrderBy("a b DESC"));
 
             // Trailing comma
-            Assert.ThrowsException<TrailingConjunctionException>(() => SafeQueryParser.ParseOrderBy("a, b,", _source));
+            Assert.ThrowsException<TrailingConjunctionException>(() => _source.ParseOrderBy("a, b,"));
         }
 
         [TestMethod("Parser.FilterParseTest")]
@@ -90,41 +90,8 @@ namespace Searchlight.Tests.Parsing
             //Assert.AreEqual("a", actual[0].
             //Assert.AreEqual("a = @p1 AND b <> @p2", actual.ValidatedFilter);
             //Assert.AreEqual(2, actual.SqlParameters.ParameterNames.Count());
-
-            // TODO: way more tests
         }
 
-        [TestMethod("Parser.FullyQualifySelectWhereAndOrderBy.MySQL")]
-        public void FullyQualifySelectWhereAndOrderBy()
-        {
-            //var safeColumns = new CustomColumnDefinition()
-            //    .WithColumn("a", typeof(String), null)
-            //    .WithColumn("b", typeof(Int32), null);
-
-            //var p2 = new SafeQueryParser(safeColumns,
-            //    new FullyQualifyColumnNames("MyTable", DataSourceType.Mysql),
-            //    DataSourceType.Mysql);
-
-            //Assert.AreEqual("`MyTable`.`a`, `MyTable`.`b`", p2.ParseSelectClause("a, b").Expression);
-            //Assert.AreEqual("`MyTable`.`a` = @p1 AND `MyTable`.`b` <> @p2", p2.ParseWhereClause("a = 'booya' AND b != 2").ValidatedFilter);
-            //Assert.AreEqual("`MyTable`.`a` ASC, `MyTable`.`b` DESC", p2.ParseOrderByClause("a ASC, b DESC", "a").Expression);
-        }
-
-        [TestMethod("Parser.FullyQualifySelectWhereAndOrderBy.SQLServer")]
-        public void FullyQualifySelectWhereAndOrderBySqlServer()
-        {
-            //var safeColumns = new CustomColumnDefinition()
-            //    .WithColumn("a", typeof(String), null)
-            //    .WithColumn("b", typeof(Int32), null);
-
-            //var p2 = new SafeQueryParser(safeColumns,
-            //    new FullyQualifyColumnNames("MyTable", DataSourceType.SqlServer),
-            //    DataSourceType.SqlServer);
-
-            //Assert.AreEqual("[MyTable].[a], [MyTable].[b]", p2.ParseSelectClause("a, b").Expression);
-            //Assert.AreEqual("[MyTable].[a] = @p1 AND [MyTable].[b] <> @p2", p2.ParseWhereClause("a = 'booya' AND b != 2").ValidatedFilter);
-            //Assert.AreEqual("[MyTable].[a] ASC, [MyTable].[b] DESC", p2.ParseOrderByClause("a ASC, b DESC", "a").Expression);
-        }
 
         [TestMethod("Parser.NullInWhereClause")]
         public void NullInWhereClause()
@@ -137,17 +104,27 @@ namespace Searchlight.Tests.Parsing
         [TestMethod("Parser.OnlyConjunctions")]
         public void OnlyConjunctions()
         {
-            //string s;
+            // Silly example
+            Assert.ThrowsException<TrailingConjunctionException>(() =>
+            {
+                var clauses = _source.ParseFilter("AND ( ) OR ");
+            });
 
-            //// Silly example
-            //Assert.ThrowsException<TrailingConjunctionException>(() => s = _parser.ParseWhereClause("AND ( ) OR ").ValidatedFilter);
+            // Realistic example of a forgetful customer
+            Assert.ThrowsException<TrailingConjunctionException>(() => {
+                _source.ParseFilter("a = b OR ");
+            });
 
-            //// Realistic example of a forgetful customer
-            //Assert.ThrowsException<TrailingConjunctionException>(() => s = _parser.ParseWhereClause("a = b OR ").ValidatedFilter);
-
-            //// Realistic example of a quirky but valid customer request
-            //s = _parser.ParseWhereClause("(a = 'test' OR b = 1)").ValidatedFilter;
-            //Assert.AreEqual("(a = @p1 OR b = @p2)", s);
+            // Realistic example of a quirky but valid customer request
+            var clauses = _source.ParseFilter("(a = 'test' OR b = 1)");
+            Assert.IsTrue(clauses[0] is CompoundClause);
+            Assert.AreEqual(clauses.Count, 1);
+            var cc = clauses[0] as CompoundClause;
+            Assert.AreEqual(cc.Children.Count, 2);
+            Assert.IsTrue(cc.Children[0] is CriteriaClause);
+            Assert.AreEqual(cc.Children[0].Conjunction, ConjunctionType.OR);
+            Assert.IsTrue(cc.Children[1] is CriteriaClause);
+            Assert.AreEqual(cc.Children[1].Conjunction, ConjunctionType.NONE);
         }
 
         [TestMethod("Parser.AllQueryExpressions")]
