@@ -13,7 +13,8 @@ namespace Searchlight.Caching
         /// </summary>
         public static void ResetAllCaches()
         {
-            if (ResetAllCachesEvent != null) {
+            if (ResetAllCachesEvent != null)
+            {
                 ResetAllCachesEvent(null, EventArgs.Empty);
             }
         }

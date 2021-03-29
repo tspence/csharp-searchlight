@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Dapper;
+using Searchlight.Query;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Dapper;
-using Searchlight.Query;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Searchlight.Nesting
 {

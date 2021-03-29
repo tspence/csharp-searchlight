@@ -1,6 +1,6 @@
+using Searchlight.Parsing;
 using System;
 using System.Text;
-using Searchlight.Parsing;
 
 namespace Searchlight.Configuration.Default
 {
@@ -19,7 +19,8 @@ namespace Searchlight.Configuration.Default
             StringBuilder tablePrefixBuilder = new StringBuilder(tableName);
 
             // surround the tablenameprefix with the appropriate characters by database type
-            switch (databaseType) {
+            switch (databaseType)
+            {
                 case DataSourceType.SqlServer:
                     tablePrefixBuilder.Replace(".", "].[");
                     tablePrefixBuilder.Insert(0, "[");

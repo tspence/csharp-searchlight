@@ -1,11 +1,11 @@
 ﻿using Dapper;
+using Searchlight.Configuration.Default;
+using Searchlight.Nesting;
+using Searchlight.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Searchlight.Configuration.Default;
-using Searchlight.Nesting;
-using Searchlight.Parsing;
 
 namespace Searchlight.Query
 {

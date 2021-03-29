@@ -75,7 +75,8 @@ namespace Searchlight.Caching
         {
             ITEM item;
             bool success = TryGet(key, out item);
-            if (!success) {
+            if (!success)
+            {
                 throw new KeyNotFoundException();
             }
             return item;
@@ -96,12 +97,16 @@ namespace Searchlight.Caching
             var maximum_cache_age = DateTime.UtcNow.Subtract(_cacheDuration);
 
             // Did we find an object successfully, and is it recent enough?
-            if (found && cached_obj.CacheDate < maximum_cache_age) {
+            if (found && cached_obj.CacheDate < maximum_cache_age)
+            {
                 item = cached_obj.CachedObject;
                 result = true;
-            } else {
+            }
+            else
+            {
                 var success = TryFetchItem(key, out item);
-                if (success) {
+                if (success)
+                {
                     Set(key, item, DateTime.UtcNow);
                     result = true;
                 }

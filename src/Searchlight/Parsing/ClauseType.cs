@@ -1,4 +1,5 @@
-﻿namespace Searchlight.Parsing
+﻿
+namespace Searchlight.Parsing
 {
     public enum ClauseType
     {

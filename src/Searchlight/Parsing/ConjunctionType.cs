@@ -1,4 +1,5 @@
-﻿namespace Searchlight.Parsing
+﻿
+namespace Searchlight.Parsing
 {
     /// <summary>
     /// Defines the type of conjunction between two clauses

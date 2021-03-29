@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.DataSource;
 using Searchlight.Parsing;
 using Searchlight.Query;
@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Searchlight.Tests.Queries
 {
-    [TestFixture]
+    [TestClass]
     public class QueryTests
     {
         public class EmployeeObj
@@ -34,7 +34,7 @@ namespace Searchlight.Tests.Queries
             return list;
         }
 
-        [Test]
+        [TestMethod]
         public void QueryListCollection()
         {
             var list = GetTestList();
@@ -53,15 +53,16 @@ namespace Searchlight.Tests.Queries
 
             // Execute the query and ensure that each result matches
             var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.True(results.Count() == 3);
-            foreach (var e in results) {
-                Assert.True(e.id > 1);
-                Assert.True(e.paycheck <= 1000.0m);
+            Assert.IsTrue(results.Count() == 3);
+            foreach (var e in results)
+            {
+                Assert.IsTrue(e.id > 1);
+                Assert.IsTrue(e.paycheck <= 1000.0m);
             }
         }
 
 
-        [Test]
+        [TestMethod]
         public void NestedClauseQuery()
         {
             var list = GetTestList();
@@ -77,7 +78,7 @@ namespace Searchlight.Tests.Queries
 
             // Did we get a nested clause?
             var cc = query[1] as CompoundClause;
-            Assert.NotNull(cc);
+            Assert.IsNotNull(cc);
             Assert.AreEqual(2, cc.Children.Count);
             Assert.AreEqual("paycheck", ((CriteriaClause)cc.Children[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThan, ((CriteriaClause)cc.Children[0]).Operation);
@@ -88,14 +89,15 @@ namespace Searchlight.Tests.Queries
 
             // Execute the query and ensure that each result matches
             var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.True(results.Count() == 2);
-            foreach (var e in results) {
-                Assert.True(e.id > 1);
-                Assert.True(e.paycheck == 800.0m || e.paycheck == 1200.0m);
+            Assert.IsTrue(results.Count() == 2);
+            foreach (var e in results)
+            {
+                Assert.IsTrue(e.id > 1);
+                Assert.IsTrue(e.paycheck == 800.0m || e.paycheck == 1200.0m);
             }
         }
 
-        [Test]
+        [TestMethod]
         public void BetweenQuery()
         {
             var list = GetTestList();
@@ -111,14 +113,15 @@ namespace Searchlight.Tests.Queries
 
             // Execute the query and ensure that each result matches
             var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.True(results.Count() == 3);
-            foreach (var e in results) {
-                Assert.True(e.id > 1);
-                Assert.True(e.id < 5);
+            Assert.IsTrue(results.Count() == 3);
+            foreach (var e in results)
+            {
+                Assert.IsTrue(e.id > 1);
+                Assert.IsTrue(e.id < 5);
             }
         }
 
-        [Test]
+        [TestMethod]
         public void StartsWithQuery()
         {
             var list = GetTestList();
@@ -134,13 +137,14 @@ namespace Searchlight.Tests.Queries
 
             // Execute the query and ensure that each result matches
             var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.True(results.Count() == 1);
-            foreach (var e in results) {
-                Assert.True(e.name[0] == 'A');
+            Assert.IsTrue(results.Count() == 1);
+            foreach (var e in results)
+            {
+                Assert.IsTrue(e.name[0] == 'A');
             }
         }
 
-        [Test]
+        [TestMethod]
         public void EndsWithQuery()
         {
             var list = GetTestList();
@@ -156,14 +160,15 @@ namespace Searchlight.Tests.Queries
 
             // Execute the query and ensure that each result matches
             var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.True(results.Count() == 2);
-            foreach (var e in results) {
-                Assert.True(e.name.EndsWith("s"));
+            Assert.IsTrue(results.Count() == 2);
+            foreach (var e in results)
+            {
+                Assert.IsTrue(e.name.EndsWith("s"));
             }
         }
 
 
-        [Test]
+        [TestMethod]
         public void ContainsQuery()
         {
             var list = GetTestList();
@@ -179,9 +184,10 @@ namespace Searchlight.Tests.Queries
 
             // Execute the query and ensure that each result matches
             var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.True(results.Count() == 3);
-            foreach (var e in results) {
-                Assert.True(e.name.Contains("s"));
+            Assert.IsTrue(results.Count() == 3);
+            foreach (var e in results)
+            {
+                Assert.IsTrue(e.name.Contains("s"));
             }
         }
     }

@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.Exceptions;
 using Searchlight.Parsing;
 using Searchlight.Query;
-using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Searchlight.Tests.Parsing
 {
     public class TokenizerTests
     {
-        [Test(Description = "Tokenizer.NonterminatedString")]
-        [TestCase("WHERE field1 = 'value AND Id = 123")]
+        [DataTestMethod]
+        [DataRow("WHERE field1 = 'value AND Id = 123")]
         public void NonterminatedString(string filter)
         {
-            var ex = Assert.Throws<UnterminatedValueException>(() => Tokenizer.GenerateTokens(filter));
+            var ex = Assert.ThrowsException<UnterminatedValueException>(() => Tokenizer.GenerateTokens(filter));
             Assert.AreEqual(filter, ex.OriginalFilter);
         }
 
-        [Test(Description = "Tokenizer.CheckStandardFilters")]
+        [TestMethod("Tokenizer.CheckStandardFilters")]
         public void CheckStandardFilters()
         {
             // Parse a date time pattern
@@ -136,7 +136,7 @@ namespace Searchlight.Tests.Parsing
             Assert.AreEqual("Bob'", list[2]);
         }
 
-        [Test(Description = "Tokenizer.TokenizeOrderBy")]
+        [TestMethod("Tokenizer.TokenizeOrderBy")]
         public void TokenizeOrderBy()
         {
             //Assert.AreEqual(ToSortInfos(Asc("Column")), Tokenizer.TokenizeOrderBy("Column ASC"));
@@ -153,7 +153,7 @@ namespace Searchlight.Tests.Parsing
             //Assert.IsEmpty(Tokenizer.TokenizeOrderBy(""));
             //Assert.IsEmpty(Tokenizer.TokenizeOrderBy(null));
 
-            //var ex = Assert.Throws<ParserSyntaxException>(() => Tokenizer.TokenizeOrderBy("Column INV"));
+            //var ex = Assert.ThrowsException<ParserSyntaxException>(() => Tokenizer.TokenizeOrderBy("Column INV"));
             //Assert.AreEqual("INV", ex.BadToken);
         }
     }

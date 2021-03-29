@@ -1,4 +1,5 @@
-﻿namespace Searchlight.Exceptions
+﻿
+namespace Searchlight.Exceptions
 {
     /// <summary>
     /// Represents a failure in the SQL validation

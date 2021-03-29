@@ -1,4 +1,5 @@
-﻿namespace Searchlight.Exceptions
+﻿
+namespace Searchlight.Exceptions
 {
     /// <summary>
     /// User ended the filter with a conjunction that required additional elements after it

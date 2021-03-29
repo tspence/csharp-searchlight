@@ -15,7 +15,7 @@ namespace Searchlight.Parsing
         /// The "KEY" represents the value we allow the user to provide.
         /// The "VALUE" represents the actual string we will place in the SQL.
         /// </summary>
-        public static readonly Dictionary<string, OperationType> RECOGNIZED_QUERY_EXPRESSIONS = new Dictionary<string, OperationType> 
+        public static readonly Dictionary<string, OperationType> RECOGNIZED_QUERY_EXPRESSIONS = new Dictionary<string, OperationType>
         {
             // Basic SQL query expressions
             { "=",  OperationType.Equals  },

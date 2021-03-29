@@ -2,7 +2,7 @@
 
 namespace Searchlight.Caching
 {
-    public class ObjectCache<ITEM> 
+    public class ObjectCache<ITEM>
     {
         private ITEM _item;
         private DateTime _next_cache_time;
@@ -32,20 +32,26 @@ namespace Searchlight.Caching
         /// </summary>
         public void EnsureCache()
         {
-            if (_item == null || _next_cache_time < DateTime.UtcNow) {
-                lock (_cache_lock) {
-                    if (_item == null || _next_cache_time < DateTime.UtcNow) {
+            if (_item == null || _next_cache_time < DateTime.UtcNow)
+            {
+                lock (_cache_lock)
+                {
+                    if (_item == null || _next_cache_time < DateTime.UtcNow)
+                    {
 
                         // To avoid having multiple calls detect cache aging, next cache time is reset immediately; 
                         // We won't trigger again on age until RetrieveCacheSet finishes
                         _next_cache_time = DateTime.MaxValue;
 
                         // Two different paths - if the cache is empty, force it and do not return until the cache is loaded
-                        if (_item == null) {
+                        if (_item == null)
+                        {
                             RetrieveCacheSet();
 
-                        // Data exists, but it is stale.  Let's allow this function to return but begin the process of loading new data from the cache
-                        } else {
+                            // Data exists, but it is stale.  Let's allow this function to return but begin the process of loading new data from the cache
+                        }
+                        else
+                        {
                             System.Threading.Tasks.Task.Factory.StartNew(() => RetrieveCacheSet());
                         }
                     }
@@ -58,7 +64,8 @@ namespace Searchlight.Caching
         /// </summary>
         private void RetrieveCacheSet()
         {
-            try {
+            try
+            {
                 DateTime dt = DateTime.UtcNow;
 
                 // Reassign the object rather than modifying the previous cached list.
@@ -71,10 +78,12 @@ namespace Searchlight.Caching
                 // Track how many times we've hit this object
                 _num_times_fetched++;
 
-            // Ensure that if the re-fetch statement crashes we recognize what happened
-            //} catch (Exception ex) {
+                // Ensure that if the re-fetch statement crashes we recognize what happened
+                //} catch (Exception ex) {
                 //Log.Error("Exception while caching {1}: {2}", this.GetType().Name, ex.ToString());
-            } finally {
+            }
+            finally
+            {
                 _next_cache_time = DateTime.UtcNow.Add(this._cacheDuration);
             }
         }
@@ -107,7 +116,8 @@ namespace Searchlight.Caching
         public void ResetCache()
         {
             // Ensure that no other object is in the midst of working on this while we reset it
-            lock (_cache_lock) {
+            lock (_cache_lock)
+            {
                 _item = default(ITEM);
             }
         }

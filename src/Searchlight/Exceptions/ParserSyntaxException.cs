@@ -8,7 +8,7 @@ namespace Searchlight.Exceptions
     public class ParserSyntaxException : SearchlightException
     {
         public ParserSyntaxException(string badToken, IEnumerable<string> expectedTokens, string originalFilter)
-            : base (originalFilter)
+            : base(originalFilter)
         {
             BadToken = badToken;
             ExpectedTokens = expectedTokens;

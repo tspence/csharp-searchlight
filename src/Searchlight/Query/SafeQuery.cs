@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Searchlight.DataSource;
+using Searchlight.Parsing;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
-using Searchlight.DataSource;
-using Searchlight.Parsing;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Searchlight.Query
 {
@@ -55,19 +55,25 @@ namespace Searchlight.Query
         {
             ConjunctionType ct = ConjunctionType.NONE;
             Expression result = null;
-            foreach (var clause in query) {
+            foreach (var clause in query)
+            {
                 var clauseExpression = BuildOneExpression(select, clause, src);
 
                 // First clause starts a run
-                if (result == null) {
+                if (result == null)
+                {
                     result = clauseExpression;
 
-                // If the previous clause specified 'and'
-                } else if (ct == ConjunctionType.AND) {
+                    // If the previous clause specified 'and'
+                }
+                else if (ct == ConjunctionType.AND)
+                {
                     result = Expression.And(result, clauseExpression);
 
-                // If the previous clause specified 'or'
-                } else if (ct == ConjunctionType.OR) {
+                    // If the previous clause specified 'or'
+                }
+                else if (ct == ConjunctionType.OR)
+                {
                     result = Expression.Or(result, clauseExpression);
                 }
                 ct = clause.Conjunction;
@@ -88,12 +94,14 @@ namespace Searchlight.Query
         {
             // Check if this is a basic criteria clause
             var criteria = clause as CriteriaClause;
-            if (criteria != null) {
+            if (criteria != null)
+            {
 
                 // Obtain a parameter from this object
                 Expression field = Expression.Property(select, criteria.Column.FieldName);
                 Expression value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
-                switch (criteria.Operation) {
+                switch (criteria.Operation)
+                {
                     case OperationType.Equals:
                         return Expression.Equal(field, value);
                     case OperationType.GreaterThan:
@@ -121,7 +129,8 @@ namespace Searchlight.Query
 
             // Is this a between clause?
             var between = clause as BetweenClause;
-            if (between != null) {
+            if (between != null)
+            {
                 Expression field = Expression.Property(select, between.Column.FieldName);
                 Expression lowerValue = Expression.Constant(between.LowerValue, between.Column.FieldType);
                 Expression upperValue = Expression.Constant(between.UpperValue, between.Column.FieldType);
@@ -132,7 +141,8 @@ namespace Searchlight.Query
 
             // Check if this is a compound clause and build it nested
             var compound = clause as CompoundClause;
-            if (compound != null) {
+            if (compound != null)
+            {
                 return BuildExpression(select, compound.Children, src);
             }
 

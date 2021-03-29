@@ -1,7 +1,7 @@
-using System;
-using System.Reflection;
 using Searchlight.Annotations;
+using System;
 using System.Linq;
+using System.Reflection;
 
 namespace Searchlight.Configuration.Default
 {
@@ -24,20 +24,26 @@ namespace Searchlight.Configuration.Default
             : base()
         {
             // Find all properties on this type
-            foreach (var pi in modelType.GetProperties()) {
+            foreach (var pi in modelType.GetProperties())
+            {
 
                 // Member variables that are lists or arrays can't be transformed into SQL
-                if (pi.GetIndexParameters().Length == 0) {
+                if (pi.GetIndexParameters().Length == 0)
+                {
 
                     // Is there a "filterable" annotation on this property?
                     var filter = pi.GetCustomAttributes<Filterable>().FirstOrDefault();
-                    if (filter != null) {
+                    if (filter != null)
+                    {
 
                         // If this is a renaming column, add it appropriately
                         Type t = filter.FieldType ?? pi.PropertyType;
-                        if (String.IsNullOrWhiteSpace(filter.Rename)) {
+                        if (String.IsNullOrWhiteSpace(filter.Rename))
+                        {
                             WithColumn(pi.Name, t, filter.EnumType);
-                        } else {
+                        }
+                        else
+                        {
                             WithRenamingColumn(pi.Name, filter.Rename, t, filter.EnumType);
                         }
                     }

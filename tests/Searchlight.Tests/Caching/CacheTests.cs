@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.Caching;
 using System;
 using System.Collections.Generic;
@@ -24,13 +24,13 @@ namespace Searchlight.Tests.Caching
             }
         }
 
-        [Test(Description ="Cache.TriggerReload")]
+        [TestMethod("Cache.TriggerReload")]
         public void CacheTriggerReload()
         {
             // Verify object cache works
             SimpleCacheTest sct = new SimpleCacheTest();
             Assert.AreEqual("TEST", sct.Get());
-            Assert.True(sct.ReloadCount >= 1);
+            Assert.IsTrue(sct.ReloadCount >= 1);
 
             // Force a full reload
             CacheHelper.ResetAllCaches();
@@ -38,7 +38,8 @@ namespace Searchlight.Tests.Caching
             // Run a loop for 10 seconds
             DateTime start = DateTime.UtcNow;
             int secElapsed = 0;
-            while (true) {
+            while (true)
+            {
 
                 // Test the value once every 100 msec
                 Task.Delay(100);
@@ -46,7 +47,8 @@ namespace Searchlight.Tests.Caching
 
                 // Report results every 1 sec
                 var ts = DateTime.UtcNow - start;
-                if ((int)ts.TotalSeconds > secElapsed) {
+                if ((int)ts.TotalSeconds > secElapsed)
+                {
                     System.Diagnostics.Debug.WriteLine($"Test Results: {ts.TotalSeconds} sec elapsed, {sct.ReloadCount} reload count");
                     secElapsed = (int)ts.TotalSeconds;
 
@@ -56,15 +58,15 @@ namespace Searchlight.Tests.Caching
             }
 
             // We should have at least 9 reloads over 10 seconds
-            Assert.True(sct.ReloadCount >= 9);
+            Assert.IsTrue(sct.ReloadCount >= 9);
         }
 
-        [Test(Description = "Cache.Basics")]
+        [TestMethod("Cache.Basics")]
         public void CacheBasics()
         {
             // Construct a bad cache system and expect it to return null
             var oc = new ObjectCache<string>();
-            Assert.Throws<NotImplementedException>(() => { oc.Get(); });
+            Assert.ThrowsException<NotImplementedException>(() => { oc.Get(); });
         }
 
         private class DictionaryCacheTest : DictionaryCache<string, string>
@@ -84,13 +86,13 @@ namespace Searchlight.Tests.Caching
                 return dict;
             }
         }
-        [Test(Description = "Cache.Dictionary")]
+        [TestMethod("Cache.Dictionary")]
         public void CacheDictionary()
         {
             // Construct a bad cache system and expect it to return null
             var dict = new DictionaryCacheTest();
             Assert.AreEqual("TEST", dict.GetItem("test"));
-            Assert.Null(dict.GetItem("somethingelse"));
+            Assert.IsNull(dict.GetItem("somethingelse"));
         }
     }
 }

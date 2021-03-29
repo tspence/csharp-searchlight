@@ -16,10 +16,12 @@ namespace Searchlight.Configuration.Default
             : base()
         {
             // Find all properties on this type
-            foreach (var pi in entityType.GetProperties()) {
+            foreach (var pi in entityType.GetProperties())
+            {
 
                 // Member variables that are lists or arrays can't be transformed into SQL
-                if (pi.GetIndexParameters().Length == 0) {
+                if (pi.GetIndexParameters().Length == 0)
+                {
 
                     // Add to our dictionary
                     WithColumn(pi.Name, pi.PropertyType, null);

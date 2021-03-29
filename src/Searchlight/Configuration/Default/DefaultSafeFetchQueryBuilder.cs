@@ -1,3 +1,4 @@
+
 namespace Searchlight.Configuration.Default
 {
     public class DefaultSafeFetchQueryBuilder : ISafeFetchQueryBuilder

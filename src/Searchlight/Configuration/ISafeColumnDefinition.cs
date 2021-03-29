@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Searchlight.Parsing;
+using System.Collections.Generic;
 
 namespace Searchlight.Configuration
 {

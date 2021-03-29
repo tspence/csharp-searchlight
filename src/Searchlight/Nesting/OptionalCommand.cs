@@ -1,5 +1,5 @@
-﻿using Searchlight.Query;
-using Dapper;
+﻿using Dapper;
+using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,9 +28,12 @@ namespace Searchlight.Nesting
         public virtual bool IsNameMatch(string commandName)
         {
             // If this command matches our designators, this is a match and we are included
-            if (CommandNames != null) {
-                foreach (var cn in CommandNames) {
-                    if (String.Equals(commandName, cn, StringComparison.OrdinalIgnoreCase)) {
+            if (CommandNames != null)
+            {
+                foreach (var cn in CommandNames)
+                {
+                    if (String.Equals(commandName, cn, StringComparison.OrdinalIgnoreCase))
+                    {
                         IsIncluded = true;
                         return true;
                     }
@@ -49,7 +52,8 @@ namespace Searchlight.Nesting
         public virtual void ApplySql(StringBuilder sql, DynamicParameters dp)
         {
             // Behavior can be overridden in the derived class
-            if (!String.IsNullOrWhiteSpace(SqlStatement)) {
+            if (!String.IsNullOrWhiteSpace(SqlStatement))
+            {
                 sql.AppendLine(SqlStatement);
             }
         }

@@ -60,9 +60,12 @@ namespace Searchlight.Query
             if (singleFilter == null) return;
 
             // Okay, there's a value to provide, let's append it
-            if (String.IsNullOrWhiteSpace(Filter)) {
+            if (String.IsNullOrWhiteSpace(Filter))
+            {
                 Filter = singleFilter;
-            } else {
+            }
+            else
+            {
                 Filter = "(" + Filter + ") AND " + singleFilter;
             }
         }
