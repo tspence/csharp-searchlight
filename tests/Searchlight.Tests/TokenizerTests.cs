@@ -1,12 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.Exceptions;
 using Searchlight.Parsing;
-using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Searchlight.Tests.Parsing
+namespace Searchlight.Tests
 {
     [TestClass]
     public class TokenizerTests

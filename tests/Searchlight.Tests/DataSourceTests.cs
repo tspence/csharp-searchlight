@@ -6,14 +6,14 @@ using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 
-namespace Searchlight.Tests.Parsing
+namespace Searchlight.Tests
 {
     [TestClass]
-    public class SafeQueryParserTests
+    public class DataSourceTests
     {
         private SearchlightDataSource _source;
 
-        public SafeQueryParserTests()
+        public DataSourceTests()
         {
             _source = new SearchlightDataSource();
             _source.ColumnDefinitions = new CustomColumnDefinition()

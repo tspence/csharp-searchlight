@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Searchlight.Tests.Caching
+namespace Searchlight.Tests
 {
     [TestClass]
     public class CacheTests
@@ -25,7 +25,7 @@ namespace Searchlight.Tests.Caching
             }
         }
 
-        [TestMethod("Cache.TriggerReload")]
+        [TestMethod]
         public void CacheTriggerReload()
         {
             // Verify object cache works
@@ -62,7 +62,7 @@ namespace Searchlight.Tests.Caching
             Assert.IsTrue(sct.ReloadCount >= 9);
         }
 
-        [TestMethod("Cache.Basics")]
+        [TestMethod]
         public void CacheBasics()
         {
             // Construct a bad cache system and expect it to return null
@@ -87,7 +87,7 @@ namespace Searchlight.Tests.Caching
                 return dict;
             }
         }
-        [TestMethod("Cache.Dictionary")]
+        [TestMethod]
         public void CacheDictionary()
         {
             // Construct a bad cache system and expect it to return null

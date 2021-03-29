@@ -5,14 +5,11 @@ using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Threading.Tasks;
 
-namespace Searchlight.Tests.Queries
+namespace Searchlight.Tests
 {
     [TestClass]
-    public class QueryTests
+    public class ParserTests
     {
         public class EmployeeObj
         {
