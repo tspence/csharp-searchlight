@@ -68,7 +68,7 @@ namespace Searchlight.DataSource
         /// <param name="filter"></param>
         /// <param name="orderBy"></param>
         /// <returns></returns>
-        public QueryData Parse(string include, string filter, string orderBy)
+        public QueryData Parse(string filter, string include = null, string orderBy = null)
         {
             QueryData query = new QueryData();
             query.OriginalFilter = filter;
