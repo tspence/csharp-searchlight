@@ -1,45 +1,55 @@
-﻿using Dapper;
-using Searchlight.Configuration.Default;
-using Searchlight.Nesting;
-using Searchlight.Parsing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Dapper;
+using Searchlight.Configuration.Default;
 using Searchlight.DataSource;
 using Searchlight.Exceptions;
+using Searchlight.Nesting;
+using Searchlight.Parsing;
 using Searchlight.Query;
 
 namespace Searchlight.Executors
 {
-    public class SQLQueryBuilder {
+    public class SQLQueryBuilder
+    {
         private StringBuilder _sb = new StringBuilder();
-        public string whereClause { get {
-            return _sb.ToString();
-        }}
+        public string whereClause
+        {
+            get
+            {
+                return _sb.ToString();
+            }
+        }
         public Dictionary<string, object> parameters = new Dictionary<string, object>();
 
-        public string AddParameter(object p) {
+        public string AddParameter(object p)
+        {
             int num = parameters.Count + 1;
             var name = $"@p{num}";
             parameters.Add(name, p);
             return name;
         }
 
-        public void AppendString(string s) {
+        public void AppendString(string s)
+        {
             _sb.Append(s);
         }
     }
 
-    public static class SqlExecutor {
+    public static class SqlExecutor
+    {
 
         public static SQLQueryBuilder RenderSQL(this SearchlightDataSource source, QueryData query)
         {
             var sql = new SQLQueryBuilder();
-            foreach (var clause in query.Filter) {
+            foreach (var clause in query.Filter)
+            {
                 RenderClause(clause, sql);
             }
-            if (sql.parameters.Count > source.MaximumParameters) {
+            if (sql.parameters.Count > source.MaximumParameters)
+            {
                 throw new TooManyParametersException(source.MaximumParameters, query.OriginalFilter);
             }
             return sql;
@@ -47,53 +57,113 @@ namespace Searchlight.Executors
 
         public static void RenderClause(BaseClause clause, SQLQueryBuilder sql)
         {
-            if (clause is BetweenClause) {
+            if (clause is BetweenClause)
+            {
                 var bc = clause as BetweenClause;
                 sql.AppendString($"{bc.Column.DatabaseColumn} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}");
-            } else if (clause is CompoundClause) {
+            }
+            else if (clause is CompoundClause)
+            {
                 var cc = clause as CompoundClause;
                 sql.AppendString("(");
-                foreach (var child in cc.Children) {
-                    RenderClause(clause, sql);
+                foreach (var child in cc.Children)
+                {
+                    RenderClause(child, sql);
                 }
                 sql.AppendString(")");
-            } else if (clause is CriteriaClause) {
+            }
+            else if (clause is CriteriaClause)
+            {
                 var cc = clause as CriteriaClause;
-                sql.AppendString($"{cc.Column.DatabaseColumn} {cc.Operation} {sql.AddParameter(cc.Value)}");
-
-            } else if (clause is InClause) {
+                switch (cc.Operation)
+                {
+                    case OperationType.Equals: 
+                        sql.AppendString($"{cc.Column.DatabaseColumn} = {sql.AddParameter(cc.Value)}");
+                        break;
+                    case OperationType.GreaterThan: 
+                        sql.AppendString($"{cc.Column.DatabaseColumn} > {sql.AddParameter(cc.Value)}");
+                        break;
+                    case OperationType.GreaterThanOrEqual: 
+                        sql.AppendString($"{cc.Column.DatabaseColumn} >= {sql.AddParameter(cc.Value)}");
+                        break;
+                    case OperationType.LessThan: 
+                        sql.AppendString($"{cc.Column.DatabaseColumn} < {sql.AddParameter(cc.Value)}");
+                        break;
+                    case OperationType.LessThanOrEqual: 
+                        sql.AppendString($"{cc.Column.DatabaseColumn} <= {sql.AddParameter(cc.Value)}");
+                        break;
+                    case OperationType.NotEqual: 
+                        sql.AppendString($"{cc.Column.DatabaseColumn} <> {sql.AddParameter(cc.Value)}");
+                        break;
+                    case OperationType.Like: 
+                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter(cc.Value)}");
+                        break;
+                    case OperationType.Contains: 
+                        if (!(cc.Value is string)) {
+                            throw new Exception("Value was not a string type");
+                        }
+                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter("%" + cc.Value + "%")}");
+                        break;
+                    case OperationType.StartsWith: 
+                        if (!(cc.Value is string)) {
+                            throw new Exception("Value was not a string type");
+                        }
+                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter(cc.Value + "%")}");
+                        break;
+                    case OperationType.EndsWith: 
+                        if (!(cc.Value is string)) {
+                            throw new Exception("Value was not a string type");
+                        }
+                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter("%" + cc.Value)}");
+                        break;
+                    default: 
+                        throw new Exception("Incorrect clause type");
+                }
+            }
+            else if (clause is InClause)
+            {
                 var ic = clause as InClause;
                 sql.AppendString(ic.Column.DatabaseColumn);
                 sql.AppendString(" IN (");
-                for (int i = 0; i < ic.Values.Count; i++) {
-                    if (i > 0) {
+                for (int i = 0; i < ic.Values.Count; i++)
+                {
+                    if (i > 0)
+                    {
                         sql.AppendString(", ");
                     }
                     sql.AppendString(sql.AddParameter(ic.Values[i]));
                 }
                 sql.AppendString(")");
 
-            } else if (clause is IsNullClause) {
+            }
+            else if (clause is IsNullClause)
+            {
                 var inc = clause as IsNullClause;
                 sql.AppendString(inc.Column.DatabaseColumn);
-                if (inc.Negated) {
+                if (inc.Negated)
+                {
                     sql.AppendString(" IS NOT NULL");
-                } else {
+                }
+                else
+                {
                     sql.AppendString(" IS NULL");
                 }
 
-            } else {
+            }
+            else
+            {
                 throw new Exception("Unrecognized clause type.");
             }
 
             // If there's another clause after this, add it
-            switch (clause.Conjunction) {
+            switch (clause.Conjunction)
+            {
                 case ConjunctionType.AND: sql.AppendString(" AND "); break;
                 case ConjunctionType.OR: sql.AppendString(" OR "); break;
             }
         }
     }
-    
+
     /*
     /// <summary>
     /// Database helper

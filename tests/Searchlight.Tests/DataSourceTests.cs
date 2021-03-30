@@ -82,24 +82,6 @@ namespace Searchlight.Tests
         }
 
         [TestMethod]
-        public void FilterParseTest()
-        {
-            //var actual = SafeQueryParser.ParseFilter("a = 'booya' AND b != 1");
-            //Assert.AreEqual("a", actual[0].
-            //Assert.AreEqual("a = @p1 AND b <> @p2", actual.ValidatedFilter);
-            //Assert.AreEqual(2, actual.SqlParameters.ParameterNames.Count());
-        }
-
-
-        [TestMethod]
-        public void NullInWhereClause()
-        {
-            //Assert.AreEqual("a IS NULL", _parser.ParseWhereClause("a is null").ValidatedFilter);
-            //Assert.AreEqual("a IS NOT NULL", _parser.ParseWhereClause("a is not null").ValidatedFilter);
-            //Assert.AreEqual("(a IS NOT NULL) OR (a IS NULL)", _parser.ParseWhereClause("(a is not null) or (a is null)").ValidatedFilter);
-        }
-
-        [TestMethod]
         public void OnlyConjunctions()
         {
             // Silly example
@@ -123,75 +105,6 @@ namespace Searchlight.Tests
             Assert.AreEqual(cc.Children[0].Conjunction, ConjunctionType.OR);
             Assert.IsTrue(cc.Children[1] is CriteriaClause);
             Assert.AreEqual(cc.Children[1].Conjunction, ConjunctionType.NONE);
-        }
-
-        [TestMethod]
-        public void AllQueryExpressions()
-        {
-            //string s;
-
-            //// Try all basic query expression types - should succeed
-            //Assert.AreEqual("a = @p1", _parser.ParseWhereClause("a = 'test'").ValidatedFilter);
-            //Assert.AreEqual("a = @p1", _parser.ParseWhereClause("a eq 'test'").ValidatedFilter);
-            //Assert.AreEqual("a > @p1", _parser.ParseWhereClause("a > 'test'").ValidatedFilter);
-            //Assert.AreEqual("a > @p1", _parser.ParseWhereClause("a gt 'test'").ValidatedFilter);
-            //Assert.AreEqual("a >= @p1", _parser.ParseWhereClause("a >= 'test'").ValidatedFilter);
-            //Assert.AreEqual("a >= @p1", _parser.ParseWhereClause("a ge 'test'").ValidatedFilter);
-            //Assert.AreEqual("a <> @p1", _parser.ParseWhereClause("a <> 'test'").ValidatedFilter);
-            //Assert.AreEqual("a <> @p1", _parser.ParseWhereClause("a != 'test'").ValidatedFilter);
-            //Assert.AreEqual("a <> @p1", _parser.ParseWhereClause("a ne 'test'").ValidatedFilter);
-            //Assert.AreEqual("a < @p1", _parser.ParseWhereClause("a < 'test'").ValidatedFilter);
-            //Assert.AreEqual("a < @p1", _parser.ParseWhereClause("a lt 'test'").ValidatedFilter);
-            //Assert.AreEqual("a <= @p1", _parser.ParseWhereClause("a <= 'test'").ValidatedFilter);
-            //Assert.AreEqual("a <= @p1", _parser.ParseWhereClause("a le 'test'").ValidatedFilter);
-
-            //// Try slightly more complex query expression types - should succeed
-            //Assert.AreEqual("a BETWEEN @p1 AND @p2", _parser.ParseWhereClause("a between 'test1' and 'test9'").ValidatedFilter);
-            //Assert.AreEqual("a IN (@p1, @p2)", _parser.ParseWhereClause("a in ('test', 'test2')").ValidatedFilter);
-            //Assert.AreEqual("a LIKE @p1", _parser.ParseWhereClause("a like 'test%'").ValidatedFilter);
-            //Assert.AreEqual("a IS NULL", _parser.ParseWhereClause("a is null").ValidatedFilter);
-            //Assert.AreEqual("a IS NOT NULL", _parser.ParseWhereClause("a is not null").ValidatedFilter);
-
-            //// Now try some that fail
-            //Assert.ThrowsException<ParserSyntaxException>(() => s = _parser.ParseWhereClause("a REALLYSHOULDBE 'test'").ValidatedFilter);
-            //Assert.ThrowsException<ParserSyntaxException>(() => s = _parser.ParseWhereClause("a !<= 'test'").ValidatedFilter);
-        }
-
-        [TestMethod]
-        public void TypeComparisons()
-        {
-            //// Test the Int64
-            //var w = _parser.ParseWhereClause("collong eq 123456789123456");
-            //Assert.AreEqual("colLong = @p1", w.ValidatedFilter);
-            //Assert.AreEqual(123456789123456, w.SqlParameters.Get<long>("p1"));
-
-            //// Test the guid
-            //w = _parser.ParseWhereClause(String.Format("colguid eq '{0}'", Guid.Empty.ToString()));
-            //Assert.AreEqual("colGuid = @p1", w.ValidatedFilter);
-            //Assert.AreEqual(Guid.Empty, w.SqlParameters.Get<Guid>("p1"));
-
-            //// Test the nullable guid
-            //w = _parser.ParseWhereClause(String.Format("colNullableGuid is null or colNullableGuid = '{0}'", Guid.Empty.ToString()));
-            //Assert.AreEqual("colNullableGuid IS NULL OR colNullableGuid = @p1", w.ValidatedFilter);
-            //Assert.AreEqual(Guid.Empty, w.SqlParameters.Get<Guid>("p1"));
-
-            //// Test the ULONG and nullable ULONG
-            //w = _parser.ParseWhereClause("colULong > 12345 or colNullableULong = 6789456");
-            //Assert.AreEqual("colULong > @p1 OR colNullableULong = @p2", w.ValidatedFilter);
-            //Assert.AreEqual(12345UL, w.SqlParameters.Get<UInt64>("p1"));
-            //Assert.AreEqual(6789456UL, w.SqlParameters.Get<Nullable<UInt64>>("p2"));
-
-            //// Test the ULONG and nullable ULONG when compared to a boolean - necessary for redshift
-            //w = _parser.ParseWhereClause("colULong = true OR colULong = false");
-            //Assert.AreEqual("colULong = @p1 OR colULong = @p2", w.ValidatedFilter);
-            //Assert.AreEqual(1UL, w.SqlParameters.Get<UInt64>("p1"));
-            //Assert.AreEqual(0UL, w.SqlParameters.Get<UInt64>("p2"));
-
-            //// Nullable variant
-            //w = _parser.ParseWhereClause("colNullableULong = true OR colNullableULong = false");
-            //Assert.AreEqual("colNullableULong = @p1 OR colNullableULong = @p2", w.ValidatedFilter);
-            //Assert.AreEqual(1UL, w.SqlParameters.Get<UInt64>("p1"));
-            //Assert.AreEqual(0UL, w.SqlParameters.Get<UInt64>("p2"));
         }
     }
 }
