@@ -7,9 +7,8 @@ using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace Searchlight.DataSource
+namespace Searchlight
 {
     /// <summary>
     /// Represents a data source used to validate queries
@@ -20,12 +19,6 @@ namespace Searchlight.DataSource
         /// Definitions of columns
         /// </summary>
         public ISafeColumnDefinition ColumnDefinitions { get; set; }
-
-        /// <summary>
-        /// Formatting for the output
-        /// </summary>
-        public IColumnify Columnifier { get; set; }
-        public DataSourceType DatabaseType { get; set; }
 
         /// <summary>
         /// The field name of the default sort field, if none are specified.
@@ -48,15 +41,12 @@ namespace Searchlight.DataSource
         /// Create a searchlight data source based on an in-memory collection
         /// </summary>
         /// <typeparam name="T">The underlying data type being queried</typeparam>
-        /// <param name="source">The collection to be used as the source</param>
         /// <param name="queryAllProperties">If true, all properties on the underlying data type will be queryable</param>
         /// <returns></returns>
-        public static SearchlightDataSource FromCollection<T>(IEnumerable<T> source, bool queryAllProperties = true)
+        public static SearchlightDataSource From<T>(bool queryAllProperties = true)
         {
             SearchlightDataSource src = new SearchlightDataSource();
             src.ColumnDefinitions = new EntityColumnDefinitions(typeof(T));
-            src.Columnifier = new NoColumnify();
-            src.DatabaseType = DataSourceType.GenericCollection;
             return src;
         }
 

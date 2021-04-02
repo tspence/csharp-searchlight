@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using Dapper;
-using Searchlight.Configuration.Default;
-using Searchlight.DataSource;
 using Searchlight.Exceptions;
-using Searchlight.Nesting;
 using Searchlight.Parsing;
 using Searchlight.Query;
 

@@ -1,7 +1,7 @@
-using Searchlight.Annotations;
 using System;
 using System.Linq;
 using System.Reflection;
+using Searchlight;
 
 namespace Searchlight.Configuration.Default
 {
@@ -32,19 +32,19 @@ namespace Searchlight.Configuration.Default
                 {
 
                     // Is there a "filterable" annotation on this property?
-                    var filter = pi.GetCustomAttributes<Filterable>().FirstOrDefault();
+                    var filter = pi.GetCustomAttributes<SearchlightField>().FirstOrDefault();
                     if (filter != null)
                     {
 
                         // If this is a renaming column, add it appropriately
                         Type t = filter.FieldType ?? pi.PropertyType;
-                        if (String.IsNullOrWhiteSpace(filter.Rename))
+                        if (String.IsNullOrWhiteSpace(filter.OriginalName))
                         {
                             WithColumn(pi.Name, t, filter.EnumType);
                         }
                         else
                         {
-                            WithRenamingColumn(pi.Name, filter.Rename, t, filter.EnumType);
+                            WithRenamingColumn(pi.Name, filter.OriginalName, t, filter.EnumType);
                         }
                     }
                 }
