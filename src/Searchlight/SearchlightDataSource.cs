@@ -259,7 +259,7 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new InvalidToken(upperToken, new string[] { "OR", "AND" }, filter);
+                    throw new InvalidToken(upperToken, new string[] { "AND", "OR"}, filter);
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error

@@ -48,10 +48,11 @@ namespace Searchlight.Tests
             // if you have too many closing parens, it would expect AND or OR instead of another close paren
             var ex3 = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter("(((a = 'hi'))))))))))))"));
             Assert.AreEqual(2, ex3.ExpectedTokens.Length);
-            Assert.AreEqual(new string[] { "AND", "OR" }, ex3.ExpectedTokens);
+            Assert.AreEqual("AND", ex3.ExpectedTokens[0]);
+            Assert.AreEqual("OR", ex3.ExpectedTokens[1]);
 
             // If you forget to supply any actual criteria, it reads the closing paren and thinks its a field name
-            var ex4 = Assert.ThrowsException<FieldNotFound>(() => _source.ParseFilter("()"));
+            var ex4 = Assert.ThrowsException<FieldNotFound>(() => _source.ParseFilter("(garbagefieldname eq 'nothing')"));
             Assert.AreEqual(7, ex4.KnownFields.Length);
         }
 
