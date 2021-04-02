@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Searchlight.Annotations
+namespace Searchlight
 {
     /// <summary>
     /// Represents a field that is permitted to be used as a filter or sort-by column in the SafeParser

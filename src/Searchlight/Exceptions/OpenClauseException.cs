@@ -1,5 +1,5 @@
 ﻿
-namespace Searchlight.Exceptions
+namespace Searchlight
 {
     /// <summary>
     /// Indicates the query was unbalanced - there were clauses that were opened but not closed

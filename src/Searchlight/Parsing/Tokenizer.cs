@@ -1,4 +1,4 @@
-﻿using Searchlight.Exceptions;
+﻿using Searchlight;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;

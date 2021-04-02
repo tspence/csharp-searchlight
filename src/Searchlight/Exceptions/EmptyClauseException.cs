@@ -1,5 +1,5 @@
 ﻿
-namespace Searchlight.Exceptions
+namespace Searchlight
 {
     /// <summary>
     /// Filter contained no usable filter criteria

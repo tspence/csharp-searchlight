@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.Configuration.Default;
-using Searchlight.DataSource;
-using Searchlight.Exceptions;
+using Searchlight;
 using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
@@ -24,8 +23,6 @@ namespace Searchlight.Tests
                 .WithColumn("colULong", typeof(UInt64), null)
                 .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
                 .WithColumn("colGuid", typeof(Guid), null);
-            _source.Columnifier = new NoColumnify();
-            _source.DatabaseType = DataSourceType.Mysql;
         }
 
         [TestMethod]

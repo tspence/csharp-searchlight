@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight.DataSource;
+using Searchlight;
 using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
@@ -9,8 +9,10 @@ using System.Linq;
 namespace Searchlight.Tests
 {
     [TestClass]
-    public class ParserTests
+    public class LinqExecutorTests
     {
+        private SearchlightDataSource src;
+
         public class EmployeeObj
         {
             public string name { get; set; }
@@ -31,13 +33,17 @@ namespace Searchlight.Tests
             return list;
         }
 
+        public LinqExecutorTests()
+        {
+            this.src = SearchlightDataSource.Create(typeof(EmployeeObj), ModelFieldMode.All);
+        }
+
         [TestMethod]
         public void QueryListCollection()
         {
             var list = GetTestList();
 
             // Construct a simple query and check that it comes out correct
-            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
             var query = src.ParseFilter("id gt 1 and paycheck le 1000");
             Assert.AreEqual(2, query.Count());
             Assert.AreEqual(ConjunctionType.AND, query[0].Conjunction);
@@ -49,7 +55,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause)query[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
             Assert.IsTrue(results.Count() == 3);
             foreach (var e in results)
             {
@@ -65,7 +71,6 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Construct a simple query and check that it comes out correct
-            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
             var query = src.ParseFilter("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
             Assert.AreEqual(2, query.Count());
             Assert.AreEqual(ConjunctionType.AND, query[0].Conjunction);
@@ -85,7 +90,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause)cc.Children[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
             Assert.IsTrue(results.Count() == 2);
             foreach (var e in results)
             {
@@ -100,7 +105,6 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
             var query = src.ParseFilter("id between 2 and 4");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
@@ -109,7 +113,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(4, ((BetweenClause)query[0]).UpperValue);
 
             // Execute the query and ensure that each result matches
-            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
             Assert.IsTrue(results.Count() == 3);
             foreach (var e in results)
             {
@@ -124,7 +128,6 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
             var query = src.ParseFilter("name startswith 'A'");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
@@ -133,7 +136,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("A", ((CriteriaClause)query[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
             Assert.IsTrue(results.Count() == 1);
             foreach (var e in results)
             {
@@ -147,7 +150,6 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
             var query = src.ParseFilter("name endswith 's'");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
@@ -156,7 +158,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("s", ((CriteriaClause)query[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
             Assert.IsTrue(results.Count() == 2);
             foreach (var e in results)
             {
@@ -171,7 +173,6 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            SearchlightDataSource src = SearchlightDataSource.FromCollection(list);
             var query = src.ParseFilter("name contains 's'");
             Assert.AreEqual(1, query.Count());
             Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
@@ -180,7 +181,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("s", ((CriteriaClause)query[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = SafeQuery.QueryCollection<EmployeeObj>(src, query, list);
+            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
             Assert.IsTrue(results.Count() == 3);
             foreach (var e in results)
             {

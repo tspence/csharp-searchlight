@@ -1,6 +1,6 @@
 ﻿using Searchlight.Configuration;
 using Searchlight.Configuration.Default;
-using Searchlight.Exceptions;
+using Searchlight;
 using Searchlight.Nesting;
 using Searchlight.Parsing;
 using Searchlight.Query;
@@ -41,12 +41,17 @@ namespace Searchlight
         /// Create a searchlight data source based on an in-memory collection
         /// </summary>
         /// <typeparam name="T">The underlying data type being queried</typeparam>
-        /// <param name="queryAllProperties">If true, all properties on the underlying data type will be queryable</param>
+        /// <param name="modelType">The type of the model for this data source.</param>
+        /// <param name="onlySearchlightFields">If true, only add columns for fields with a SearchlightField annotation.</param>
         /// <returns></returns>
-        public static SearchlightDataSource From<T>(bool queryAllProperties = true)
+        public static SearchlightDataSource Create(Type modelType, ModelFieldMode mode)
         {
             SearchlightDataSource src = new SearchlightDataSource();
-            src.ColumnDefinitions = new EntityColumnDefinitions(typeof(T));
+            if (mode == ModelFieldMode.SearchlightOnly) {
+                src.ColumnDefinitions = new ModelColumnDefinitions(modelType);
+            } else {
+                src.ColumnDefinitions = new EntityColumnDefinitions(modelType);
+            }
             return src;
         }
 

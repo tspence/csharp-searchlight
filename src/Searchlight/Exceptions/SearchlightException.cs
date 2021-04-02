@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Searchlight.Exceptions
+namespace Searchlight
 {
     /// <summary>
     /// Represents a failure in the SQL validation

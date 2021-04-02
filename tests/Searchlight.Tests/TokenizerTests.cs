@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight.Exceptions;
+using Searchlight;
 using Searchlight.Parsing;
 using System;
 using System.Collections.Generic;
