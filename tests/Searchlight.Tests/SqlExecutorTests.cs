@@ -100,9 +100,15 @@ namespace Searchlight.Tests
 
             // Error in conjunctions between clauses
             originalFilter = "a = 'hi' BUTIREALLYTHINKTHAT b = 0";
-            var ex2 = Assert.ThrowsException<ExpectedConjunction>(() => _source.ParseFilter(originalFilter));
+            var ex2 = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual(originalFilter, ex2.OriginalFilter);
-            Assert.AreEqual("BUTIREALLYTHINKTHAT", ex2.FoundToken);
+            Assert.AreEqual("BUTIREALLYTHINKTHAT", ex2.BadToken);
+            Assert.AreEqual(5, ex2.ExpectedTokens.Length);
+            Assert.AreEqual("(", ex2.ExpectedTokens[0]);
+            Assert.AreEqual(")", ex2.ExpectedTokens[1]);
+            Assert.AreEqual("AND", ex2.ExpectedTokens[2]);
+            Assert.AreEqual("OR", ex2.ExpectedTokens[3]);
+            Assert.AreEqual("NOT", ex2.ExpectedTokens[4]);
         }
 
 

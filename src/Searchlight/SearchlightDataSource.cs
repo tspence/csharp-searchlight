@@ -245,7 +245,7 @@ namespace Searchlight
                 string conjunction;
                 if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out conjunction))
                 {
-                    throw new ExpectedConjunction(token, filter);
+                    throw new InvalidToken(upperToken, StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), filter);
                 }
 
                 // Store the value of the conjunction
@@ -259,7 +259,7 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new InvalidToken(upperToken, new string[] { "AND", "OR"}, filter);
+                    throw new InvalidToken(upperToken, new string[] { "AND", "OR" }, filter);
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
