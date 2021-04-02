@@ -6,13 +6,10 @@ using Searchlight;
 namespace Searchlight.Configuration.Default
 {
     /// <summary>
-    /// Use this class if your API presents a different list of columns to the API caller
-    /// than you store in the data source.
-    /// 
-    /// For each column on your API model that is searchable, add the "Filterable" annotation
-    /// and specify the underlying column name in the data source.
+    /// This class requires that you must define a SearchlightField annotation on every field that is queryable
+    /// for your model.
     /// </summary>
-    public class ModelColumnDefinitions : CustomColumnDefinition
+    public class StrictColumnDefinitions : CustomColumnDefinition
     {
         /// <summary>
         /// Constructs a list of column definitions based on an API model rather than a database entity.
@@ -20,7 +17,7 @@ namespace Searchlight.Configuration.Default
         /// Supports column renaming from the model's variable name to the database column.
         /// </summary>
         /// <param name="modelType"></param>
-        public ModelColumnDefinitions(Type modelType)
+        public StrictColumnDefinitions(Type modelType)
             : base()
         {
             // Find all properties on this type
@@ -38,14 +35,7 @@ namespace Searchlight.Configuration.Default
 
                         // If this is a renaming column, add it appropriately
                         Type t = filter.FieldType ?? pi.PropertyType;
-                        if (String.IsNullOrWhiteSpace(filter.OriginalName))
-                        {
-                            WithColumn(pi.Name, t, filter.EnumType);
-                        }
-                        else
-                        {
-                            WithRenamingColumn(pi.Name, filter.OriginalName, t, filter.EnumType);
-                        }
+                        WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name, filter.Aliases ?? new string[] { }, t, filter.EnumType);
                     }
                 }
             }

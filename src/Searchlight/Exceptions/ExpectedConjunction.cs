@@ -8,9 +8,9 @@ namespace Searchlight
     /// <summary>
     /// A conjunction (AND or OR) was expected, but something else was found
     /// </summary>
-    public class ExpectedConjunctionException : SearchlightException
+    public class ExpectedConjunction : SearchlightException
     {
-        public ExpectedConjunctionException(string found, string originalFilter)
+        public ExpectedConjunction(string found, string originalFilter)
             : base(originalFilter)
         {
             FoundToken = found;

@@ -17,17 +17,23 @@ namespace Searchlight
         /// <param name="rename"></param>
         /// <param name="fieldType"></param>
         /// <param name="enumType">If the field is an enum, the field should be parsed as an enum using (enumType) and converted to (fieldtype) before querying</param>
-        public SearchlightField(string originalName = null, Type fieldType = null, Type enumType = null)
+        public SearchlightField(string originalName = null, string[] aliases = null, Type fieldType = null, Type enumType = null)
         {
             OriginalName = originalName;
             FieldType = fieldType;
             EnumType = enumType;
+            Aliases = aliases ?? new string[] { };
         }
 
         /// <summary>
         /// If this column is named differently in the API, this is the official SQL name of the column
         /// </summary>
         public string OriginalName { get; set; }
+
+        /// <summary>
+        /// If this field can potentially be known by other names, list them here
+        /// </summary>
+        public string[] Aliases { get; set; }
 
         /// <summary>
         /// If this field is a different type in the database, this is the actual field type in the DB

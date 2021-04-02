@@ -4,9 +4,9 @@ namespace Searchlight
     /// <summary>
     /// Represents a failure in the SQL validation
     /// </summary>
-    public class FieldValueException : SearchlightException
+    public class FieldTypeMismatch : SearchlightException
     {
-        public FieldValueException(string fieldName, string fieldType, string fieldValue, string originalFilter)
+        public FieldTypeMismatch(string fieldName, string fieldType, string fieldValue, string originalFilter)
             : base(originalFilter)
         {
             FieldName = fieldName;

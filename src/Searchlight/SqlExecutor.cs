@@ -17,7 +17,7 @@ namespace Searchlight
             }
             if (sql.parameters.Count > source.MaximumParameters)
             {
-                throw new TooManyParametersException(source.MaximumParameters, query.OriginalFilter);
+                throw new TooManyParameters(source.MaximumParameters, query.OriginalFilter);
             }
             return sql;
         }
@@ -27,7 +27,7 @@ namespace Searchlight
             if (clause is BetweenClause)
             {
                 var bc = clause as BetweenClause;
-                sql.AppendString($"{bc.Column.DatabaseColumn} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}");
+                sql.AppendString($"{bc.Column.OriginalName} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}");
             }
             else if (clause is CompoundClause)
             {
@@ -45,43 +45,43 @@ namespace Searchlight
                 switch (cc.Operation)
                 {
                     case OperationType.Equals: 
-                        sql.AppendString($"{cc.Column.DatabaseColumn} = {sql.AddParameter(cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} = {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.GreaterThan: 
-                        sql.AppendString($"{cc.Column.DatabaseColumn} > {sql.AddParameter(cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} > {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.GreaterThanOrEqual: 
-                        sql.AppendString($"{cc.Column.DatabaseColumn} >= {sql.AddParameter(cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} >= {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.LessThan: 
-                        sql.AppendString($"{cc.Column.DatabaseColumn} < {sql.AddParameter(cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} < {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.LessThanOrEqual: 
-                        sql.AppendString($"{cc.Column.DatabaseColumn} <= {sql.AddParameter(cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} <= {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.NotEqual: 
-                        sql.AppendString($"{cc.Column.DatabaseColumn} <> {sql.AddParameter(cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.Like: 
-                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter(cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.Contains: 
                         if (!(cc.Value is string)) {
                             throw new Exception("Value was not a string type");
                         }
-                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter("%" + cc.Value + "%")}");
+                        sql.AppendString($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}");
                         break;
                     case OperationType.StartsWith: 
                         if (!(cc.Value is string)) {
                             throw new Exception("Value was not a string type");
                         }
-                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter(cc.Value + "%")}");
+                        sql.AppendString($"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}");
                         break;
                     case OperationType.EndsWith: 
                         if (!(cc.Value is string)) {
                             throw new Exception("Value was not a string type");
                         }
-                        sql.AppendString($"{cc.Column.DatabaseColumn} LIKE {sql.AddParameter("%" + cc.Value)}");
+                        sql.AppendString($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value)}");
                         break;
                     default: 
                         throw new Exception("Incorrect clause type");
@@ -90,7 +90,7 @@ namespace Searchlight
             else if (clause is InClause)
             {
                 var ic = clause as InClause;
-                sql.AppendString(ic.Column.DatabaseColumn);
+                sql.AppendString(ic.Column.OriginalName);
                 sql.AppendString(" IN (");
                 for (int i = 0; i < ic.Values.Count; i++)
                 {
@@ -106,7 +106,7 @@ namespace Searchlight
             else if (clause is IsNullClause)
             {
                 var inc = clause as IsNullClause;
-                sql.AppendString(inc.Column.DatabaseColumn);
+                sql.AppendString(inc.Column.OriginalName);
                 if (inc.Negated)
                 {
                     sql.AppendString(" IS NOT NULL");

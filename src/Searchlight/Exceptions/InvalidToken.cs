@@ -5,9 +5,9 @@ namespace Searchlight
     /// <summary>
     /// Represents a failure in the SQL validation
     /// </summary>
-    public class ParserSyntaxException : SearchlightException
+    public class InvalidToken : SearchlightException
     {
-        public ParserSyntaxException(string badToken, IEnumerable<string> expectedTokens, string originalFilter)
+        public InvalidToken(string badToken, string[] expectedTokens, string originalFilter)
             : base(originalFilter)
         {
             BadToken = badToken;
@@ -15,6 +15,6 @@ namespace Searchlight
         }
 
         public string BadToken { get; set; }
-        public IEnumerable<string> ExpectedTokens { get; set; }
+        public string[] ExpectedTokens { get; set; }
     }
 }

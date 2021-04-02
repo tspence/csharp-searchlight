@@ -12,6 +12,12 @@ namespace Searchlight.Configuration
         IEnumerable<ColumnInfo> GetColumnDefinitions();
 
         /// <summary>
+        /// Returns the list of defined column names
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<string> ColumnNames();
+
+        /// <summary>
         /// Identify one column by a token
         /// </summary>
         ColumnInfo IdentifyColumn(string filterToken);

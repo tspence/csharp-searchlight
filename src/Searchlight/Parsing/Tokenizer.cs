@@ -118,7 +118,7 @@ namespace Searchlight.Parsing
                     // If the string failed to end properly, throw an error
                     if (in_string)
                     {
-                        throw new UnterminatedValueException(line);
+                        throw new UnterminatedString(sb.ToString(), line);
                     }
 
                     // Normal characters just get added to the token

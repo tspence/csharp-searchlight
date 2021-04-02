@@ -29,7 +29,7 @@ namespace Searchlight.Tests
         public void IncorrectFieldValueType()
         {
             string originalFilter = "a = 'test' and b = 'Hello!'";
-            var ex = Assert.ThrowsException<FieldValueException>(() => _source.ParseFilter(originalFilter));
+            var ex = Assert.ThrowsException<FieldTypeMismatch>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual("b", ex.FieldName);
             Assert.AreEqual("System.Int32", ex.FieldType);
             Assert.AreEqual("Hello!", ex.FieldValue);
@@ -40,16 +40,19 @@ namespace Searchlight.Tests
         public void AllParenthesis()
         {
             // Basic problem: if you never close a parenthesis that's a syntax error
-            var ex1 = Assert.ThrowsException<OpenClauseException>(() => _source.ParseFilter("((((((((((("));
+            var ex1 = Assert.ThrowsException<OpenClause>(() => _source.ParseFilter("((((((((((("));
 
             // If you unbalance your parenthesis, that's a syntax error
-            var ex2 = Assert.ThrowsException<OpenClauseException>(() => _source.ParseFilter("(((((((((((a = 'hi')))"));
+            var ex2 = Assert.ThrowsException<OpenClause>(() => _source.ParseFilter("(((((((((((a = 'hi')))"));
 
             // if you have too many closing parens, it would expect AND or OR instead of another close paren
-            var ex3 = Assert.ThrowsException<UnknownConjunctionException>(() => _source.ParseFilter("(((a = 'hi'))))))))))))"));
+            var ex3 = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter("(((a = 'hi'))))))))))))"));
+            Assert.AreEqual(2, ex3.ExpectedTokens.Length);
+            Assert.AreEqual(new string[] { "AND", "OR" }, ex3.ExpectedTokens);
 
             // If you forget to supply any actual criteria, it reads the closing paren and thinks its a field name
-            var ex4 = Assert.ThrowsException<FieldNameException>(() => _source.ParseFilter("()"));
+            var ex4 = Assert.ThrowsException<FieldNotFound>(() => _source.ParseFilter("()"));
+            Assert.AreEqual(7, ex4.KnownFields.Length);
         }
 
         [DataTestMethod]
@@ -69,26 +72,26 @@ namespace Searchlight.Tests
         public void OrderByExceptionsTest()
         {
             // Field doesn't exist
-            Assert.ThrowsException<FieldNameException>(() => _source.ParseOrderBy("c, d ASC"));
+            Assert.ThrowsException<FieldNotFound>(() => _source.ParseOrderBy("c, d ASC"));
 
             // No comma between fields
-            Assert.ThrowsException<ParserSyntaxException>(() => _source.ParseOrderBy("a b DESC"));
+            Assert.ThrowsException<InvalidToken>(() => _source.ParseOrderBy("a b DESC"));
 
             // Trailing comma
-            Assert.ThrowsException<TrailingConjunctionException>(() => _source.ParseOrderBy("a, b,"));
+            Assert.ThrowsException<TrailingConjunction>(() => _source.ParseOrderBy("a, b,"));
         }
 
         [TestMethod]
         public void OnlyConjunctions()
         {
             // Silly example
-            Assert.ThrowsException<FieldNameException>(() =>
+            Assert.ThrowsException<FieldNotFound>(() =>
             {
                 var clauses = _source.ParseFilter("AND ( ) OR ");
             });
 
             // Realistic example of a forgetful customer
-            Assert.ThrowsException<TrailingConjunctionException>(() => {
+            Assert.ThrowsException<TrailingConjunction>(() => {
                 _source.ParseFilter("a = b OR ");
             });
 
