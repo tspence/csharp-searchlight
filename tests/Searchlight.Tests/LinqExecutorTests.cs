@@ -35,7 +35,7 @@ namespace Searchlight.Tests
 
         public LinqExecutorTests()
         {
-            this.src = SearchlightDataSource.Create(typeof(EmployeeObj), ModelFieldMode.All);
+            this.src = SearchlightDataSource.Create(typeof(EmployeeObj), ModelFieldMode.Loose);
         }
 
         [TestMethod]

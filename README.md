@@ -41,11 +41,72 @@ Parameters:
 
 # How does Searchlight work?
 
-You can construct searchlight models using the Searchlight data annotation, or you can construct a model manually.
+To use searchlight, you construct a "model" that will be exposed via your API.  Tag your model with the `[SearchlightModel]` annotation, and tag each
+queryable field with  `[SearchlightField]`.
 
 ```
+[SearchlightModel]
+public class MyAccount
+{
+    [SearchlightField]
+    public string AccountName { get; set; }
+    [SearchlightField]
+    public DateTime Created { get; set; }
+
+    // This field will not be searchable
+    public string SecretKey { get; set; }
+}
+```
+
+When someone queries your API, Searchlight can transform their query into a SQL or LINQ statement:
 
 ```
+var list = new List<MyAccount>();
+var query = src.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
+
+// To execute via SQL, this function gives you a parameterized SQL statement
+var sql = SqlExecutor.RenderSQL(_source, query);
+... execute SQL via whatever method you prefer ...
+
+// To execute via an in-memory object collection
+var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query.filter, list);
+```
+
+# What if a developer makes a mistake when querying?
+
+Searchlight provides detailed error messages that explicitly indicate what was wrong about the customer's query string.
+
+* `EmptyClause` - The user sent a query with an empty open/close parenthesis, like "()".
+* `FieldNotFound` - The query specified a field whose name could not be found.
+* `FieldTypeMismatch` - The user tried to compare a string field with an integer, for example.
+* `OpenClause` - The query had an open parenthesis with no closing parenthesis.
+* `InvalidToken` - The parser expected a token like "AND" or "OR", but something else was provided.
+* `TooManyParameters` - The user has sent too many criteria or parameters (some data sources have limits, for example, parameterized TSQL).
+* `TrailingConjunction` - The query ended with the word "AND" or "OR" but nothing after it.
+* `UnterminatedString` - A string value parameter is missing its end quotation mark.
+
+With these errors, your API can give direct and useful feedback to developers as they craft their interfaces.  In each case, Searchlight
+provides useful help:
+
+* When the user gets a `FieldNotFound` error, Searchlight provides the list of all valid field names in the error.
+* If you see an `InvalidToken` error, Searchlight tells you exactly which token was invalid and what it thinks are the correct tokens.
+
+# What if my data model changes over time?
+
+Searchlight provides for aliases so that you can maintain backwards compatibility with prior versions.  If you decide
+to rename a field, fix a typo, or migrate from one field to another, Searchlight allows you to tag the field for forwards and backwards
+compatibility.
+
+```
+[SearchlightModel]
+public class MyAccount
+{
+    [SearchlightField(Aliases = new string[] { "OldName", "NewName", "TransitionalName" })]
+    public string AccountName { get; set; }
+}
+```
+
+# Constructing Searchlight models programmatically
 
 Constructing a model manually works as follows:
 

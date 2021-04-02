@@ -16,7 +16,7 @@ namespace Searchlight.Parsing
         public ColumnInfo(string fieldName, Type fieldType)
         {
             FieldName = fieldName;
-            DatabaseColumn = fieldName;
+            OriginalName = fieldName;
             FieldType = fieldType;
         }
 
@@ -25,14 +25,16 @@ namespace Searchlight.Parsing
         /// </summary>
         /// <param name="filterName">The name supplied in the raw filter</param>
         /// <param name="columnName">The name of the column in the database</param>
+        /// <param name="aliases">If this field is known by other names, list them here</param>
         /// <param name="columnType">The raw type of the column in the database</param>
-        /// <param name="columnType">The user-mediated enum type that will be converted</param>
-        public ColumnInfo(string filterName, string columnName, Type columnType, Type enumType)
+        /// <param name="enumType">The user-mediated enum type that will be converted</param>
+        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType, Type enumType)
         {
             FieldName = filterName;
-            DatabaseColumn = columnName;
+            OriginalName = columnName;
             FieldType = columnType;
             EnumType = enumType;
+            Aliases = aliases;
         }
 
         /// <summary>
@@ -41,9 +43,14 @@ namespace Searchlight.Parsing
         public string FieldName { get; private set; }
 
         /// <summary>
+        /// This is the name of the field that the user provides in the filter text
+        /// </summary>
+        public string[] Aliases { get; private set; }
+
+        /// <summary>
         /// This is the name of the field as it is emitted into SQL expressions
         /// </summary>
-        public string DatabaseColumn { get; private set; }
+        public string OriginalName { get; private set; }
 
         /// <summary>
         /// When the user compares a field to a parameter, the parameter must be convertable to this type

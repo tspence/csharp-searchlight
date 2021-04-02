@@ -4,14 +4,17 @@ namespace Searchlight
     /// <summary>
     /// Represents a failure in the SQL validation
     /// </summary>
-    public class FieldNameException : SearchlightException
+    public class FieldNotFound : SearchlightException
     {
-        public FieldNameException(string fieldName, string originalFilter)
+        public FieldNotFound(string fieldName, string[] knownFields, string originalFilter)
             : base(originalFilter)
         {
             FieldName = fieldName;
+            KnownFields = knownFields;
         }
 
         public string FieldName { get; set; }
+
+        public string[] KnownFields { get; set; }
     }
 }

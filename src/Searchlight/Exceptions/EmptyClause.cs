@@ -4,7 +4,7 @@ namespace Searchlight
     /// <summary>
     /// Filter contained no usable filter criteria
     /// </summary>
-    public class EmptyClauseException : SearchlightException
+    public class EmptyClause : SearchlightException
     {
         /// <summary>
         /// Throw this exception if the query did not have parseable filter criteria - 
@@ -12,7 +12,7 @@ namespace Searchlight
         /// if there was an empty parenthesis clause
         /// </summary>
         /// <param name="originalFilter"></param>
-        public EmptyClauseException(string originalFilter)
+        public EmptyClause(string originalFilter)
             : base(originalFilter)
         {
         }

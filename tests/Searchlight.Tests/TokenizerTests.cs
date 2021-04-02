@@ -14,7 +14,7 @@ namespace Searchlight.Tests
         [DataRow("WHERE field1 = 'value AND Id = 123")]
         public void NonterminatedString(string filter)
         {
-            var ex = Assert.ThrowsException<UnterminatedValueException>(() => Tokenizer.GenerateTokens(filter));
+            var ex = Assert.ThrowsException<UnterminatedString>(() => Tokenizer.GenerateTokens(filter));
             Assert.AreEqual(filter, ex.OriginalFilter);
         }
 

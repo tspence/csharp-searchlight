@@ -7,10 +7,12 @@ namespace Searchlight.Configuration.Default
     public class CustomColumnDefinition : ISafeColumnDefinition
     {
         private readonly Dictionary<string, ColumnInfo> _fieldDict;
+        private readonly List<ColumnInfo> _columns;
 
         public CustomColumnDefinition()
         {
             _fieldDict = new Dictionary<string, ColumnInfo>();
+            _columns = new List<ColumnInfo>();
         }
 
         #region Builder pattern
@@ -22,7 +24,9 @@ namespace Searchlight.Configuration.Default
         /// <returns></returns>
         public CustomColumnDefinition WithColumn(string columnName, Type columnType, Type enumType)
         {
-            _fieldDict[columnName.ToUpper()] = new ColumnInfo(columnName, columnName, columnType, enumType);
+            var columnInfo = new ColumnInfo(columnName, columnName, null, columnType, enumType);
+            _fieldDict[columnName.ToUpper()] = columnInfo;
+            _columns.Add(columnInfo);
             return this;
         }
 
@@ -32,25 +36,33 @@ namespace Searchlight.Configuration.Default
         /// <param name="columnName"></param>
         /// <param name="columnType"></param>
         /// <returns></returns>
-        public CustomColumnDefinition WithRenamingColumn(string filterName, string columnName, Type columnType, Type enumType)
+        public CustomColumnDefinition WithRenamingColumn(string filterName, string columnName, string[] aliases,  Type columnType, Type enumType)
         {
-            // Allow the API caller to either specify the model name
-            _fieldDict[filterName.ToUpper()] = new ColumnInfo(filterName, columnName, columnType, enumType);
+            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType, enumType);
+            _columns.Add(columnInfo);
 
-            // Allowing them to use the Entity name preserves compatibility with filters written in the past
-            _fieldDict[columnName.ToUpper()] = new ColumnInfo(filterName, columnName, columnType, enumType);
+            // Allow the API caller to either specify either the model name or one of the aliases
+            _fieldDict[filterName.ToUpper()] = columnInfo;
+            if (aliases != null)
+            {
+                foreach (var alias in aliases)
+                {
+                    _fieldDict[alias.ToUpper()] = columnInfo;
+                }
+            }
             return this;
         }
         #endregion
 
         #region Interface implementation
-        /// <summary>
-        /// Identify all columns
-        /// </summary>
-        /// <returns></returns>
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
         {
-            return _fieldDict.Values;
+            return _columns;
+        }
+
+        public IEnumerable<string> ColumnNames()
+        {
+            return _fieldDict.Keys;
         }
 
         /// <summary>

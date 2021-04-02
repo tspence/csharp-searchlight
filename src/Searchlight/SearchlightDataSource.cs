@@ -47,8 +47,8 @@ namespace Searchlight
         public static SearchlightDataSource Create(Type modelType, ModelFieldMode mode)
         {
             SearchlightDataSource src = new SearchlightDataSource();
-            if (mode == ModelFieldMode.SearchlightOnly) {
-                src.ColumnDefinitions = new ModelColumnDefinitions(modelType);
+            if (mode == ModelFieldMode.Strict) {
+                src.ColumnDefinitions = new StrictColumnDefinitions(modelType);
             } else {
                 src.ColumnDefinitions = new EntityColumnDefinitions(modelType);
             }
@@ -108,7 +108,7 @@ namespace Searchlight
                     // This is not recognized - throw an exception and refuse to process further
                     if (!found_command)
                     {
-                        throw new FieldNameException(name, includes);
+                        throw new FieldNotFound(name, ColumnDefinitions.ColumnNames().ToArray(), includes);
                     }
                 }
             }
@@ -153,7 +153,7 @@ namespace Searchlight
                 si.Column = ColumnDefinitions.IdentifyColumn(colName);
                 if (si.Column == null)
                 {
-                    throw new FieldNameException(colName, orderBy);
+                    throw new FieldNotFound(colName, ColumnDefinitions.ColumnNames().ToArray(), orderBy);
                 }
 
                 // Was that the last token?
@@ -164,7 +164,7 @@ namespace Searchlight
                 var token = tokens.Dequeue();
                 if (token == StringConstants.COMMA)
                 {
-                    if (tokens.Count == 0) throw new TrailingConjunctionException(orderBy);
+                    if (tokens.Count == 0) throw new TrailingConjunction(orderBy);
                     continue;
                 }
 
@@ -245,7 +245,7 @@ namespace Searchlight
                 string conjunction;
                 if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out conjunction))
                 {
-                    throw new ExpectedConjunctionException(token, filter);
+                    throw new InvalidToken(upperToken, StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), filter);
                 }
 
                 // Store the value of the conjunction
@@ -259,20 +259,20 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new UnknownConjunctionException(filter, upperToken);
+                    throw new InvalidToken(upperToken, new string[] { "AND", "OR" }, filter);
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
                 if (tokens.Count == 0)
                 {
-                    throw new TrailingConjunctionException(filter);
+                    throw new TrailingConjunction(filter);
                 }
             }
 
             // If we expected to end with a parenthesis, but didn't, throw an exception here
             if (expectCloseParenthesis)
             {
-                throw new OpenClauseException(filter);
+                throw new OpenClause(filter);
             }
 
             // Here's your clause!
@@ -298,7 +298,7 @@ namespace Searchlight
                 compound.Children = ParseClauseList(filter, tokens, true);
                 if (compound.Children == null || compound.Children.Count == 0)
                 {
-                    throw new EmptyClauseException(filter);
+                    throw new EmptyClause(filter);
                 }
                 return compound;
             }
@@ -307,7 +307,11 @@ namespace Searchlight
             var columnInfo = ColumnDefinitions.IdentifyColumn(fieldToken);
             if (columnInfo == null)
             {
-                throw new FieldNameException(fieldToken, filter);
+                if (String.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
+                {
+                    throw new EmptyClause(filter);
+                }
+                throw new FieldNotFound(fieldToken, ColumnDefinitions.ColumnNames().ToArray(), filter);
             }
 
             // Allow "NOT" tokens here
@@ -323,7 +327,7 @@ namespace Searchlight
             OperationType op = OperationType.Unknown;
             if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out op))
             {
-                throw new ParserSyntaxException(operationToken, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys, filter);
+                throw new InvalidToken(operationToken, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(), filter);
             }
 
             // Safe syntax for a "BETWEEN" expression is "column BETWEEN (param1) AND (param2)"
@@ -352,7 +356,7 @@ namespace Searchlight
                     string comma_or_paren = tokens.Dequeue();
                     if (!StringConstants.SAFE_LIST_TOKENS.Contains(comma_or_paren))
                     {
-                        throw new ParserSyntaxException(comma_or_paren, StringConstants.SAFE_LIST_TOKENS, filter);
+                        throw new InvalidToken(comma_or_paren, StringConstants.SAFE_LIST_TOKENS, filter);
                     }
                     if (comma_or_paren == StringConstants.CLOSE_PARENTHESIS) break;
                 }
@@ -399,7 +403,7 @@ namespace Searchlight
         {
             if (!String.Equals(expected_token, actual, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ParserSyntaxException(actual, new string[] { expected_token }, originalFilter);
+                throw new InvalidToken(actual, new string[] { expected_token }, originalFilter);
             }
         }
 
@@ -468,7 +472,7 @@ namespace Searchlight
             }
             catch
             {
-                throw new FieldValueException(column.FieldName, fieldType.ToString(), valueToken, originalFilter);
+                throw new FieldTypeMismatch(column.FieldName, fieldType.ToString(), valueToken, originalFilter);
             }
 
             // Put this into an SQL Parameter list
