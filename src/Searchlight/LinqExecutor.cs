@@ -1,15 +1,13 @@
-﻿using Searchlight.DataSource;
-using Searchlight.Parsing;
+﻿using Searchlight.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Threading.Tasks;
+using Searchlight.Query;
 
-namespace Searchlight.Query
+namespace Searchlight
 {
-    public class SafeQuery
+    public class LinqExecutor
     {
         /// <summary>
         /// Query against a collection in memory

@@ -1,5 +1,5 @@
 ﻿
-namespace Searchlight.Exceptions
+namespace Searchlight
 {
     public class TooManyParametersException : SearchlightException
     {

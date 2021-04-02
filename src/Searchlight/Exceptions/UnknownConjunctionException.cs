@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Searchlight.Exceptions
+namespace Searchlight
 {
     /// <summary>
     /// Throw this exception if the user specified something other than AND or OR
