@@ -26,7 +26,6 @@ namespace Searchlight.Parsing
         /// </summary>
         Between,
         In,
-        Like,
         Contains,
         StartsWith,
         EndsWith,

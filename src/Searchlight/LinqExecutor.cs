@@ -118,7 +118,6 @@ namespace Searchlight
                         return Expression.Call(field, typeof(string).GetMethod("Contains", new Type[] { typeof(string) }), value);
                     case OperationType.In:
                     case OperationType.IsNull:
-                    case OperationType.Like:
                     case OperationType.NotEqual:
                     case OperationType.Between:
                         throw new NotImplementedException();

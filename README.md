@@ -1,19 +1,13 @@
+[![NuGet](https://img.shields.io/nuget/v/Searchlight.svg?style=plastic)](https://www.nuget.org/packages/Searchlight/)
+[![Travis](https://travis-ci.com/tspence/csharp-searchlight.svg?branch=master&style=plastic)](https://travis-ci.com/tspence/csharp-searchlight)
+
 # csharp-searchlight
 A lightweight, secure framework for searching through databases and in-memory collections using a fluent REST API with robust, secure searching features.
 
-# Status
-
-Travis CI:
-
-[![Travis](https://travis-ci.com/tspence/csharp-searchlight.svg?branch=master&style=plastic)](https://travis-ci.com/tspence/csharp-searchlight)
-
-NuGet:
-
-TODO
-
 # What is Searchlight?
 
-Searchlight is a simple and safe query language for API design.  It works well with REST, provides complex features, and is easier to learn than GraphQL.  
+Searchlight is a simple and safe query language for API design.  [Designed with security in mind](https://tedspence.com/protecting-apis-with-layered-security-8c989fb5a19f), 
+it works well with REST, provides complex features, and is easier to learn than GraphQL.  
 At the same time, Searchlight is safe from SQL injection attacks.  By using Searchlight, you gain the ability to offer your customers robust query functionality
 while still being able to ensure that you are only executing query plans that have been rigorously validated and that all customer input data parameterized. 
 
