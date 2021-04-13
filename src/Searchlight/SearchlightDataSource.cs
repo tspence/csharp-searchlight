@@ -44,10 +44,10 @@ namespace Searchlight
         /// <param name="modelType">The type of the model for this data source.</param>
         /// <param name="onlySearchlightFields">If true, only add columns for fields with a SearchlightField annotation.</param>
         /// <returns></returns>
-        public static SearchlightDataSource Create(Type modelType, ModelFieldMode mode)
+        public static SearchlightDataSource Create(Type modelType, AttributeMode mode)
         {
             SearchlightDataSource src = new SearchlightDataSource();
-            if (mode == ModelFieldMode.Strict) {
+            if (mode == AttributeMode.Strict) {
                 src.ColumnDefinitions = new StrictColumnDefinitions(modelType);
             } else {
                 src.ColumnDefinitions = new EntityColumnDefinitions(modelType);
@@ -63,9 +63,9 @@ namespace Searchlight
         /// <param name="filter"></param>
         /// <param name="orderBy"></param>
         /// <returns></returns>
-        public QueryData Parse(string filter, string include = null, string orderBy = null)
+        public SyntaxTree Parse(string filter, string include = null, string orderBy = null)
         {
-            QueryData query = new QueryData();
+            SyntaxTree query = new SyntaxTree();
             query.OriginalFilter = filter;
             query.Includes = ParseIncludes(include);
             query.Filter = ParseFilter(filter);
