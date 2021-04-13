@@ -62,9 +62,6 @@ namespace Searchlight
                     case OperationType.NotEqual: 
                         sql.AppendString($"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}");
                         break;
-                    case OperationType.Like: 
-                        sql.AppendString($"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value)}");
-                        break;
                     case OperationType.Contains: 
                         if (!(cc.Value is string)) {
                             throw new Exception("Value was not a string type");

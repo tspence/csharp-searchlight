@@ -37,7 +37,6 @@ namespace Searchlight.Parsing
             // Slightly less common query expressions
             { "BETWEEN",        OperationType.Between     },
             { "IN",             OperationType.In          },
-            { "LIKE",           OperationType.Like        },
             { "STARTSWITH",     OperationType.StartsWith  },
             { "CONTAINS",       OperationType.Contains    },
             { "ENDSWITH",       OperationType.EndsWith    },
