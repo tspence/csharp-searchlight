@@ -27,13 +27,11 @@ namespace Searchlight.Parsing
         /// <param name="columnName">The name of the column in the database</param>
         /// <param name="aliases">If this field is known by other names, list them here</param>
         /// <param name="columnType">The raw type of the column in the database</param>
-        /// <param name="enumType">The user-mediated enum type that will be converted</param>
-        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType, Type enumType)
+        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType)
         {
             FieldName = filterName;
             OriginalName = columnName;
             FieldType = columnType;
-            EnumType = enumType;
             Aliases = aliases;
         }
 
@@ -56,15 +54,5 @@ namespace Searchlight.Parsing
         /// When the user compares a field to a parameter, the parameter must be convertable to this type
         /// </summary>
         public Type FieldType { get; private set; }
-
-        /// <summary>
-        /// If the end user thinks of this column as an enum, this is the type it should be parsed as
-        /// </summary>
-        public Type EnumType { get; private set; }
-
-        /// <summary>
-        /// Reflection property for this column; useful for retrieving or saving to an object
-        /// </summary>
-        public PropertyInfo Property { get; private set; }
     }
 }

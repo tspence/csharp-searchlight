@@ -105,8 +105,7 @@ public class MyAccount
 Constructing a model manually works as follows:
 
 ```
-var source = new SearchlightDataSource();
-source.ColumnDefinitions = new CustomColumnDefinition()
+var source = new SearchlightDataSource()
     .WithColumn("a", typeof(String), null)
     .WithColumn("b", typeof(Int32), null)
     .WithColumn("colLong", typeof(Int64), null)
@@ -114,7 +113,6 @@ source.ColumnDefinitions = new CustomColumnDefinition()
     .WithColumn("colULong", typeof(UInt64), null)
     .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
     .WithColumn("colGuid", typeof(Guid), null);
-source.Columnifier = new NoColumnify();
 source.MaximumParameters = 200;
 source.DefaultSortField = "a";
 ```
