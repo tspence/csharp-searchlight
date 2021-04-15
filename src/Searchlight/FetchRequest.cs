@@ -35,7 +35,10 @@ namespace Searchlight
         public void Append(string appendedFilter)
         {
             // If there's no new value to provide, skip it
-            if (appendedFilter == null) return;
+            if (appendedFilter == null)
+            {
+                return;
+            }
 
             // Okay, there's a value to provide, let's append it
             if (String.IsNullOrWhiteSpace(filter))

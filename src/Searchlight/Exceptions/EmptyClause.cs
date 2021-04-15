@@ -13,8 +13,10 @@ namespace Searchlight
         /// </summary>
         /// <param name="originalFilter"></param>
         public EmptyClause(string originalFilter)
-            : base(originalFilter)
         {
+            this.OriginalFilter = originalFilter;
         }
+
+        public string OriginalFilter { get; set; }
     }
 }

@@ -8,11 +8,13 @@ namespace Searchlight
     public class InvalidToken : SearchlightException
     {
         public InvalidToken(string badToken, string[] expectedTokens, string originalFilter)
-            : base(originalFilter)
         {
+            OriginalFilter = originalFilter;
             BadToken = badToken;
             ExpectedTokens = expectedTokens;
         }
+
+        public string OriginalFilter { get; set; }
 
         public string BadToken { get; set; }
         public string[] ExpectedTokens { get; set; }

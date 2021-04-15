@@ -1,6 +1,7 @@
 ﻿using Searchlight.Parsing;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Searchlight.Configuration.Default
 {
@@ -15,7 +16,6 @@ namespace Searchlight.Configuration.Default
             _columns = new List<ColumnInfo>();
         }
 
-        #region Builder pattern
         /// <summary>
         /// Add a column to this definition
         /// </summary>
@@ -24,10 +24,7 @@ namespace Searchlight.Configuration.Default
         /// <returns></returns>
         public CustomColumnDefinition WithColumn(string columnName, Type columnType, Type enumType)
         {
-            var columnInfo = new ColumnInfo(columnName, columnName, null, columnType, enumType);
-            _fieldDict[columnName.ToUpper()] = columnInfo;
-            _columns.Add(columnInfo);
-            return this;
+            return WithRenamingColumn(columnName, columnName, null, columnType, enumType);
         }
 
         /// <summary>
@@ -42,19 +39,31 @@ namespace Searchlight.Configuration.Default
             _columns.Add(columnInfo);
 
             // Allow the API caller to either specify either the model name or one of the aliases
-            _fieldDict[filterName.ToUpper()] = columnInfo;
+            AddName(filterName, columnInfo);
             if (aliases != null)
             {
                 foreach (var alias in aliases)
                 {
-                    _fieldDict[alias.ToUpper()] = columnInfo;
+                    AddName(alias, columnInfo);
                 }
             }
             return this;
         }
-        #endregion
 
-        #region Interface implementation
+        private void AddName(string name, ColumnInfo col)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return;
+            var upperName = name.ToUpper();
+            if (_fieldDict.ContainsKey(upperName))
+            {
+                var existing = _fieldDict[upperName];
+                throw new DuplicateName()
+                    {ExistingColumn = existing.OriginalName, ConflictingColumn = col.OriginalName, ConflictingName = upperName};
+            }
+
+            _fieldDict[upperName] = col;
+        }
+
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
         {
             return _columns;
@@ -76,6 +85,5 @@ namespace Searchlight.Configuration.Default
             _fieldDict.TryGetValue(filterToken?.ToUpper(), out ci);
             return ci;
         }
-        #endregion
     }
 }

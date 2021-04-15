@@ -10,10 +10,12 @@ namespace Searchlight
         GroupBy,
         OrderBy
     }
-    
-    /// <summary>
-    /// Select whether Searchlight will automatically index all fields 
-    /// </summary>
+
+    ///
+    public class X {
+
+    }
+
     public enum AttributeMode {
         /// <summary>
         /// Not recommended - Allows developers to query any field on the model, even fields not tagged with the `SearchlightField` annotation.

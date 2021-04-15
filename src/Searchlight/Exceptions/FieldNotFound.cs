@@ -7,11 +7,13 @@ namespace Searchlight
     public class FieldNotFound : SearchlightException
     {
         public FieldNotFound(string fieldName, string[] knownFields, string originalFilter)
-            : base(originalFilter)
         {
+            this.OriginalFilter = originalFilter;
             FieldName = fieldName;
             KnownFields = knownFields;
         }
+
+        public string OriginalFilter { get; set; }
 
         public string FieldName { get; set; }
 

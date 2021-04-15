@@ -3,15 +3,10 @@
 namespace Searchlight
 {
     /// <summary>
-    /// Represents a failure in the SQL validation
+    /// Base class for all exceptions within Searchlight
     /// </summary>
     public class SearchlightException : Exception
     {
-        public SearchlightException(string originalFilter)
-        {
-            OriginalFilter = originalFilter;
-        }
-
-        public string OriginalFilter { get; set; }
+     
     }
 }

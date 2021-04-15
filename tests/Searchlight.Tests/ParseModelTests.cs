@@ -119,5 +119,26 @@ namespace Searchlight.Tests
             Assert.IsNotNull(cc);
             Assert.AreEqual("Description", cc.Column.FieldName);
         }
+
+        
+        public class TestFieldConflicts
+        {
+            [SearchlightField(aliases: new string[] {"description"})]
+            public string Name { get; set; }
+            [SearchlightField(aliases: new string[] { "desription", "DescriptionText" })]
+            public string Description { get; set; }
+        }
+        
+        [TestMethod]
+        public void TestNamingConflicts()
+        {
+            var ex = Assert.ThrowsException<DuplicateName>(() =>
+            {
+                var source = SearchlightDataSource.Create(typeof(TestFieldConflicts), AttributeMode.Strict);
+            });
+            Assert.AreEqual("DESCRIPTION", ex.ConflictingName);
+            Assert.AreEqual("Name", ex.ExistingColumn);
+            Assert.AreEqual("Description", ex.ConflictingColumn);
+        }
     }
 }

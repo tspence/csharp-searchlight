@@ -15,6 +15,8 @@ namespace Searchlight
     /// </summary>
     public class SearchlightDataSource
     {
+        public string TableName { get; set; }
+        
         /// <summary>
         /// Definitions of columns
         /// </summary>
@@ -47,6 +49,7 @@ namespace Searchlight
         public static SearchlightDataSource Create(Type modelType, AttributeMode mode)
         {
             SearchlightDataSource src = new SearchlightDataSource();
+            src.TableName = modelType.Name;
             if (mode == AttributeMode.Strict) {
                 src.ColumnDefinitions = new StrictColumnDefinitions(modelType);
             } else {
