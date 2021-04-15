@@ -11,8 +11,10 @@ namespace Searchlight
         /// </summary>
         /// <param name="originalFilter"></param>
         public OpenClause(string originalFilter)
-            : base(originalFilter)
         {
+            OriginalFilter = originalFilter;
         }
+
+        public string OriginalFilter { get; set; }
     }
 }

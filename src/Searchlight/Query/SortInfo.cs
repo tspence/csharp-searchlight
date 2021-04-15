@@ -1,3 +1,4 @@
+using Searchlight;
 using Searchlight.Parsing;
 
 namespace Searchlight.Query

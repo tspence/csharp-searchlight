@@ -8,7 +8,7 @@ namespace Searchlight
     public static class SqlExecutor
     {
 
-        public static SQLQueryBuilder RenderSQL(this SearchlightDataSource source, QueryData query)
+        public static SQLQueryBuilder RenderSQL(this SearchlightDataSource source, SyntaxTree query)
         {
             var sql = new SQLQueryBuilder();
             foreach (var clause in query.Filter)

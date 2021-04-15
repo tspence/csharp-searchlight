@@ -9,7 +9,7 @@ namespace Searchlight.Query
     /// <summary>
     /// Internal representation of a query, after it has been verified by SafeQueryParser
     /// </summary>
-    public class QueryData
+    public class SyntaxTree
     {
         /// <summary>
         /// The original filter that was provided to the query, for reference

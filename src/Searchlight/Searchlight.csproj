@@ -8,4 +8,8 @@
     <PackageReference Include="Dapper" Version="2.0.78" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Exceptions\FilterException.cs" />
+  </ItemGroup>
+
 </Project>
