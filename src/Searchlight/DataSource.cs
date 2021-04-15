@@ -11,19 +11,19 @@ namespace Searchlight
     /// <summary>
     /// Represents a data source used to validate queries
     /// </summary>
-    public class SearchlightDataSource
+    public class DataSource
     {
         /// <summary>
         /// The official name of the collection queried by this data source
         /// </summary>
         public string TableName { get; set; }
-        
+
         /// <summary>
         /// The C# class type of this data source
         /// </summary>
-        
+
         public Type ModelType { get; set; }
-        
+
         /// <summary>
         /// The field name of the default sort field, if none are specified.
         /// This is necessary to ensure reliable pagination.
@@ -39,7 +39,7 @@ namespace Searchlight
         /// Some data sources can only handle a specified number of parameters.
         /// </summary>
         public int MaximumParameters { get; set; }
-        
+
         private readonly Dictionary<string, ColumnInfo> _fieldDict = new Dictionary<string, ColumnInfo>();
         private readonly List<ColumnInfo> _columns = new List<ColumnInfo>();
 
@@ -49,7 +49,7 @@ namespace Searchlight
         /// <param name="columnName"></param>
         /// <param name="columnType"></param>
         /// <returns></returns>
-        public SearchlightDataSource WithColumn(string columnName, Type columnType)
+        public DataSource WithColumn(string columnName, Type columnType)
         {
             return WithRenamingColumn(columnName, columnName, null, columnType);
         }
@@ -60,7 +60,7 @@ namespace Searchlight
         /// <param name="columnName"></param>
         /// <param name="columnType"></param>
         /// <returns></returns>
-        public SearchlightDataSource WithRenamingColumn(string filterName, string columnName, string[] aliases,  Type columnType)
+        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType)
         {
             var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType);
             _columns.Add(columnInfo);
@@ -74,6 +74,7 @@ namespace Searchlight
                     AddName(alias, columnInfo);
                 }
             }
+
             return this;
         }
 
@@ -85,7 +86,10 @@ namespace Searchlight
             {
                 var existing = _fieldDict[upperName];
                 throw new DuplicateName()
-                    {ExistingColumn = existing.OriginalName, ConflictingColumn = col.OriginalName, ConflictingName = upperName};
+                {
+                    ExistingColumn = existing.OriginalName, ConflictingColumn = col.OriginalName,
+                    ConflictingName = upperName
+                };
             }
 
             _fieldDict[upperName] = col;
@@ -120,9 +124,9 @@ namespace Searchlight
         /// <param name="modelType">The type of the model for this data source</param>
         /// <param name="mode">The parsing mode for fields on this class</param>
         /// <returns></returns>
-        public static SearchlightDataSource Create(Type modelType, AttributeMode mode)
+        public static DataSource Create(Type modelType, AttributeMode mode)
         {
-            SearchlightDataSource src = new SearchlightDataSource();
+            var src = new DataSource();
             src.TableName = modelType.Name;
             src.ModelType = modelType;
             foreach (var pi in modelType.GetProperties())
@@ -139,14 +143,15 @@ namespace Searchlight
                         var filter = pi.GetCustomAttributes<SearchlightField>().FirstOrDefault();
                         if (filter != null)
                         {
-
                             // If this is a renaming column, add it appropriately
                             Type t = filter.FieldType ?? pi.PropertyType;
-                            src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name, filter.Aliases ?? new string[] { }, t);
+                            src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name,
+                                filter.Aliases ?? new string[] { }, t);
                         }
                     }
                 }
             }
+
             return src;
         }
 
@@ -177,17 +182,17 @@ namespace Searchlight
         {
             // Retrieve the list of possibilities
             List<OptionalCommand> list = new List<OptionalCommand>();
-            if (Commands != null) {
+            if (Commands != null)
+            {
                 list.AddRange(Commands);
             }
 
             // First check the field are from valid entity fields
             if (!String.IsNullOrWhiteSpace(includes))
             {
-                string[] commandNames = includes.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] commandNames = includes.Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var name in commandNames.Select(x => x.Trim()))
                 {
-
                     // Check to see if this is a recognized subtable that is allowed
                     bool found_command = false;
                     foreach (var command in list)
@@ -318,7 +323,6 @@ namespace Searchlight
             var working = new List<BaseClause>();
             while (tokens.Count > 0)
             {
-
                 // Identify one clause and add it
                 var clause = ParseOneClause(filter, tokens);
                 working.Add(clause);
@@ -354,7 +358,7 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new InvalidToken(upperToken, new string[] { "AND", "OR" }, filter);
+                    throw new InvalidToken(upperToken, new string[] {"AND", "OR"}, filter);
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
@@ -395,6 +399,7 @@ namespace Searchlight
                 {
                     throw new EmptyClause(filter);
                 }
+
                 return compound;
             }
 
@@ -406,6 +411,7 @@ namespace Searchlight
                 {
                     throw new EmptyClause(filter);
                 }
+
                 throw new FieldNotFound(fieldToken, ColumnNames().ToArray(), filter);
             }
 
@@ -422,7 +428,8 @@ namespace Searchlight
             OperationType op = OperationType.Unknown;
             if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out op))
             {
-                throw new InvalidToken(operationToken, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(), filter);
+                throw new InvalidToken(operationToken, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(),
+                    filter);
             }
 
             // Safe syntax for a "BETWEEN" expression is "column BETWEEN (param1) AND (param2)"
@@ -453,8 +460,10 @@ namespace Searchlight
                     {
                         throw new InvalidToken(commaOrParen, StringConstants.SAFE_LIST_TOKENS, filter);
                     }
+
                     if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
                 }
+
                 return c;
 
                 // Safe syntax for an "IS NULL" expression is "column IS [NOT] NULL"
@@ -471,6 +480,7 @@ namespace Searchlight
                     negated = true;
                     next = tokens.Dequeue();
                 }
+
                 c.Negated = negated;
                 Expect(StringConstants.NULL, next, filter);
                 return c;
@@ -498,7 +508,7 @@ namespace Searchlight
         {
             if (!String.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidToken(actual, new string[] { expectedToken }, originalFilter);
+                throw new InvalidToken(actual, new string[] {expectedToken}, originalFilter);
             }
         }
 
@@ -515,7 +525,6 @@ namespace Searchlight
             object pvalue;
             try
             {
-
                 // For nullable types, note that the fieldvaluetoken will always be non-null.
                 // This is because the safe parser will throw an exception if there is no token after a query expression.
                 // The only way to test against null is to use the special query expression "<field> IS NULL" or "<field> IS NOT NULL".
@@ -524,6 +533,7 @@ namespace Searchlight
                 {
                     fieldType = column.FieldType.GetGenericArguments()[0];
                 }
+
                 if (fieldType == typeof(Guid))
                 {
                     pvalue = Guid.Parse(valueToken);
@@ -559,6 +569,5 @@ namespace Searchlight
             // Put this into an SQL Parameter list
             return pvalue;
         }
-
     }
 }

@@ -7,11 +7,11 @@ namespace Searchlight.Tests
     [TestClass]
     public class DataSourceTests
     {
-        private SearchlightDataSource _source;
+        private DataSource _source;
 
         public DataSourceTests()
         {
-            _source = new SearchlightDataSource()
+            _source = new DataSource()
                 .WithColumn("a", typeof(String))
                 .WithColumn("b", typeof(Int32))
                 .WithColumn("colLong", typeof(Int64))

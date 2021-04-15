@@ -33,7 +33,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void TestLimitedFields()
         {
-            var source = SearchlightDataSource.Create(typeof(TestStrictMode), AttributeMode.Strict);
+            var source = DataSource.Create(typeof(TestStrictMode), AttributeMode.Strict);
             var columns = source.GetColumnDefinitions().ToArray();
             Assert.AreEqual(2, columns.Length);
             Assert.AreEqual("Name", columns[0].FieldName);
@@ -57,7 +57,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void TestExpansiveFields()
         {
-            var source = SearchlightDataSource.Create(typeof(TestStrictMode), AttributeMode.Loose);
+            var source = DataSource.Create(typeof(TestStrictMode), AttributeMode.Loose);
             var columns = source.GetColumnDefinitions().ToArray();
             Assert.AreEqual(3, columns.Length);
             Assert.AreEqual("Name", columns[0].FieldName);
@@ -85,7 +85,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void TestFieldRenaming()
         {
-            var source = SearchlightDataSource.Create(typeof(TestFieldRenaming), AttributeMode.Strict);
+            var source = DataSource.Create(typeof(TestFieldRenaming), AttributeMode.Strict);
             var columns = source.GetColumnDefinitions().ToArray();
             Assert.AreEqual(3, columns.Length);
             Assert.AreEqual("Name", columns[0].FieldName);
@@ -134,7 +134,7 @@ namespace Searchlight.Tests
         {
             var ex = Assert.ThrowsException<DuplicateName>(() =>
             {
-                var source = SearchlightDataSource.Create(typeof(TestFieldConflicts), AttributeMode.Strict);
+                var source = DataSource.Create(typeof(TestFieldConflicts), AttributeMode.Strict);
             });
             Assert.AreEqual("DESCRIPTION", ex.ConflictingName);
             Assert.AreEqual("Name", ex.ExistingColumn);

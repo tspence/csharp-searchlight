@@ -12,7 +12,7 @@ namespace Searchlight
         /// You can specify the type the user sees as well as the type as it is stored in the database.
         /// </summary>
         /// <param name="originalName">If the model is known by a different name in the underlying data store, specify it here</param>
-        /// <param name="fieldType"></param>
+        /// <param name="aliases">If the model will be known by multiple names, specify them here</param>
         public SearchlightModel(string originalName = null, string[] aliases = null)
         {
             OriginalName = originalName;

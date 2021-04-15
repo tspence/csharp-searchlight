@@ -7,11 +7,11 @@ namespace Searchlight.Tests
     [TestClass]
     public class SqlExecutorTests
     {
-        private SearchlightDataSource _source;
+        private DataSource _source;
 
         public SqlExecutorTests()
         {
-            _source = new SearchlightDataSource()
+            _source = new DataSource()
                 .WithColumn("a", typeof(String))
                 .WithColumn("b", typeof(Int32))
                 .WithColumn("colLong", typeof(Int64))
@@ -19,7 +19,6 @@ namespace Searchlight.Tests
                 .WithColumn("colULong", typeof(UInt64))
                 .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
                 .WithColumn("colGuid", typeof(Guid));
-
             _source.MaximumParameters = 200;
             _source.DefaultSortField = "a";
         }
