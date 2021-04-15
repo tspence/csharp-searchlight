@@ -1,21 +1,5 @@
 namespace Searchlight
 {
-    /// <summary>
-    /// Differing types of clauses for columnification
-    /// </summary>
-    public enum ClauseType
-    {
-        Select,
-        Where,
-        GroupBy,
-        OrderBy
-    }
-
-    ///
-    public class X {
-
-    }
-
     public enum AttributeMode {
         /// <summary>
         /// Not recommended - Allows developers to query any field on the model, even fields not tagged with the `SearchlightField` annotation.

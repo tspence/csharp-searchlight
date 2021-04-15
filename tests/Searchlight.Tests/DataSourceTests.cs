@@ -1,7 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight.Configuration.Default;
-using Searchlight;
-using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 
@@ -14,15 +11,14 @@ namespace Searchlight.Tests
 
         public DataSourceTests()
         {
-            _source = new SearchlightDataSource();
-            _source.ColumnDefinitions = new CustomColumnDefinition()
-                .WithColumn("a", typeof(String), null)
-                .WithColumn("b", typeof(Int32), null)
-                .WithColumn("colLong", typeof(Int64), null)
-                .WithColumn("colNullableGuid", typeof(Nullable<Guid>), null)
-                .WithColumn("colULong", typeof(UInt64), null)
-                .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
-                .WithColumn("colGuid", typeof(Guid), null);
+            _source = new SearchlightDataSource()
+                .WithColumn("a", typeof(String))
+                .WithColumn("b", typeof(Int32))
+                .WithColumn("colLong", typeof(Int64))
+                .WithColumn("colNullableGuid", typeof(Nullable<Guid>))
+                .WithColumn("colULong", typeof(UInt64))
+                .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
+                .WithColumn("colGuid", typeof(Guid));
         }
 
         [TestMethod]

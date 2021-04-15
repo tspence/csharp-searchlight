@@ -1,10 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight.Configuration.Default;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Searchlight.Tests
 {
@@ -13,17 +8,15 @@ namespace Searchlight.Tests
     {
         public SearchlightDataSource getSource()
         {
-            var safeColumns = new CustomColumnDefinition()
-               .WithColumn("a", typeof(String), null)
-               .WithColumn("b", typeof(Int32), null)
-               .WithColumn("colLong", typeof(Int64), null)
-               .WithColumn("colNullableGuid", typeof(Nullable<Guid>), null)
-               .WithColumn("colULong", typeof(UInt64), null)
-               .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
-               .WithColumn("colGuid", typeof(Guid), null);
+            var src = new SearchlightDataSource()
+               .WithColumn("a", typeof(String))
+               .WithColumn("b", typeof(Int32))
+               .WithColumn("colLong", typeof(Int64))
+               .WithColumn("colNullableGuid", typeof(Nullable<Guid>))
+               .WithColumn("colULong", typeof(UInt64))
+               .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
+               .WithColumn("colGuid", typeof(Guid));
 
-            var src = new SearchlightDataSource();
-            src.ColumnDefinitions = safeColumns;
             src.MaximumParameters = 200;
             src.DefaultSortField = "a";
             return src;

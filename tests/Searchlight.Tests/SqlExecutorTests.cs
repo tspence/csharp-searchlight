@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight;
-using Searchlight.Configuration.Default;
 
 namespace Searchlight.Tests
 {
@@ -13,17 +11,15 @@ namespace Searchlight.Tests
 
         public SqlExecutorTests()
         {
-            var safeColumns = new CustomColumnDefinition()
-                .WithColumn("a", typeof(String), null)
-                .WithColumn("b", typeof(Int32), null)
-                .WithColumn("colLong", typeof(Int64), null)
-                .WithColumn("colNullableGuid", typeof(Nullable<Guid>), null)
-                .WithColumn("colULong", typeof(UInt64), null)
-                .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
-                .WithColumn("colGuid", typeof(Guid), null);
+            _source = new SearchlightDataSource()
+                .WithColumn("a", typeof(String))
+                .WithColumn("b", typeof(Int32))
+                .WithColumn("colLong", typeof(Int64))
+                .WithColumn("colNullableGuid", typeof(Nullable<Guid>))
+                .WithColumn("colULong", typeof(UInt64))
+                .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
+                .WithColumn("colGuid", typeof(Guid));
 
-            _source = new SearchlightDataSource();
-            _source.ColumnDefinitions = safeColumns;
             _source.MaximumParameters = 200;
             _source.DefaultSortField = "a";
         }

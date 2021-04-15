@@ -1,12 +1,10 @@
-﻿using Searchlight.Configuration;
-using Searchlight.Configuration.Default;
-using Searchlight;
-using Searchlight.Nesting;
+﻿using Searchlight.Nesting;
 using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Searchlight
 {
@@ -15,13 +13,17 @@ namespace Searchlight
     /// </summary>
     public class SearchlightDataSource
     {
+        /// <summary>
+        /// The official name of the collection queried by this data source
+        /// </summary>
         public string TableName { get; set; }
         
         /// <summary>
-        /// Definitions of columns
+        /// The C# class type of this data source
         /// </summary>
-        public ISafeColumnDefinition ColumnDefinitions { get; set; }
-
+        
+        public Type ModelType { get; set; }
+        
         /// <summary>
         /// The field name of the default sort field, if none are specified.
         /// This is necessary to ensure reliable pagination.
@@ -37,23 +39,113 @@ namespace Searchlight
         /// Some data sources can only handle a specified number of parameters.
         /// </summary>
         public int MaximumParameters { get; set; }
+        
+        private readonly Dictionary<string, ColumnInfo> _fieldDict = new Dictionary<string, ColumnInfo>();
+        private readonly List<ColumnInfo> _columns = new List<ColumnInfo>();
+
+        /// <summary>
+        /// Add a column to this definition
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <param name="columnType"></param>
+        /// <returns></returns>
+        public SearchlightDataSource WithColumn(string columnName, Type columnType)
+        {
+            return WithRenamingColumn(columnName, columnName, null, columnType);
+        }
+
+        /// <summary>
+        /// Add a column to this definition
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <param name="columnType"></param>
+        /// <returns></returns>
+        public SearchlightDataSource WithRenamingColumn(string filterName, string columnName, string[] aliases,  Type columnType)
+        {
+            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType);
+            _columns.Add(columnInfo);
+
+            // Allow the API caller to either specify either the model name or one of the aliases
+            AddName(filterName, columnInfo);
+            if (aliases != null)
+            {
+                foreach (var alias in aliases)
+                {
+                    AddName(alias, columnInfo);
+                }
+            }
+            return this;
+        }
+
+        private void AddName(string name, ColumnInfo col)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return;
+            var upperName = name.ToUpper();
+            if (_fieldDict.ContainsKey(upperName))
+            {
+                var existing = _fieldDict[upperName];
+                throw new DuplicateName()
+                    {ExistingColumn = existing.OriginalName, ConflictingColumn = col.OriginalName, ConflictingName = upperName};
+            }
+
+            _fieldDict[upperName] = col;
+        }
+
+        public IEnumerable<ColumnInfo> GetColumnDefinitions()
+        {
+            return _columns;
+        }
+
+        public IEnumerable<string> ColumnNames()
+        {
+            return _fieldDict.Keys;
+        }
+
+        /// <summary>
+        /// Identify a single column by its token
+        /// </summary>
+        /// <param name="filterToken"></param>
+        /// <returns></returns>
+        public ColumnInfo IdentifyColumn(string filterToken)
+        {
+            ColumnInfo ci = null;
+            _fieldDict.TryGetValue(filterToken?.ToUpper(), out ci);
+            return ci;
+        }
 
 
         /// <summary>
         /// Create a searchlight data source based on an in-memory collection
         /// </summary>
-        /// <typeparam name="T">The underlying data type being queried</typeparam>
-        /// <param name="modelType">The type of the model for this data source.</param>
-        /// <param name="onlySearchlightFields">If true, only add columns for fields with a SearchlightField annotation.</param>
+        /// <param name="modelType">The type of the model for this data source</param>
+        /// <param name="mode">The parsing mode for fields on this class</param>
         /// <returns></returns>
         public static SearchlightDataSource Create(Type modelType, AttributeMode mode)
         {
             SearchlightDataSource src = new SearchlightDataSource();
             src.TableName = modelType.Name;
-            if (mode == AttributeMode.Strict) {
-                src.ColumnDefinitions = new StrictColumnDefinitions(modelType);
-            } else {
-                src.ColumnDefinitions = new EntityColumnDefinitions(modelType);
+            src.ModelType = modelType;
+            foreach (var pi in modelType.GetProperties())
+            {
+                // Searchlight does not support list/array element syntax
+                if (pi.GetIndexParameters().Length == 0)
+                {
+                    if (mode == AttributeMode.Loose)
+                    {
+                        src.WithColumn(pi.Name, pi.PropertyType);
+                    }
+                    else
+                    {
+                        var filter = pi.GetCustomAttributes<SearchlightField>().FirstOrDefault();
+                        if (filter != null)
+                        {
+
+                            // If this is a renaming column, add it appropriately
+                            Type t = filter.FieldType ?? pi.PropertyType;
+                            src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name, filter.Aliases ?? new string[] { }, t);
+                        }
+                    }
+                }
             }
             return src;
         }
@@ -111,7 +203,7 @@ namespace Searchlight
                     // This is not recognized - throw an exception and refuse to process further
                     if (!found_command)
                     {
-                        throw new FieldNotFound(name, ColumnDefinitions.ColumnNames().ToArray(), includes);
+                        throw new FieldNotFound(name, ColumnNames().ToArray(), includes);
                     }
                 }
             }
@@ -137,7 +229,7 @@ namespace Searchlight
                 list.Add(new SortInfo()
                 {
                     Direction = SortDirection.Ascending,
-                    Column = ColumnDefinitions.IdentifyColumn(DefaultSortField)
+                    Column = IdentifyColumn(DefaultSortField)
                 });
                 return list;
             }
@@ -153,10 +245,10 @@ namespace Searchlight
 
                 // Identify the field being sorted
                 var colName = tokens.Dequeue();
-                si.Column = ColumnDefinitions.IdentifyColumn(colName);
+                si.Column = IdentifyColumn(colName);
                 if (si.Column == null)
                 {
-                    throw new FieldNotFound(colName, ColumnDefinitions.ColumnNames().ToArray(), orderBy);
+                    throw new FieldNotFound(colName, ColumnNames().ToArray(), orderBy);
                 }
 
                 // Was that the last token?
@@ -307,14 +399,14 @@ namespace Searchlight
             }
 
             // Identify the fieldname -- is it on the approved list?
-            var columnInfo = ColumnDefinitions.IdentifyColumn(fieldToken);
+            var columnInfo = IdentifyColumn(fieldToken);
             if (columnInfo == null)
             {
                 if (String.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
                 {
                     throw new EmptyClause(filter);
                 }
-                throw new FieldNotFound(fieldToken, ColumnDefinitions.ColumnNames().ToArray(), filter);
+                throw new FieldNotFound(fieldToken, ColumnNames().ToArray(), filter);
             }
 
             // Allow "NOT" tokens here
@@ -356,12 +448,12 @@ namespace Searchlight
                 while (true)
                 {
                     c.Values.Add(ParseParameter(columnInfo, tokens.Dequeue(), filter));
-                    string comma_or_paren = tokens.Dequeue();
-                    if (!StringConstants.SAFE_LIST_TOKENS.Contains(comma_or_paren))
+                    string commaOrParen = tokens.Dequeue();
+                    if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen))
                     {
-                        throw new InvalidToken(comma_or_paren, StringConstants.SAFE_LIST_TOKENS, filter);
+                        throw new InvalidToken(commaOrParen, StringConstants.SAFE_LIST_TOKENS, filter);
                     }
-                    if (comma_or_paren == StringConstants.CLOSE_PARENTHESIS) break;
+                    if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
                 }
                 return c;
 
@@ -399,14 +491,14 @@ namespace Searchlight
         /// <summary>
         /// Verify that the next token is an expected token
         /// </summary>
-        /// <param name="expected_token"></param>
+        /// <param name="expectedToken"></param>
         /// <param name="actual"></param>
         /// <param name="originalFilter"></param>
-        private static void Expect(string expected_token, string actual, string originalFilter)
+        private static void Expect(string expectedToken, string actual, string originalFilter)
         {
-            if (!String.Equals(expected_token, actual, StringComparison.OrdinalIgnoreCase))
+            if (!String.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidToken(actual, new string[] { expected_token }, originalFilter);
+                throw new InvalidToken(actual, new string[] { expectedToken }, originalFilter);
             }
         }
 
@@ -420,7 +512,6 @@ namespace Searchlight
         {
             // Attempt to cast this item to the specified type
             var fieldType = column.FieldType;
-            var enumType = column.EnumType;
             object pvalue;
             try
             {
@@ -433,20 +524,7 @@ namespace Searchlight
                 {
                     fieldType = column.FieldType.GetGenericArguments()[0];
                 }
-
-                // If this is an object that must be parsed as an enum, permit the user to specify the enum as a string
-                if (enumType != null)
-                {
-                    if (Nullable.GetUnderlyingType(enumType) != null)
-                    {
-                        enumType = enumType.GetGenericArguments()[0];
-                    }
-                    var o = Enum.Parse(enumType, valueToken);
-                    pvalue = Convert.ChangeType(o, fieldType);
-
-                    // Guid parsing
-                }
-                else if (fieldType == typeof(Guid))
+                if (fieldType == typeof(Guid))
                 {
                     pvalue = Guid.Parse(valueToken);
 
