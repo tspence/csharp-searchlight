@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}"
+ProjectSection(SolutionItems) = preProject
+	Searchlight.nuspec = Searchlight.nuspec
+EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight", "src\Searchlight\Searchlight.csproj", "{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}"
 EndProject
