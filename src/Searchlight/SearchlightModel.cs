@@ -14,7 +14,7 @@ namespace Searchlight
         /// <param name="originalName">If the model is known by a different name in the underlying data store, specify it here</param>
         /// <param name="aliases">If the model will be known by multiple names, specify them here</param>
         /// <param name="maxParams">The maximum number of parameters that can be used in a query on this data source</param>
-        public SearchlightModel(string originalName = null, string[] aliases = null, string maxParams = null)
+        public SearchlightModel(string originalName = null, string[] aliases = null, string maxParams = null, string defaultSort = null)
         {
             OriginalName = originalName;
             Aliases = aliases ?? new string[] {};
@@ -22,6 +22,7 @@ namespace Searchlight
             {
                 MaximumParameters = Int32.Parse(maxParams);
             }
+            DefaultSort = defaultSort;
         }
 
         /// <summary>
@@ -37,6 +38,11 @@ namespace Searchlight
         /// <summary>
         /// The maximum number of parameters that can be used when querying this model
         /// </summary>
-        public int? MaximumParameters { get; set; }
+        public int MaximumParameters { get; set; }
+        
+        /// <summary>
+        /// The default sort criteria to use when none are specified, if any
+        /// </summary>
+        public string DefaultSort { get; set; }
     }
 }

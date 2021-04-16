@@ -17,7 +17,7 @@ namespace Searchlight.Tests
                .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
                .WithColumn("colGuid", typeof(Guid));
             src.MaximumParameters = 200;
-            src.DefaultSortField = "a";
+            src.DefaultSort = "a";
             return src;
         }
 

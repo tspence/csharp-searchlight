@@ -20,7 +20,7 @@ namespace Searchlight.Tests
                 .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
                 .WithColumn("colGuid", typeof(Guid));
             _source.MaximumParameters = 200;
-            _source.DefaultSortField = "a";
+            _source.DefaultSort = "a";
         }
 
         [TestMethod]
@@ -33,6 +33,12 @@ namespace Searchlight.Tests
                 var sql = SqlExecutor.RenderSql(_source, query);
             }));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
+            
+            // Verify that 0 is treated as unlimited
+            _source.MaximumParameters = 0;
+            var syntax = _source.Parse(originalFilter);
+            Assert.IsNotNull(syntax);
+            _source.MaximumParameters = 200;
         }
 
         [TestMethod]

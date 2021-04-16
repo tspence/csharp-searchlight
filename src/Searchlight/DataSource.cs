@@ -27,7 +27,7 @@ namespace Searchlight
         /// The field name of the default sort field, if none are specified.
         /// This is necessary to ensure reliable pagination.
         /// </summary>
-        public string DefaultSortField { get; set; }
+        public string DefaultSort { get; set; }
 
         /// <summary>
         /// This function produces a list of optional commands that can be specified in the $include parameter
@@ -112,7 +112,7 @@ namespace Searchlight
         public ColumnInfo IdentifyColumn(string filterToken)
         {
             ColumnInfo ci = null;
-            _fieldDict.TryGetValue(filterToken?.ToUpper(), out ci);
+            _fieldDict.TryGetValue(filterToken?.ToUpper() ?? string.Empty, out ci);
             return ci;
         }
 
@@ -126,8 +126,22 @@ namespace Searchlight
         public static DataSource Create(Type modelType, AttributeMode mode)
         {
             var src = new DataSource();
-            src.TableName = modelType.Name;
+            var modelAttribute = modelType.GetCustomAttribute<SearchlightModel>();
             src.ModelType = modelType;
+            if (modelAttribute == null && mode == AttributeMode.Strict)
+            {
+                throw new NonSearchlightModel() { ModelTypeName = modelType.Name };
+            }
+            if (modelAttribute != null)
+            {
+                src.TableName = modelAttribute.OriginalName;
+                src.MaximumParameters = modelAttribute.MaximumParameters;
+                src.DefaultSort = modelAttribute.DefaultSort;
+            }
+            else
+            {
+                src.TableName = modelType.Name;
+            }
             foreach (var pi in modelType.GetProperties())
             {
                 // Searchlight does not support list/array element syntax
@@ -233,7 +247,7 @@ namespace Searchlight
                 list.Add(new SortInfo()
                 {
                     Direction = SortDirection.Ascending,
-                    Column = IdentifyColumn(DefaultSortField)
+                    Column = IdentifyColumn(DefaultSort)
                 });
                 return list;
             }

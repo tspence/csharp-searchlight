@@ -15,6 +15,7 @@ namespace Searchlight.Tests
         public string NotASearchlightField { get; set; }
     }
 
+    [SearchlightModel()]
     public class TestFieldRenaming
     {
         [SearchlightField(originalName: "field_name")]
@@ -120,7 +121,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("Description", cc.Column.FieldName);
         }
 
-        
+        [SearchlightModel]
         public class TestFieldConflicts
         {
             [SearchlightField(aliases: new string[] {"description"})]
@@ -139,6 +140,19 @@ namespace Searchlight.Tests
             Assert.AreEqual("DESCRIPTION", ex.ConflictingName);
             Assert.AreEqual("Name", ex.ExistingColumn);
             Assert.AreEqual("Description", ex.ConflictingColumn);
+        }
+
+        public void TestNonSearchlightModel()
+        {
+            // "THIS" isn't a searchlight model; in strict mode it doesn't work
+            var ex = Assert.ThrowsException<NonSearchlightModel>(() =>
+            {
+                var source = DataSource.Create(this.GetType(), AttributeMode.Strict);
+            });
+            
+            // But if I try it in loose mode, anything goes
+            var s2 = DataSource.Create(this.GetType(), AttributeMode.Loose);
+            Assert.IsNotNull(s2);
         }
     }
 }
