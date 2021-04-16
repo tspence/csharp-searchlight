@@ -6,9 +6,9 @@ namespace Searchlight.Tests
     [TestClass]
     public class ExceptionTests
     {
-        public SearchlightDataSource getSource()
+        public DataSource getSource()
         {
-            var src = new SearchlightDataSource()
+            var src = new DataSource()
                .WithColumn("a", typeof(String))
                .WithColumn("b", typeof(Int32))
                .WithColumn("colLong", typeof(Int64))
@@ -16,9 +16,8 @@ namespace Searchlight.Tests
                .WithColumn("colULong", typeof(UInt64))
                .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
                .WithColumn("colGuid", typeof(Guid));
-
             src.MaximumParameters = 200;
-            src.DefaultSortField = "a";
+            src.DefaultSort = "a";
             return src;
         }
 
@@ -31,7 +30,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<EmptyClause>((Action)(() =>
             {
                 var query = src.Parse(originalFilter);
-                var sql = SqlExecutor.RenderSQL(src, query);
+                var sql = SqlExecutor.RenderSql(src, query);
             }));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
         }

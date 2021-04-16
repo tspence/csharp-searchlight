@@ -11,7 +11,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class LinqExecutorTests
     {
-        private SearchlightDataSource src;
+        private DataSource src;
 
         public class EmployeeObj
         {
@@ -35,7 +35,7 @@ namespace Searchlight.Tests
 
         public LinqExecutorTests()
         {
-            this.src = SearchlightDataSource.Create(typeof(EmployeeObj), AttributeMode.Loose);
+            this.src = DataSource.Create(typeof(EmployeeObj), AttributeMode.Loose);
         }
 
         [TestMethod]

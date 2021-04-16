@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Searchlight
 {
@@ -28,26 +29,29 @@ namespace Searchlight
         /// <summary>
         /// The paginated and filtered list of records matching the parameters you supplied.
         /// </summary>
-        public List<T> records { get; set; }
+        public T[] records { get; set; }
 
         /// <summary>
         /// Simple Constructor
         /// </summary>
         public FetchResult()
         {
-            records = new List<T>();
+            records = null;
             totalCount = null;
         }
 
         /// <summary>
-        /// Construct this from a different FetchResult, but maintain the count
+        /// Construct results for a searchlight request and return information about pagination
         /// </summary>
-        public FetchResult(FetchRequest request, List<T> newlist, int? totalCount)
+        /// <param name="request">The original request</param>
+        /// <param name="records">The paginated subsection of records returned from the query</param>
+        /// <param name="totalCount">The total number of records returned from the query, if known.  If it is computationally problematic to calculate this number, leave it null.</param>
+        public FetchResult(FetchRequest request, IEnumerable<T> records, int? totalCount)
         {
             this.pageSize = request.pageSize;
             this.pageNumber = request.pageNumber;
             this.totalCount = totalCount;
-            this.records = newlist;
+            this.records = records.ToArray();
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Searchlight
         /// <param name="query">The query commands</param>
         /// <param name="list">The source enumerable</param>
         /// <returns></returns>
-        public static IEnumerable<T> QueryCollection<T>(SearchlightDataSource src, List<BaseClause> query, IEnumerable<T> list)
+        public static IEnumerable<T> QueryCollection<T>(DataSource src, List<BaseClause> query, IEnumerable<T> list)
         {
             // Goal of this function is to construct this LINQ expression:
             //   return (from obj in LIST where QUERY select obj)
@@ -49,7 +49,7 @@ namespace Searchlight
         /// <param name="query"></param>
         /// <param name="src"></param>
         /// <returns></returns>
-        private static Expression BuildExpression(ParameterExpression select, List<BaseClause> query, SearchlightDataSource src)
+        private static Expression BuildExpression(ParameterExpression select, List<BaseClause> query, DataSource src)
         {
             ConjunctionType ct = ConjunctionType.NONE;
             Expression result = null;
@@ -88,7 +88,7 @@ namespace Searchlight
         /// <param name="clause"></param>
         /// <param name="src"></param>
         /// <returns></returns>
-        private static Expression BuildOneExpression(ParameterExpression select, BaseClause clause, SearchlightDataSource src)
+        private static Expression BuildOneExpression(ParameterExpression select, BaseClause clause, DataSource src)
         {
             // Check if this is a basic criteria clause
             var criteria = clause as CriteriaClause;
