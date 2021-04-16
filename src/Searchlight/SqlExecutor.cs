@@ -8,14 +8,21 @@ namespace Searchlight
     public static class SqlExecutor
     {
 
-        public static SQLQueryBuilder RenderSQL(this DataSource source, SyntaxTree query)
+        /// <summary>
+        /// Convert this syntax tree to a SQL Query Builder for this data source
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        /// <exception cref="TooManyParameters"></exception>
+        public static SQLQueryBuilder RenderSql(this DataSource source, SyntaxTree query)
         {
             var sql = new SQLQueryBuilder();
             foreach (var clause in query.Filter)
             {
                 RenderClause(clause, sql);
             }
-            if (sql.parameters.Count > source.MaximumParameters)
+            if (sql.Parameters.Count > source.MaximumParameters && source.MaximumParameters > 0)
             {
                 throw new TooManyParameters(source.MaximumParameters, query.OriginalFilter);
             }

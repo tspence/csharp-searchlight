@@ -13,10 +13,12 @@ namespace Searchlight
         /// </summary>
         /// <param name="originalName">If the model is known by a different name in the underlying data store, specify it here</param>
         /// <param name="aliases">If the model will be known by multiple names, specify them here</param>
-        public SearchlightModel(string originalName = null, string[] aliases = null)
+        /// <param name="maxParams">The maximum number of parameters that can be used in a query on this data source</param>
+        public SearchlightModel(string originalName = null, string[] aliases = null, int? maxParams = null)
         {
             OriginalName = originalName;
             Aliases = aliases ?? new string[] {};
+            MaximumParameters = maxParams;
         }
 
         /// <summary>
@@ -29,5 +31,10 @@ namespace Searchlight
         /// If Searchlight should recognize this table by any other aliases, list them here
         /// </summary>
         public string[] Aliases { get; set; }
+        
+        /// <summary>
+        /// The maximum number of parameters that can be used when querying this model
+        /// </summary>
+        public int? MaximumParameters { get; set; }
     }
 }

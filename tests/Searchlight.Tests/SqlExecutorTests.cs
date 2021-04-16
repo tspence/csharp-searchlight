@@ -30,7 +30,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<TooManyParameters>((Action)(() =>
             {
                 var query = _source.Parse(originalFilter);
-                var sql = SqlExecutor.RenderSQL(_source, query);
+                var sql = SqlExecutor.RenderSql(_source, query);
             }));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
         }
@@ -40,21 +40,21 @@ namespace Searchlight.Tests
         {
             // First test, lowercase
             var query = _source.Parse("b between 1 and 5");
-            var sql = SqlExecutor.RenderSQL(_source, query);
+            var sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.whereClause);
-            Assert.AreEqual(2, sql.parameters.Count());
+            Assert.AreEqual(2, sql.Parameters.Count());
 
             // Second test, proper case
             query = _source.Parse("b Between 1 And 5");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.whereClause);
-            Assert.AreEqual(2, sql.parameters.Count());
+            Assert.AreEqual(2, sql.Parameters.Count());
 
             // Third test, uppercase
             query = _source.Parse("b BETWEEN 1 AND 5");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.whereClause);
-            Assert.AreEqual(2, sql.parameters.Count());
+            Assert.AreEqual(2, sql.Parameters.Count());
         }
 
         [TestMethod]
@@ -111,41 +111,41 @@ namespace Searchlight.Tests
         public void FilterParseTest()
         {
             var query = _source.Parse("a = 'booya' AND b != 1");
-            var sql = SqlExecutor.RenderSQL(_source, query);
+            var sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("a = @p1 AND b <> @p2", sql.whereClause);
-            Assert.AreEqual(2, sql.parameters.Count());
-            Assert.AreEqual("booya", sql.parameters["@p1"]);
-            Assert.AreEqual(1, sql.parameters["@p2"]);
+            Assert.AreEqual(2, sql.Parameters.Count());
+            Assert.AreEqual("booya", sql.Parameters["@p1"]);
+            Assert.AreEqual(1, sql.Parameters["@p2"]);
         }
 
         [TestMethod]
         public void NullInWhereClause()
         {
             var query = _source.Parse("a is null");
-            var sql = SqlExecutor.RenderSQL(_source, query);
+            var sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("a IS NULL", sql.whereClause);
-            Assert.AreEqual(0, sql.parameters.Count);
+            Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("a is not null");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("a IS NOT NULL", sql.whereClause);
-            Assert.AreEqual(0, sql.parameters.Count);
+            Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("(  a  is  not  null )  or   ( a  is  null  )  ");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("(a IS NOT NULL) OR (a IS NULL)", sql.whereClause);
-            Assert.AreEqual(0, sql.parameters.Count);
+            Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("(((  a  is  not  null ))  or   ( a  is  null  ))  ");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("(((a IS NOT NULL)) OR (a IS NULL))", sql.whereClause);
-            Assert.AreEqual(0, sql.parameters.Count);
+            Assert.AreEqual(0, sql.Parameters.Count);
         }
 
         public string ParseWhereClause(string filter)
         {
             var query = _source.Parse(filter);
-            var sql = SqlExecutor.RenderSQL(_source, query);
+            var sql = SqlExecutor.RenderSql(_source, query);
             return sql.whereClause;
         }
 
@@ -188,42 +188,42 @@ namespace Searchlight.Tests
         {
             // Test the Int64
             var query = _source.Parse("collong eq 123456789123456");
-            var sql = SqlExecutor.RenderSQL(_source, query);
+            var sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("colLong = @p1", sql.whereClause);
-            Assert.AreEqual(123456789123456, sql.parameters["@p1"]);
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
 
             // Test the guid
             query = _source.Parse(String.Format("colguid eq '{0}'", Guid.Empty.ToString()));
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("colGuid = @p1", sql.whereClause);
-            Assert.AreEqual(Guid.Empty, sql.parameters["@p1"]);
+            Assert.AreEqual(Guid.Empty, sql.Parameters["@p1"]);
 
             // Test the nullable guid
             query = _source.Parse(String.Format("colNullableGuid is null or colNullableGuid = '{0}'", Guid.Empty.ToString()));
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("colNullableGuid IS NULL OR colNullableGuid = @p1", sql.whereClause);
-            Assert.AreEqual(Guid.Empty, sql.parameters["@p1"]);
+            Assert.AreEqual(Guid.Empty, sql.Parameters["@p1"]);
 
             // Test the ULONG and nullable ULONG
             query = _source.Parse("colULong > 12345 or colNullableULong = 6789456");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("colULong > @p1 OR colNullableULong = @p2", sql.whereClause);
-            Assert.AreEqual(12345UL, sql.parameters["@p1"]);
-            Assert.AreEqual(6789456UL, sql.parameters["@p2"]);
+            Assert.AreEqual(12345UL, sql.Parameters["@p1"]);
+            Assert.AreEqual(6789456UL, sql.Parameters["@p2"]);
 
             // Test the ULONG and nullable ULONG when compared to a boolean - necessary for redshift
             query = _source.Parse("colULong = true OR colULong = false");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("colULong = @p1 OR colULong = @p2", sql.whereClause);
-            Assert.AreEqual(1UL, sql.parameters["@p1"]);
-            Assert.AreEqual(0UL, sql.parameters["@p2"]);
+            Assert.AreEqual(1UL, sql.Parameters["@p1"]);
+            Assert.AreEqual(0UL, sql.Parameters["@p2"]);
 
             // Nullable variant
             query = _source.Parse("colNullableULong = true OR colNullableULong = false");
-            sql = SqlExecutor.RenderSQL(_source, query);
+            sql = SqlExecutor.RenderSql(_source, query);
             Assert.AreEqual("colNullableULong = @p1 OR colNullableULong = @p2", sql.whereClause);
-            Assert.AreEqual(1UL, sql.parameters["@p1"]);
-            Assert.AreEqual(0UL, sql.parameters["@p2"]);
+            Assert.AreEqual(1UL, sql.Parameters["@p1"]);
+            Assert.AreEqual(0UL, sql.Parameters["@p2"]);
         }
     }
 }

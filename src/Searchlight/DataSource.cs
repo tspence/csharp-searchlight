@@ -14,14 +14,13 @@ namespace Searchlight
     public class DataSource
     {
         /// <summary>
-        /// The official name of the collection queried by this data source
+        /// The externally visible name of this collection or table
         /// </summary>
         public string TableName { get; set; }
 
         /// <summary>
-        /// The C# class type of this data source
+        /// The internal type of the model queried by this source
         /// </summary>
-
         public Type ModelType { get; set; }
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<EmptyClause>((Action)(() =>
             {
                 var query = src.Parse(originalFilter);
-                var sql = SqlExecutor.RenderSQL(src, query);
+                var sql = SqlExecutor.RenderSql(src, query);
             }));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
         }
