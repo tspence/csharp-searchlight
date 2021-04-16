@@ -4,30 +4,18 @@ using System.Text;
 namespace Searchlight {
     public class SQLQueryBuilder
     {
-        public DataSource Source;
-        private readonly StringBuilder _sb = new StringBuilder();
-        
-        public string whereClause
+        public SQLQueryBuilder(DataSource src)
         {
-            get
-            {
-                if (_sb.Length > 0)
-                {
-                    return " WHERE " + _sb.ToString();
-                }
-
-                return "";
-            }
-        }
-
-        public string orderByClause
-        {
-            get
-            {
-                return "";
-            }
+            _source = src;
         }
         
+        private DataSource _source;
+        private readonly StringBuilder _whereClause = new StringBuilder();
+        private readonly StringBuilder _orderByClause = new StringBuilder();
+        
+        public string WhereClause => _whereClause.ToString();
+        public string OrderByClause => _orderByClause.ToString();
+
         public readonly Dictionary<string, object> Parameters = new Dictionary<string, object>();
 
         public string AddParameter(object p)
@@ -38,14 +26,21 @@ namespace Searchlight {
             return name;
         }
 
-        public void AppendString(string s)
+        public void AppendWhereClause(string s)
         {
-            _sb.Append(s);
+            _whereClause.Append(s);
+        }
+
+        public void AppendOrderByClause(string s)
+        {
+            _orderByClause.Append(s);
         }
 
         public override string ToString()
         {
-            return $"SELECT * FROM {Source.TableName} {whereClause} {orderByClause}";
+            var where = _whereClause.Length > 0 ? $" WHERE {_whereClause}" : "";
+            var order = _orderByClause.Length > 0 ? $" ORDER BY {_orderByClause}" : "";
+            return $"SELECT * FROM {_source.TableName} {where} {order}";
         }
     }
 }
