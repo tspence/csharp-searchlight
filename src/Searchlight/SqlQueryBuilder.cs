@@ -36,11 +36,19 @@ namespace Searchlight {
             _orderByClause.Append(s);
         }
 
+        public int? MaxRecords { get; set; }
+
+        /// <summary>
+        /// Uses SQL Server syntax by default.
+        /// TODO: Implement alternative SQL formats
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
+            var limit = MaxRecords != null ? $" TOP {MaxRecords}" : "";
             var where = _whereClause.Length > 0 ? $" WHERE {_whereClause}" : "";
             var order = _orderByClause.Length > 0 ? $" ORDER BY {_orderByClause}" : "";
-            return $"SELECT * FROM {_source.TableName} {where} {order}";
+            return $"SELECT{limit} * FROM {_source.TableName}{where}{order}";
         }
     }
 }

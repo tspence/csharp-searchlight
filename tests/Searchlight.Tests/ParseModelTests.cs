@@ -142,6 +142,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("Description", ex.ConflictingColumn);
         }
 
+        [TestMethod]
         public void TestNonSearchlightModel()
         {
             // "THIS" isn't a searchlight model; in strict mode it doesn't work
@@ -153,6 +154,30 @@ namespace Searchlight.Tests
             // But if I try it in loose mode, anything goes
             var s2 = DataSource.Create(this.GetType(), AttributeMode.Loose);
             Assert.IsNotNull(s2);
+        }
+
+        [SearchlightModel(DefaultSort="name")]
+        public class TestWithDefaultSort
+        {
+            [SearchlightField(aliases: new string[] { "fullName" })]
+            public string Name { get; set; }
+            [SearchlightField(aliases: new string[] { "DescriptionText" })]
+            public string Description { get; set; }
+        }
+
+        [TestMethod]
+        public void TestDefaultSort()
+        {
+            var source = DataSource.Create(typeof(TestWithDefaultSort), AttributeMode.Strict);
+            var query = source.Parse(null, null, null);
+            Assert.AreEqual(1, query.OrderBy.Count);
+            Assert.AreEqual("Name", query.OrderBy[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Ascending, query.OrderBy[0].Direction);
+
+            // Now try the same thing with a class that doesn't have a default sort
+            var source2 = DataSource.Create(typeof(TestStrictMode), AttributeMode.Strict);
+            var query2 = source2.Parse(null, null, null);
+            Assert.AreEqual(0, query2.OrderBy.Count);
         }
     }
 }

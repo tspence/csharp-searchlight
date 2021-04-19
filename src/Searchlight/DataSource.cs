@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Searchlight.Exceptions;
 
 namespace Searchlight
 {
@@ -186,6 +187,31 @@ namespace Searchlight
             return query;
         }
 
+        public SyntaxTree Parse(FetchRequest request)
+        {
+            SyntaxTree query = new SyntaxTree();
+            query.OriginalFilter = request.filter;
+            // TODO: Implement "include/commands" - query.Includes = ParseIncludes(request.includes);
+            query.Filter = ParseFilter(request.filter);
+            query.OrderBy = ParseOrderBy(request.order);
+            if (request.pageNumber != null || request.pageSize != null)
+            {
+                query.PageNumber = request.pageNumber ?? 0;
+                query.PageSize = request.pageSize ?? 50;
+                if (query.PageSize <= 1)
+                {
+                    throw new InvalidPageSize() {PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString()};
+                }
+
+                if (query.PageNumber < 0)
+                {
+                    throw new InvalidPageNumber() { PageNumber = request.pageNumber == null ? "not specified" : request.pageNumber.ToString() };
+                }
+            }
+
+            return query;
+        }
+
         /// <summary>
         /// Parse the include statements
         /// </summary>
@@ -244,11 +270,14 @@ namespace Searchlight
             // Shortcut for case where user gives us an empty string
             if (String.IsNullOrWhiteSpace(orderBy))
             {
-                list.Add(new SortInfo()
+                if (!String.IsNullOrWhiteSpace(DefaultSort))
                 {
-                    Direction = SortDirection.Ascending,
-                    Column = IdentifyColumn(DefaultSort)
-                });
+                    list.Add(new SortInfo()
+                    {
+                        Direction = SortDirection.Ascending,
+                        Column = IdentifyColumn(DefaultSort)
+                    });
+                }
                 return list;
             }
 
