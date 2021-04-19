@@ -30,5 +30,15 @@ namespace Searchlight.Query
         /// The list of clauses in the "$filter" statement
         /// </summary>
         public List<BaseClause> Filter { get; set; }
+
+        /// <summary>
+        /// For pagination, which (zero-based) page are we viewing?
+        /// </summary>
+        public int? PageNumber { get; set; }
+
+        /// <summary>
+        /// For pagination, how large is each page?
+        /// </summary>
+        public int? PageSize { get; set; }
     }
 }

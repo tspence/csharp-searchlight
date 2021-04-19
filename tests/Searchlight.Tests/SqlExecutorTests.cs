@@ -21,6 +21,7 @@ namespace Searchlight.Tests
                 .WithColumn("colGuid", typeof(Guid));
             _source.MaximumParameters = 200;
             _source.DefaultSort = "a";
+            _source.TableName = "MyTable";
         }
 
         [TestMethod]
@@ -230,6 +231,28 @@ namespace Searchlight.Tests
             Assert.AreEqual("colNullableULong = @p1 OR colNullableULong = @p2", sql.WhereClause);
             Assert.AreEqual(1UL, sql.Parameters["@p1"]);
             Assert.AreEqual(0UL, sql.Parameters["@p2"]);
+        }
+
+        [TestMethod]
+        public void SqlServerBasicQuery()
+        {
+            // Basic query including where and order
+            var query = _source.Parse("collong eq 123456789123456", null, "b desc");
+            var sql = _source.RenderSql(query);
+            Assert.AreEqual("SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b DESCENDING", sql.ToString());
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
+        }
+
+        [TestMethod]
+        public void SqlServerPaginated()
+        {
+            // Fetch request including pagination
+            var fetch = new FetchRequest()
+                {filter = "collong eq 123456789123456", order = "b desc", pageNumber = 2, pageSize = 50};
+            var query = _source.Parse(fetch);
+            var sql = _source.RenderSql(query);
+            Assert.AreEqual("SELECT TOP 150 * FROM MyTable WHERE colLong = @p1 ORDER BY b DESCENDING", sql.ToString());
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
         }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using System;
-using Searchlight;
-using Searchlight.Parsing;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -25,6 +23,21 @@ namespace Searchlight
             if (sql.Parameters.Count > source.MaximumParameters && source.MaximumParameters > 0)
             {
                 throw new TooManyParameters(source.MaximumParameters, query.OriginalFilter);
+            }
+
+            for (int i = 0; i < query.OrderBy.Count; i++)
+            {
+                if (i > 0)
+                {
+                    sql.AppendOrderByClause(", ");
+                }
+
+                var sort = query.OrderBy[i];
+                sql.AppendOrderByClause($"{sort.Column.OriginalName} {sort.Direction.ToString().ToUpperInvariant()}");
+            }
+            if (query.PageNumber != null && query.PageSize != null)
+            {
+                sql.MaxRecords = (query.PageNumber + 1) * query.PageSize;
             }
             return sql;
         }
@@ -51,43 +64,46 @@ namespace Searchlight
                 var cc = clause as CriteriaClause;
                 switch (cc.Operation)
                 {
-                    case OperationType.Equals: 
+                    case OperationType.Equals:
                         sql.AppendWhereClause($"{cc.Column.OriginalName} = {sql.AddParameter(cc.Value)}");
                         break;
-                    case OperationType.GreaterThan: 
+                    case OperationType.GreaterThan:
                         sql.AppendWhereClause($"{cc.Column.OriginalName} > {sql.AddParameter(cc.Value)}");
                         break;
-                    case OperationType.GreaterThanOrEqual: 
+                    case OperationType.GreaterThanOrEqual:
                         sql.AppendWhereClause($"{cc.Column.OriginalName} >= {sql.AddParameter(cc.Value)}");
                         break;
-                    case OperationType.LessThan: 
+                    case OperationType.LessThan:
                         sql.AppendWhereClause($"{cc.Column.OriginalName} < {sql.AddParameter(cc.Value)}");
                         break;
-                    case OperationType.LessThanOrEqual: 
+                    case OperationType.LessThanOrEqual:
                         sql.AppendWhereClause($"{cc.Column.OriginalName} <= {sql.AddParameter(cc.Value)}");
                         break;
-                    case OperationType.NotEqual: 
+                    case OperationType.NotEqual:
                         sql.AppendWhereClause($"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}");
                         break;
-                    case OperationType.Contains: 
-                        if (!(cc.Value is string)) {
+                    case OperationType.Contains:
+                        if (!(cc.Value is string))
+                        {
                             throw new Exception("Value was not a string type");
                         }
                         sql.AppendWhereClause($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}");
                         break;
-                    case OperationType.StartsWith: 
-                        if (!(cc.Value is string)) {
+                    case OperationType.StartsWith:
+                        if (!(cc.Value is string))
+                        {
                             throw new Exception("Value was not a string type");
                         }
                         sql.AppendWhereClause($"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}");
                         break;
-                    case OperationType.EndsWith: 
-                        if (!(cc.Value is string)) {
+                    case OperationType.EndsWith:
+                        if (!(cc.Value is string))
+                        {
                             throw new Exception("Value was not a string type");
                         }
                         sql.AppendWhereClause($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value)}");
                         break;
-                    default: 
+                    default:
                         throw new Exception("Incorrect clause type");
                 }
             }
