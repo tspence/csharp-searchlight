@@ -135,7 +135,7 @@ namespace Searchlight
             }
             if (modelAttribute != null)
             {
-                src.TableName = modelAttribute.OriginalName;
+                src.TableName = modelAttribute.OriginalName ?? modelType.Name;
                 src.MaximumParameters = modelAttribute.MaximumParameters;
                 src.DefaultSort = modelAttribute.DefaultSort;
             }
@@ -180,6 +180,7 @@ namespace Searchlight
         public SyntaxTree Parse(string filter, string include = null, string orderBy = null)
         {
             SyntaxTree query = new SyntaxTree();
+            query.Source = this;
             query.OriginalFilter = filter;
             query.Includes = ParseIncludes(include);
             query.Filter = ParseFilter(filter);
@@ -190,6 +191,7 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             SyntaxTree query = new SyntaxTree();
+            query.Source = this;
             query.OriginalFilter = request.filter;
             // TODO: Implement "include/commands" - query.Includes = ParseIncludes(request.includes);
             query.Filter = ParseFilter(request.filter);
