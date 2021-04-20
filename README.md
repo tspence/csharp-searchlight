@@ -2,14 +2,18 @@
 [![Travis](https://travis-ci.com/tspence/csharp-searchlight.svg?branch=master&style=plastic)](https://travis-ci.com/tspence/csharp-searchlight)
 
 # csharp-searchlight
-A lightweight, secure framework for searching through databases and in-memory collections using a fluent REST API with robust, secure searching features.
+
+A lightweight, secure query language for searching through databases and in-memory collections using a fluent REST API with robust, secure searching features.
 
 # What is Searchlight?
 
 Searchlight is a simple and safe query language for API design.  [Designed with security in mind](https://tedspence.com/protecting-apis-with-layered-security-8c989fb5a19f), 
 it works well with REST, provides complex features, and is easier to learn than GraphQL.  
-At the same time, Searchlight is safe from SQL injection attacks.  By using Searchlight, you gain the ability to offer your customers robust query functionality
-while still being able to ensure that you are only executing query plans that have been rigorously validated and that all customer input data parameterized. 
+
+The Searchlight query language is safe from SQL injection attacks.  Searchlight allows you to expose robust query functionality while maintaining full control
+over the exact queries executed on your data store, whether those queries are executed via LINQ, SQL, or NoSQL.  You maintain the ability to enforce rules on
+end-user query complexity, you can enable or disable querying on certain columns based on performance metrics, or adjust query criteria to enforce separation
+of customer data.  All input fields provided from the customer are parameterized. 
 
 An example API with Searchlight looks like this:
 
@@ -17,13 +21,13 @@ An example API with Searchlight looks like this:
 GET /customers/?query=CreatedDate gt '2019-01-01' and (IsApproved = false OR (approvalCode IS NULL AND daysWaiting between 5 and 10))
 ```
 
-Searchlight uses type checking, validation, and parsing to convert this into an abstract syntax tree (AST) representing search clauses and parameters.  You can 
-then convert that AST into various forms and execute it on an SQL database, an in-memory object collection using LINQ, a MongoDB database, or so on.  To ensure
-that no risky text is passed to your database, Searchlight reconstructs a completely new SQL query from string constants defined in your classes, and adds
+Searchlight uses type checking, validation, and parsing to convert this query text into an abstract syntax tree (AST) representing search clauses and parameters.  
+You can then convert that AST into various forms and execute it on an SQL database, an in-memory object collection using LINQ, a MongoDB database, or so on.  
+To ensure that no risky text is passed to your database, Searchlight reconstructs a completely new SQL query from string constants defined in your classes, and adds
 parameters as appropriate.  All field names are converted from "customer-visible" field names to "actual database" names.  The above query would be transformed 
 to the following:
 
-```
+```sql
 SELECT * FROM customers WHERE created_date >= @p1 AND (approval_flag = @p2 OR (approval_code_str IS NULL AND days_waiting BETWEEN @p3 AND @p4))
 
 Parameters:
@@ -38,10 +42,11 @@ Parameters:
 To use searchlight, you construct a "model" that will be exposed via your API.  Tag your model with the `[SearchlightModel]` annotation, and tag each
 queryable field with  `[SearchlightField]`.
 
-```
+```csharp
 [SearchlightModel]
 public class MyAccount
 {
+    // These fields are queryable
     [SearchlightField]
     public string AccountName { get; set; }
     [SearchlightField]
@@ -54,16 +59,50 @@ public class MyAccount
 
 When someone queries your API, Searchlight can transform their query into a SQL or LINQ statement:
 
-```
+```csharp
 var list = new List<MyAccount>();
-var query = src.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
+var syntax = src.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
 
 // To execute via SQL, this function gives you a parameterized SQL statement
-var sql = SqlExecutor.RenderSQL(_source, query);
+var sql = syntax.ToSqlServerCommand(_source, query);
 ... execute SQL via whatever method you prefer ...
 
 // To execute via an in-memory object collection
 var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query.filter, list);
+```
+
+# How can I implement Searchlight using Dapper and AutoMapper to maintain full database independence?
+
+Searchlight is designed to mix with other powerful frameworks such as [Dapper](https://github.com/StackExchange/Dapper) and [AutoMapper](https://automapper.org/) to help 
+provide high performance functionality on SQL Server. This example API demonstrates filtering, ordering, pagination, and the ability to return a full row count so the
+application can display pagination UI elements.
+
+This example demonstrates key techniques:
+* Widgets are known inside the database by one class, "WidgetEntity", yet are expressed through the API as a different class, "WidgetModel".  This allows you to
+rename fields, rename tables, enforce transformation logic, and make certain fields visible either internally or externally.
+* Pagination uses the "Page Size" and "Page Number" pattern.  You could implement similar features using Skip and Take if preferred.
+* The exact SQL Server query uses a temporary table and multiple result sets to ensure that only the exact rows specified are returned to the caller.  The SQL command
+retrieves the minimum amount of data possible, plus it also tells you the total count of records so your user interface can show the exact number of pages.
+* This pattern uses [Dapper Contrib](https://dapper-tutorial.net/dapper-contrib) to fetch widget entities using asynchronous queries.
+
+```csharp
+public async Task<FetchResult<WidgetModel>> QueryWidgets([FromQuery]string filter, [FromQuery]string order, [FromQuery]int? pageSize, [FromQuery]int? pageNumber)
+{
+    var request = new FetchRequest() {filter = filter, order = order, pageNumber = pageNumber, pageSize = pageSize};
+    var source = DataSource.Create(typeof(WidgetModel), AttributeMode.Strict);
+    var syntax = source.Parse(request);
+    var sql = syntax.ToSqlServerCommand(true);
+    using (var conn = new SqlConnection(_config.GetConnectionString("MyConnectionString")))
+    {
+        using (var multi = (await conn.QueryMultipleAsync(sql.CommandText, sql.Parameters, null, null, CommandType.Text)))
+        {
+            var totalCount = (await multi.ReadAsync<int>()).ToArray().FirstOrDefault();
+            var entities = (await multi.ReadAsync<WidgetEntity>()).ToArray();
+            var models = _mapper.Map<WidgetEntity[], WidgetModel[]>(entities);
+            return new FetchResult<WidgetModel>(request, models.ToList(), totalCount);
+        }
+    }
+}
 ```
 
 # What if a developer makes a mistake when querying?
@@ -91,7 +130,7 @@ Searchlight provides for aliases so that you can maintain backwards compatibilit
 to rename a field, fix a typo, or migrate from one field to another, Searchlight allows you to tag the field for forwards and backwards
 compatibility.
 
-```
+```csharp
 [SearchlightModel]
 public class MyAccount
 {
@@ -104,7 +143,7 @@ public class MyAccount
 
 Constructing a model manually works as follows:
 
-```
+```csharp
 var source = new SearchlightDataSource()
     .WithColumn("a", typeof(String), null)
     .WithColumn("b", typeof(Int32), null)

@@ -31,7 +31,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<TooManyParameters>((Action)(() =>
             {
                 var query = _source.Parse(originalFilter);
-                var sql = SqlExecutor.RenderSql(_source, query);
+                var sql = query.ToSqlServerCommand(false);
             }));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
             
@@ -47,20 +47,20 @@ namespace Searchlight.Tests
         {
             // First test, lowercase
             var query = _source.Parse("b between 1 and 5");
-            var sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause);
+            var sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count());
 
             // Second test, proper case
             query = _source.Parse("b Between 1 And 5");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count());
 
             // Third test, uppercase
             query = _source.Parse("b BETWEEN 1 AND 5");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count());
         }
 
@@ -118,8 +118,8 @@ namespace Searchlight.Tests
         public void FilterParseTest()
         {
             var query = _source.Parse("a = 'booya' AND b != 1");
-            var sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("a = @p1 AND b <> @p2", sql.WhereClause);
+            var sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("a = @p1 AND b <> @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count());
             Assert.AreEqual("booya", sql.Parameters["@p1"]);
             Assert.AreEqual(1, sql.Parameters["@p2"]);
@@ -129,31 +129,31 @@ namespace Searchlight.Tests
         public void NullInWhereClause()
         {
             var query = _source.Parse("a is null");
-            var sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("a IS NULL", sql.WhereClause);
+            var sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("a IS NULL", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("a is not null");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("a IS NOT NULL", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("a IS NOT NULL", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("(  a  is  not  null )  or   ( a  is  null  )  ");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("(a IS NOT NULL) OR (a IS NULL)", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("(a IS NOT NULL) OR (a IS NULL)", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("(((  a  is  not  null ))  or   ( a  is  null  ))  ");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("(((a IS NOT NULL)) OR (a IS NULL))", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("(((a IS NOT NULL)) OR (a IS NULL))", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
         }
 
         public string ParseWhereClause(string filter)
         {
             var query = _source.Parse(filter);
-            var sql = SqlExecutor.RenderSql(_source, query);
-            return sql.WhereClause;
+            var sql = query.ToSqlServerCommand(false);
+            return sql.WhereClause.ToString();
         }
 
         [TestMethod]
@@ -195,40 +195,40 @@ namespace Searchlight.Tests
         {
             // Test the Int64
             var query = _source.Parse("collong eq 123456789123456");
-            var sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("colLong = @p1", sql.WhereClause);
+            var sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("colLong = @p1", sql.WhereClause.ToString());
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
 
             // Test the guid
             query = _source.Parse(String.Format("colguid eq '{0}'", Guid.Empty.ToString()));
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("colGuid = @p1", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("colGuid = @p1", sql.WhereClause.ToString());
             Assert.AreEqual(Guid.Empty, sql.Parameters["@p1"]);
 
             // Test the nullable guid
             query = _source.Parse(String.Format("colNullableGuid is null or colNullableGuid = '{0}'", Guid.Empty.ToString()));
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("colNullableGuid IS NULL OR colNullableGuid = @p1", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("colNullableGuid IS NULL OR colNullableGuid = @p1", sql.WhereClause.ToString());
             Assert.AreEqual(Guid.Empty, sql.Parameters["@p1"]);
 
             // Test the ULONG and nullable ULONG
             query = _source.Parse("colULong > 12345 or colNullableULong = 6789456");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("colULong > @p1 OR colNullableULong = @p2", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("colULong > @p1 OR colNullableULong = @p2", sql.WhereClause.ToString());
             Assert.AreEqual(12345UL, sql.Parameters["@p1"]);
             Assert.AreEqual(6789456UL, sql.Parameters["@p2"]);
 
             // Test the ULONG and nullable ULONG when compared to a boolean - necessary for redshift
             query = _source.Parse("colULong = true OR colULong = false");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("colULong = @p1 OR colULong = @p2", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("colULong = @p1 OR colULong = @p2", sql.WhereClause.ToString());
             Assert.AreEqual(1UL, sql.Parameters["@p1"]);
             Assert.AreEqual(0UL, sql.Parameters["@p2"]);
 
             // Nullable variant
             query = _source.Parse("colNullableULong = true OR colNullableULong = false");
-            sql = SqlExecutor.RenderSql(_source, query);
-            Assert.AreEqual("colNullableULong = @p1 OR colNullableULong = @p2", sql.WhereClause);
+            sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("colNullableULong = @p1 OR colNullableULong = @p2", sql.WhereClause.ToString());
             Assert.AreEqual(1UL, sql.Parameters["@p1"]);
             Assert.AreEqual(0UL, sql.Parameters["@p2"]);
         }
@@ -237,9 +237,9 @@ namespace Searchlight.Tests
         public void SqlServerBasicQuery()
         {
             // Basic query including where and order
-            var query = _source.Parse("collong eq 123456789123456", null, "b desc");
-            var sql = _source.RenderSql(query);
-            Assert.AreEqual("SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b DESCENDING", sql.ToString());
+            var query = _source.Parse("collong eq 123456789123456", null, "b ascending");
+            var sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b ASC", sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
         }
 
@@ -250,8 +250,32 @@ namespace Searchlight.Tests
             var fetch = new FetchRequest()
                 {filter = "collong eq 123456789123456", order = "b desc", pageNumber = 2, pageSize = 50};
             var query = _source.Parse(fetch);
-            var sql = _source.RenderSql(query);
-            Assert.AreEqual("SELECT TOP 150 * FROM MyTable WHERE colLong = @p1 ORDER BY b DESCENDING", sql.ToString());
+            var sql = query.ToSqlServerCommand(false);
+            Assert.AreEqual("SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b DESC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY", sql.CommandText);
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
+        }
+
+        [TestMethod]
+        public void SqlServerMultiFetch()
+        {
+            // Fetch request including pagination
+            var fetch = new FetchRequest()
+                { filter = "collong eq 123456789123456", order = "b desc", pageNumber = 2, pageSize = 50 };
+            var query = _source.Parse(fetch);
+            var sql = query.ToSqlServerCommand(true);
+            Assert.AreEqual("SELECT * INTO #temp FROM MyTable WHERE colLong = @p1;\nSELECT COUNT(1) AS TotalRecords FROM #temp;\nSELECT * FROM #temp ORDER BY b DESC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\nDROP TABLE #temp;\n", sql.CommandText);
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
+        }
+
+        [TestMethod]
+        public void SqlServerMultiFetchDefaultSort()
+        {
+            // Fetch request including pagination
+            var fetch = new FetchRequest()
+                { filter = "collong eq 123456789123456", order = null, pageNumber = 2, pageSize = 50 };
+            var query = _source.Parse(fetch);
+            var sql = query.ToSqlServerCommand(true);
+            Assert.AreEqual("SELECT * INTO #temp FROM MyTable WHERE colLong = @p1;\nSELECT COUNT(1) AS TotalRecords FROM #temp;\nSELECT * FROM #temp ORDER BY a ASC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\nDROP TABLE #temp;\n", sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
         }
     }

@@ -12,6 +12,11 @@ namespace Searchlight.Query
     public class SyntaxTree
     {
         /// <summary>
+        /// The data source for this request
+        /// </summary>
+        public DataSource Source { get; set; }
+
+        /// <summary>
         /// The original filter that was provided to the query, for reference
         /// </summary>
         public string OriginalFilter { get; set; }

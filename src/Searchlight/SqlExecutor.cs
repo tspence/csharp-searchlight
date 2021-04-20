@@ -1,63 +1,80 @@
 ﻿using System;
+using System.Collections.Generic;
 using Searchlight.Query;
 
 namespace Searchlight
 {
     public static class SqlExecutor
     {
-
         /// <summary>
         /// Convert this syntax tree to a SQL Query Builder for this data source
         /// </summary>
-        /// <param name="source"></param>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        /// <exception cref="TooManyParameters"></exception>
-        public static SQLQueryBuilder RenderSql(this DataSource source, SyntaxTree query)
+        /// <param name="query">The query to convert to SQL text</param>
+        /// <param name="useMultiFetch">If true, will produce a multi result set query where the first result set is the total count of records for pagination purposes</param>
+        public static SqlQuery ToSqlServerCommand(this SyntaxTree query, bool useMultiFetch)
         {
-            var sql = new SQLQueryBuilder(source);
+            var sql = new SqlQuery();
             foreach (var clause in query.Filter)
             {
                 RenderClause(clause, sql);
             }
-            if (sql.Parameters.Count > source.MaximumParameters && source.MaximumParameters > 0)
+            if (sql.Parameters.Count > query.Source.MaximumParameters && query.Source.MaximumParameters > 0)
             {
-                throw new TooManyParameters(source.MaximumParameters, query.OriginalFilter);
+                throw new TooManyParameters(query.Source.MaximumParameters, query.OriginalFilter);
             }
 
             for (int i = 0; i < query.OrderBy.Count; i++)
             {
                 if (i > 0)
                 {
-                    sql.AppendOrderByClause(", ");
+                    sql.OrderByClause.Append(", ");
                 }
 
                 var sort = query.OrderBy[i];
-                sql.AppendOrderByClause($"{sort.Column.OriginalName} {sort.Direction.ToString().ToUpperInvariant()}");
+                var dir = sort.Direction == SortDirection.Ascending ? "ASC" : "DESC";
+                sql.OrderByClause.Append($"{sort.Column.OriginalName} {dir}");
             }
-            if (query.PageNumber != null && query.PageSize != null)
+            var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
+            var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
+            var offset = "";
+            if (query.PageNumber != null || query.PageSize != null)
             {
-                sql.MaxRecords = (query.PageNumber + 1) * query.PageSize;
+                var size  = query.PageSize ?? 50; // default page size
+                var page = query.PageNumber ?? 0;
+                offset = $" OFFSET {page * size} ROWS FETCH NEXT {size} ROWS ONLY";
+            }
+
+            // If the user wants multi-fetch to retrieve row count
+            if (useMultiFetch)
+            {
+                sql.CommandText = $"SELECT * INTO #temp FROM {query.Source.TableName}{where};\n" +
+                    $"SELECT COUNT(1) AS TotalRecords FROM #temp;\n" +
+                    $"SELECT * FROM #temp{order}{offset};\n" +
+                    $"DROP TABLE #temp;\n";
+            }
+            else
+            {
+                sql.CommandText = $"SELECT * FROM {query.Source.TableName}{where}{order}{offset}";
             }
             return sql;
         }
 
-        public static void RenderClause(BaseClause clause, SQLQueryBuilder sql)
+        public static void RenderClause(BaseClause clause, SqlQuery sql)
         {
             if (clause is BetweenClause)
             {
                 var bc = clause as BetweenClause;
-                sql.AppendWhereClause($"{bc.Column.OriginalName} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}");
+                sql.WhereClause.Append($"{bc.Column.OriginalName} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}");
             }
             else if (clause is CompoundClause)
             {
                 var cc = clause as CompoundClause;
-                sql.AppendWhereClause("(");
+                sql.WhereClause.Append("(");
                 foreach (var child in cc.Children)
                 {
                     RenderClause(child, sql);
                 }
-                sql.AppendWhereClause(")");
+                sql.WhereClause.Append(")");
             }
             else if (clause is CriteriaClause)
             {
@@ -65,43 +82,43 @@ namespace Searchlight
                 switch (cc.Operation)
                 {
                     case OperationType.Equals:
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} = {sql.AddParameter(cc.Value)}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} = {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.GreaterThan:
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} > {sql.AddParameter(cc.Value)}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} > {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.GreaterThanOrEqual:
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} >= {sql.AddParameter(cc.Value)}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} >= {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.LessThan:
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} < {sql.AddParameter(cc.Value)}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} < {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.LessThanOrEqual:
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} <= {sql.AddParameter(cc.Value)}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} <= {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.NotEqual:
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}");
                         break;
                     case OperationType.Contains:
                         if (!(cc.Value is string))
                         {
                             throw new Exception("Value was not a string type");
                         }
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}");
                         break;
                     case OperationType.StartsWith:
                         if (!(cc.Value is string))
                         {
                             throw new Exception("Value was not a string type");
                         }
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}");
                         break;
                     case OperationType.EndsWith:
                         if (!(cc.Value is string))
                         {
                             throw new Exception("Value was not a string type");
                         }
-                        sql.AppendWhereClause($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value)}");
+                        sql.WhereClause.Append($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value)}");
                         break;
                     default:
                         throw new Exception("Incorrect clause type");
@@ -110,30 +127,30 @@ namespace Searchlight
             else if (clause is InClause)
             {
                 var ic = clause as InClause;
-                sql.AppendWhereClause(ic.Column.OriginalName);
-                sql.AppendWhereClause(" IN (");
+                sql.WhereClause.Append(ic.Column.OriginalName);
+                sql.WhereClause.Append(" IN (");
                 for (int i = 0; i < ic.Values.Count; i++)
                 {
                     if (i > 0)
                     {
-                        sql.AppendWhereClause(", ");
+                        sql.WhereClause.Append(", ");
                     }
-                    sql.AppendWhereClause(sql.AddParameter(ic.Values[i]));
+                    sql.WhereClause.Append(sql.AddParameter(ic.Values[i]));
                 }
-                sql.AppendWhereClause(")");
+                sql.WhereClause.Append(")");
 
             }
             else if (clause is IsNullClause)
             {
                 var inc = clause as IsNullClause;
-                sql.AppendWhereClause(inc.Column.OriginalName);
+                sql.WhereClause.Append(inc.Column.OriginalName);
                 if (inc.Negated)
                 {
-                    sql.AppendWhereClause(" IS NOT NULL");
+                    sql.WhereClause.Append(" IS NOT NULL");
                 }
                 else
                 {
-                    sql.AppendWhereClause(" IS NULL");
+                    sql.WhereClause.Append(" IS NULL");
                 }
 
             }
@@ -145,8 +162,8 @@ namespace Searchlight
             // If there's another clause after this, add it
             switch (clause.Conjunction)
             {
-                case ConjunctionType.AND: sql.AppendWhereClause(" AND "); break;
-                case ConjunctionType.OR: sql.AppendWhereClause(" OR "); break;
+                case ConjunctionType.AND: sql.WhereClause.Append(" AND "); break;
+                case ConjunctionType.OR: sql.WhereClause.Append(" OR "); break;
             }
         }
     }

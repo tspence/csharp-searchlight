@@ -55,27 +55,6 @@ namespace Searchlight
     }
 
     /// <summary>
-    /// Some SQL data sources require slightly different syntax
-    /// </summary>
-    public enum DataSourceType
-    {
-        /// <summary>
-        /// Use LINQ expression trees to query a generic collection in memory
-        /// </summary>
-        GenericCollection,
-
-        /// <summary>
-        /// Use T/SQL to query a microsoft SQL server database
-        /// </summary>
-        SqlServer,
-
-        /// <summary>
-        /// Use MySql queries
-        /// </summary>
-        Mysql
-    }
-
-    /// <summary>
     /// Defines the type of conjunction between two clauses
     /// </summary>
     public enum ConjunctionType
