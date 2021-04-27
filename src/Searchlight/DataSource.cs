@@ -112,8 +112,9 @@ namespace Searchlight
         /// <returns></returns>
         public ColumnInfo IdentifyColumn(string filterToken)
         {
+            if (String.IsNullOrWhiteSpace(filterToken)) return null;
             ColumnInfo ci = null;
-            _fieldDict.TryGetValue(filterToken?.ToUpper() ?? string.Empty, out ci);
+            _fieldDict.TryGetValue(filterToken.ToUpper(), out ci);
             return ci;
         }
 

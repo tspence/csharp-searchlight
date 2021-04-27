@@ -12,7 +12,9 @@
 		<description>Implements the Searchlight REST query language for CSharp.  The Searchlight language is database neutral and can support most database technologies.  Using Searchlight, you can provide a rich query language via your API, while still being completely safe from SQL injection attacks.  Searchlight enables you to use multiple database engines with the same functionality, and to transform queries using the in-memory abstract syntax tree prior to execution.</description>
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<releaseNotes>
-			Update the method signature for LINQ querying to be similar to SQL.
+			0.8.6 - April 27, 2021
+
+			* Update the method signature for LINQ querying to be similar to SQL.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2021</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>

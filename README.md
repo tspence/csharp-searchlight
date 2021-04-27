@@ -63,9 +63,9 @@ When someone queries your API, Searchlight can transform their query into a SQL 
 var list = new List<MyAccount>();
 var syntax = src.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
 
-// To execute via SQL, this function gives you a parameterized SQL statement
-var sql = syntax.ToSqlServerCommand(_source, query);
-... execute SQL via whatever method you prefer ...
+// To execute via SQL Server
+var sql = syntax.ToSqlServerCommand();
+var results = conn.Execute(sql.CommandText, sql.Parameters);
 
 // To execute via an in-memory object collection using LINQ
 var results = syntax.QueryCollection<EmployeeObj>(list);
