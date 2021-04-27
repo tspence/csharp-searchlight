@@ -33,7 +33,7 @@ namespace Searchlight
         /// <summary>
         /// This function produces a list of optional commands that can be specified in the $include parameter
         /// </summary>
-        public OptionalCommand[] Commands { get; set; }
+        public List<ICommand> Commands { get; set; }
 
         /// <summary>
         /// Some data sources can only handle a specified number of parameters.
@@ -216,10 +216,9 @@ namespace Searchlight
         }
 
         /// <summary>
-        /// Parse the include statements
+        /// Specify the name of optional collections or commands to include in this fetch request separated by commas.
         /// </summary>
-        /// <param name="includes"></param>
-        /// <param name="source"></param>
+        /// <param name="includes">The names of collections to fetch</param>
         public List<OptionalCommand> ParseIncludes(string includes)
         {
             // Retrieve the list of possibilities

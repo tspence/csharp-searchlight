@@ -8,29 +8,26 @@ namespace Searchlight.Tests
     [SearchlightModel]
     public class TestStrictMode
     {
-        [SearchlightField]
-        public string Name { get; set; }
-        [SearchlightField]
-        public string Description { get; set; }
+        [SearchlightField] public string Name { get; set; }
+        [SearchlightField] public string Description { get; set; }
         public string NotASearchlightField { get; set; }
     }
 
     [SearchlightModel()]
     public class TestFieldRenaming
     {
-        [SearchlightField(originalName: "field_name")]
+        [SearchlightField(OriginalName = "field_name")]
         public string Name { get; set; }
-        [SearchlightField(aliases: new string[] { "desription", "DescriptionText" })]
-        public string Description { get; set; }
-        [SearchlightField]
-        public string NotASearchlightField { get; set; }
 
+        [SearchlightField(Aliases = new string[] {"desription", "DescriptionText"})]
+        public string Description { get; set; }
+
+        [SearchlightField] public string NotASearchlightField { get; set; }
     }
 
     [TestClass]
     public class ParseModelTests
     {
-
         [TestMethod]
         public void TestLimitedFields()
         {
@@ -96,8 +93,12 @@ namespace Searchlight.Tests
             Assert.AreEqual("Description", columns[1].FieldName);
             Assert.AreEqual(typeof(string), columns[1].FieldType);
             Assert.AreEqual(2, columns[1].Aliases.Length);
-            Assert.AreEqual("desription", columns[1].Aliases[0]); // Example: "I misspelled the field name in version 1 of the API, so I had to rename it"
-            Assert.AreEqual("DescriptionText", columns[1].Aliases[1]); // Example: "This field was originally known as DescriptionText, but our new standards made us change it"
+            Assert.AreEqual("desription",
+                columns[1].Aliases[
+                    0]); // Example: "I misspelled the field name in version 1 of the API, so I had to rename it"
+            Assert.AreEqual("DescriptionText",
+                columns[1].Aliases[
+                    1]); // Example: "This field was originally known as DescriptionText, but our new standards made us change it"
 
             // Attempt to query a field using its old name
             var clauses = source.ParseFilter("desription contains 'Blockchain'");
@@ -124,12 +125,13 @@ namespace Searchlight.Tests
         [SearchlightModel]
         public class TestFieldConflicts
         {
-            [SearchlightField(aliases: new string[] {"description"})]
+            [SearchlightField(Aliases = new string[] {"description"})]
             public string Name { get; set; }
-            [SearchlightField(aliases: new string[] { "desription", "DescriptionText" })]
+
+            [SearchlightField(Aliases = new string[] {"desription", "DescriptionText"})]
             public string Description { get; set; }
         }
-        
+
         [TestMethod]
         public void TestNamingConflicts()
         {
@@ -150,18 +152,19 @@ namespace Searchlight.Tests
             {
                 var source = DataSource.Create(this.GetType(), AttributeMode.Strict);
             });
-            
+
             // But if I try it in loose mode, anything goes
             var s2 = DataSource.Create(this.GetType(), AttributeMode.Loose);
             Assert.IsNotNull(s2);
         }
 
-        [SearchlightModel(DefaultSort="name")]
+        [SearchlightModel(DefaultSort = "name")]
         public class TestWithDefaultSort
         {
-            [SearchlightField(aliases: new string[] { "fullName" })]
+            [SearchlightField(Aliases = new string[] {"fullName"})]
             public string Name { get; set; }
-            [SearchlightField(aliases: new string[] { "DescriptionText" })]
+
+            [SearchlightField(Aliases = new string[] {"DescriptionText"})]
             public string Description { get; set; }
         }
 

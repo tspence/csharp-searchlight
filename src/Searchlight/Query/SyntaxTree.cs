@@ -24,7 +24,7 @@ namespace Searchlight.Query
         /// <summary>
         /// Represents commands that were specified by the "$include" parameter
         /// </summary>
-        public List<OptionalCommand> Includes { get; set; }
+        public List<String> Includes { get; set; }
 
         /// <summary>
         /// The prioritized list of sort statements specified by the "$orderBy" parameter

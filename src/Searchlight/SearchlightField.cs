@@ -11,21 +11,6 @@ namespace Searchlight
     public class SearchlightField : Attribute
     {
         /// <summary>
-        /// Information about the name of the field and its type in the database, if that type is different from the type the user sees.
-        /// You can specify the type the user sees as well as the type as it is stored in the database.
-        /// </summary>
-        /// <param name="rename"></param>
-        /// <param name="fieldType"></param>
-        /// <param name="enumType">If the field is an enum, the field should be parsed as an enum using (enumType) and converted to (fieldtype) before querying</param>
-        public SearchlightField(string originalName = null, string[] aliases = null, Type fieldType = null, Type enumType = null)
-        {
-            OriginalName = originalName;
-            FieldType = fieldType;
-            EnumType = enumType;
-            Aliases = aliases ?? new string[] { };
-        }
-
-        /// <summary>
         /// If this column is named differently in the API, this is the official SQL name of the column
         /// </summary>
         public string OriginalName { get; set; }
