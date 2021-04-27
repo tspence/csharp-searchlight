@@ -7,28 +7,27 @@ using Searchlight.Query;
 
 namespace Searchlight
 {
-    public class LinqExecutor
+    public static class LinqExecutor
     {
         /// <summary>
-        /// Query against a collection in memory
+        /// Run the query represented by this syntax tree against an in-memory collection using LINQ
         /// </summary>
-        /// <typeparam name="T">Underlying data type being queried</typeparam>
-        /// <param name="src">Information about the data source</param>
-        /// <param name="query">The query commands</param>
-        /// <param name="list">The source enumerable</param>
+        /// <param name="tree">The syntax tree of the query to execute</param>
+        /// <param name="collection">The collection of data elements to query</param>
+        /// <typeparam name="T">Generic type of the model</typeparam>
         /// <returns></returns>
-        public static IEnumerable<T> QueryCollection<T>(DataSource src, List<BaseClause> query, IEnumerable<T> list)
+        public static IEnumerable<T> QueryCollection<T>(this SyntaxTree tree, IEnumerable<T> collection)
         {
             // Goal of this function is to construct this LINQ expression:
             //   return (from obj in LIST where QUERY select obj)
             // Here's how we'll do it:
-            var queryable = list.AsQueryable<T>();
+            var queryable = collection.AsQueryable<T>();
 
             // Construct a linq "select" expression (
             ParameterExpression select = Expression.Parameter(typeof(T), "obj");
 
             // Construct a linq "filter" expression 
-            Expression expression = BuildExpression(select, query, src);
+            Expression expression = BuildExpression(select, tree.Filter, tree.Source);
 
             // Convert that to a "where" method call
             var whereCallExpression = Expression.Call(

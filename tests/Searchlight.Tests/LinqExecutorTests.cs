@@ -44,19 +44,19 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Construct a simple query and check that it comes out correct
-            var query = src.ParseFilter("id gt 1 and paycheck le 1000");
-            Assert.AreEqual(2, query.Count());
-            Assert.AreEqual(ConjunctionType.AND, query[0].Conjunction);
-            Assert.AreEqual("id", ((CriteriaClause)query[0]).Column.FieldName);
-            Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause)query[0]).Operation);
-            Assert.AreEqual(1, ((CriteriaClause)query[0]).Value);
-            Assert.AreEqual("paycheck", ((CriteriaClause)query[1]).Column.FieldName);
-            Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause)query[1]).Operation);
-            Assert.AreEqual(1000.0m, ((CriteriaClause)query[1]).Value);
+            var syntax = src.Parse("id gt 1 and paycheck le 1000");
+            Assert.AreEqual(2, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("id", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause)syntax.Filter[0]).Operation);
+            Assert.AreEqual(1, ((CriteriaClause)syntax.Filter[0]).Value);
+            Assert.AreEqual("paycheck", ((CriteriaClause)syntax.Filter[1]).Column.FieldName);
+            Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause)syntax.Filter[1]).Operation);
+            Assert.AreEqual(1000.0m, ((CriteriaClause)syntax.Filter[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.IsTrue(results.Count() == 3);
+            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
+            Assert.AreEqual(3, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.id > 1);
@@ -71,15 +71,15 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Construct a simple query and check that it comes out correct
-            var query = src.ParseFilter("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
-            Assert.AreEqual(2, query.Count());
-            Assert.AreEqual(ConjunctionType.AND, query[0].Conjunction);
-            Assert.AreEqual("id", ((CriteriaClause)query[0]).Column.FieldName);
-            Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause)query[0]).Operation);
-            Assert.AreEqual(1, ((CriteriaClause)query[0]).Value);
+            var syntax = src.Parse("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
+            Assert.AreEqual(2, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("id", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause)syntax.Filter[0]).Operation);
+            Assert.AreEqual(1, ((CriteriaClause)syntax.Filter[0]).Value);
 
             // Did we get a nested clause?
-            var cc = query[1] as CompoundClause;
+            var cc = syntax.Filter[1] as CompoundClause;
             Assert.IsNotNull(cc);
             Assert.AreEqual(2, cc.Children.Count);
             Assert.AreEqual("paycheck", ((CriteriaClause)cc.Children[0]).Column.FieldName);
@@ -90,8 +90,8 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause)cc.Children[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.IsTrue(results.Count() == 2);
+            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
+            Assert.AreEqual(2, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.id > 1);
@@ -105,16 +105,16 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            var query = src.ParseFilter("id between 2 and 4");
-            Assert.AreEqual(1, query.Count());
-            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
-            Assert.AreEqual("id", ((BetweenClause)query[0]).Column.FieldName);
-            Assert.AreEqual(2, ((BetweenClause)query[0]).LowerValue);
-            Assert.AreEqual(4, ((BetweenClause)query[0]).UpperValue);
+            var syntax = src.Parse("id between 2 and 4");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("id", ((BetweenClause)syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(2, ((BetweenClause)syntax.Filter[0]).LowerValue);
+            Assert.AreEqual(4, ((BetweenClause)syntax.Filter[0]).UpperValue);
 
             // Execute the query and ensure that each result matches
-            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.IsTrue(results.Count() == 3);
+            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
+            Assert.AreEqual(3, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.id > 1);
@@ -128,16 +128,16 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            var query = src.ParseFilter("name startswith 'A'");
-            Assert.AreEqual(1, query.Count());
-            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
-            Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
-            Assert.AreEqual(OperationType.StartsWith, ((CriteriaClause)query[0]).Operation);
-            Assert.AreEqual("A", ((CriteriaClause)query[0]).Value);
+            var syntax = src.Parse("name startswith 'A'");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.StartsWith, ((CriteriaClause)syntax.Filter[0]).Operation);
+            Assert.AreEqual("A", ((CriteriaClause)syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.IsTrue(results.Count() == 1);
+            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
+            Assert.AreEqual(1, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.name[0] == 'A');
@@ -150,16 +150,16 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            var query = src.ParseFilter("name endswith 's'");
-            Assert.AreEqual(1, query.Count());
-            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
-            Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
-            Assert.AreEqual(OperationType.EndsWith, ((CriteriaClause)query[0]).Operation);
-            Assert.AreEqual("s", ((CriteriaClause)query[0]).Value);
+            var syntax = src.Parse("name endswith 's'");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.EndsWith, ((CriteriaClause)syntax.Filter[0]).Operation);
+            Assert.AreEqual("s", ((CriteriaClause)syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.IsTrue(results.Count() == 2);
+            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
+            Assert.AreEqual(2, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.name.EndsWith("s"));
@@ -173,16 +173,16 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             // Note that the "between" clause is inclusive
-            var query = src.ParseFilter("name contains 's'");
-            Assert.AreEqual(1, query.Count());
-            Assert.AreEqual(ConjunctionType.NONE, query[0].Conjunction);
-            Assert.AreEqual("name", ((CriteriaClause)query[0]).Column.FieldName);
-            Assert.AreEqual(OperationType.Contains, ((CriteriaClause)query[0]).Operation);
-            Assert.AreEqual("s", ((CriteriaClause)query[0]).Value);
+            var syntax = src.Parse("name contains 's'");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.Contains, ((CriteriaClause)syntax.Filter[0]).Operation);
+            Assert.AreEqual("s", ((CriteriaClause)syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query, list);
-            Assert.IsTrue(results.Count() == 3);
+            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
+            Assert.AreEqual(3, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.name.Contains("s"));

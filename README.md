@@ -67,8 +67,8 @@ var syntax = src.Parse("AccountName startswith 'alice' and Created gt '2019-01-0
 var sql = syntax.ToSqlServerCommand(_source, query);
 ... execute SQL via whatever method you prefer ...
 
-// To execute via an in-memory object collection
-var results = LinqExecutor.QueryCollection<EmployeeObj>(src, query.filter, list);
+// To execute via an in-memory object collection using LINQ
+var results = syntax.QueryCollection<EmployeeObj>(list);
 ```
 
 # How can I implement Searchlight using Dapper and AutoMapper to maintain full database independence?
