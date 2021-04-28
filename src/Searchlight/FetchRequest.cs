@@ -11,12 +11,12 @@ namespace Searchlight
         /// To use this fetch request with a SearchlightEngine object, set the table name here.
         /// </summary>
         public string table { get; set; }
-        
+
         /// <summary>
         /// Optional fields and child collections are not fetched by default unless specified here.
         /// </summary>
         public string include { get; set; }
-        
+
         /// <summary>
         /// A list of conditions to filter objects.  For example, "ID > 123" or "IsActive = 1".
         /// </summary>
@@ -57,7 +57,7 @@ namespace Searchlight
             }
             else
             {
-                filter = $"(${filter}) AND ${appendedFilter}";
+                filter = $"({filter}) AND {appendedFilter}";
             }
         }
     }
