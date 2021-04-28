@@ -74,7 +74,6 @@ namespace Searchlight.Tests
                             "SELECT COUNT(1) AS TotalRecords FROM #temp;\n" +
                             "SELECT * FROM #temp ORDER BY Name ASC OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY;\n" +
                             "SELECT * FROM BookReservation t1 INNER JOIN #temp ON t1.ISBN = #temp.ISBN;\n" +
-                            "SELECT * FROM BookCopies t2 INNER JOIN #temp ON t2.ISBN = #temp.ISBN;\n" +
                             "DROP TABLE #temp;\n", query.CommandText);
         }
 
@@ -104,6 +103,7 @@ namespace Searchlight.Tests
                             "SELECT COUNT(1) AS TotalRecords FROM #temp;\n" +
                             "SELECT * FROM #temp ORDER BY Name ASC OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY;\n" +
                             "SELECT * FROM BookReservation t1 INNER JOIN #temp ON t1.ISBN = #temp.ISBN;\n" +
+                            "SELECT * FROM BookCopies t2 INNER JOIN #temp ON t2.ISBN = #temp.ISBN;\n" +
                             "DROP TABLE #temp;\n", query.CommandText);
         }
     }
