@@ -60,7 +60,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("SELECT * INTO #temp FROM LibraryBook WHERE Author LIKE @p1;\n" +
                 "SELECT COUNT(1) AS TotalRecords FROM #temp;\n" +
                 "SELECT * FROM #temp ORDER BY Name ASC OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY;\n" +
-                "SELECT * FROM BookReservation INNER JOIN #temp ON #temp.ISBN = BookReservation.ISBN;\n" +
+                "SELECT * FROM BookReservation t1 INNER JOIN #temp ON t1.ISBN = #temp.ISBN;\n" +
                 "DROP TABLE #temp;\n", query.CommandText);
         }
     }

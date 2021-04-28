@@ -128,6 +128,7 @@ namespace Searchlight
         public static DataSource Create(Type modelType, AttributeMode mode)
         {
             var src = new DataSource();
+            src.Commands = new List<ICommand>();
             var modelAttribute = modelType.GetCustomAttribute<SearchlightModel>();
             src.ModelType = modelType;
             if (modelAttribute == null && mode == AttributeMode.Strict)
@@ -163,6 +164,12 @@ namespace Searchlight
                             src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name,
                                 filter.Aliases ?? new string[] { }, t);
                         }
+
+                        var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();
+                        if (collection != null)
+                        {
+                            src.Commands.Add(new OptionalCollectionCommand(pi.Name, collection));
+                        }
                     }
                 }
             }
@@ -180,13 +187,8 @@ namespace Searchlight
         /// <returns></returns>
         public SyntaxTree Parse(string filter, string include = null, string orderBy = null)
         {
-            SyntaxTree query = new SyntaxTree();
-            query.Source = this;
-            query.OriginalFilter = filter;
-            query.Includes = ParseIncludes(include);
-            query.Filter = ParseFilter(filter);
-            query.OrderBy = ParseOrderBy(orderBy);
-            return query;
+            var fetch = new FetchRequest() {filter = filter, include = include, order = orderBy};
+            return Parse(fetch);
         }
 
         public SyntaxTree Parse(FetchRequest request)
@@ -194,7 +196,11 @@ namespace Searchlight
             SyntaxTree query = new SyntaxTree();
             query.Source = this;
             query.OriginalFilter = request.filter;
-            // TODO: Implement "include/commands" - query.Includes = ParseIncludes(request.includes);
+            query.Includes = ParseIncludes(request.include);
+            foreach (var cmd in query.Includes)
+            {
+                cmd.Preview(request);
+            }
             query.Filter = ParseFilter(request.filter);
             query.OrderBy = ParseOrderBy(request.order);
             if (request.pageNumber != null || request.pageSize != null)
@@ -219,38 +225,21 @@ namespace Searchlight
         /// Specify the name of optional collections or commands to include in this fetch request separated by commas.
         /// </summary>
         /// <param name="includes">The names of collections to fetch</param>
-        public List<OptionalCommand> ParseIncludes(string includes)
+        public List<ICommand> ParseIncludes(string includes)
         {
-            // Retrieve the list of possibilities
-            List<OptionalCommand> list = new List<OptionalCommand>();
-            if (Commands != null)
+            // We will collect results here
+            var list = new List<ICommand>();
+            if (!string.IsNullOrWhiteSpace(includes))
             {
-                list.AddRange(Commands);
-            }
-
-            // First check the field are from valid entity fields
-            if (!String.IsNullOrWhiteSpace(includes))
-            {
-                string[] commandNames = includes.Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var name in commandNames.Select(x => x.Trim()))
+                foreach (var name in includes.Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    // Check to see if this is a recognized subtable that is allowed
-                    bool found_command = false;
-                    foreach (var command in list)
-                    {
-                        if (command.IsNameMatch(name))
-                        {
-                            command.IsIncluded = true;
-                            found_command = true;
-                            break;
-                        }
-                    }
-
-                    // This is not recognized - throw an exception and refuse to process further
-                    if (!found_command)
+                    var matchingCommand = (from command in Commands where command.MatchesName(name) select command)
+                        .FirstOrDefault();
+                    if (matchingCommand == null)
                     {
                         throw new FieldNotFound(name, ColumnNames().ToArray(), includes);
                     }
+                    list.Add(matchingCommand);
                 }
             }
 
@@ -263,7 +252,6 @@ namespace Searchlight
         /// that pagination works
         /// </summary>
         /// <param name="orderBy"></param>
-        /// <param name="source"></param>
         /// <returns></returns>
         public List<SortInfo> ParseOrderBy(string orderBy)
         {

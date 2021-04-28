@@ -8,6 +8,11 @@ namespace Searchlight
     public class SearchlightCollection : Attribute
     {
         /// <summary>
+        /// A list of aliases for this collection, if any
+        /// </summary>
+        public string[] Aliases { get; set; }
+        
+        /// <summary>
         /// The name of the foreign table
         /// </summary>
         public string ForeignTableName { get; set; }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -44,13 +46,23 @@ namespace Searchlight
                 offset = $" OFFSET {page * size} ROWS FETCH NEXT {size} ROWS ONLY";
             }
 
+            // Apply all selected commands
+            foreach (var cmd in query.Includes)
+            {
+                cmd.Apply(sql);
+            }
+            
             // If the user wants multi-fetch to retrieve row count
             if (useMultiFetch)
             {
+                var commandClauses = sql.ResultSetClauses.Count > 0
+                    ? String.Join("\n", sql.ResultSetClauses) + "\n"
+                    : "";
                 sql.CommandText = $"SELECT * INTO #temp FROM {query.Source.TableName}{where};\n" +
-                    $"SELECT COUNT(1) AS TotalRecords FROM #temp;\n" +
-                    $"SELECT * FROM #temp{order}{offset};\n" +
-                    $"DROP TABLE #temp;\n";
+                                  $"SELECT COUNT(1) AS TotalRecords FROM #temp;\n" +
+                                  $"SELECT * FROM #temp{order}{offset};\n" + 
+                                  commandClauses +
+                                  $"DROP TABLE #temp;\n";
             }
             else
             {

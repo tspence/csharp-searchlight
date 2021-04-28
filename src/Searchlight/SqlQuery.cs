@@ -9,14 +9,16 @@ namespace Searchlight {
             Parameters = new Dictionary<string, object>();
             WhereClause = new StringBuilder();
             OrderByClause = new StringBuilder();
+            ResultSetClauses = new List<string>();
         }
 
         public string CommandText { get; set; }
 
-        public Dictionary<string, object> Parameters { get; set; }
+        public Dictionary<string, object> Parameters { get; }
 
-        public StringBuilder WhereClause { get; set; }
-        public StringBuilder OrderByClause { get; set; }
+        public StringBuilder WhereClause { get; }
+        public StringBuilder OrderByClause { get; }
+        public List<string> ResultSetClauses { get; }
 
         internal string AddParameter(object p)
         {
