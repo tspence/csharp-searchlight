@@ -182,5 +182,16 @@ namespace Searchlight.Tests
             var query2 = source2.Parse(null, null, null);
             Assert.AreEqual(0, query2.OrderBy.Count);
         }
+
+        [TestMethod]
+        public void TestEngineAssemblyParsing()
+        {
+            var engine = new SearchlightEngine()
+                .AddAssembly(this.GetType().Assembly);
+            Assert.IsNotNull(engine.FindTable("TestWithDefaultSort"));
+            Assert.IsNotNull(engine.FindTable("BookReservation"));
+            Assert.IsNotNull(engine.FindTable("BookCopy"));
+            Assert.AreEqual(1, engine.ModelErrors.Count);
+        }
     }
 }

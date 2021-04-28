@@ -58,8 +58,9 @@ public class MyAccount
 When someone queries your API, Searchlight can transform their query into a SQL or LINQ statement:
 
 ```csharp
+var engine = new SearchlightEngine().AddAssembly(this.GetType().Assembly);
 var list = new List<MyAccount>();
-var syntax = src.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
+var syntax = engine.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
 
 // To execute via SQL Server
 var sql = syntax.ToSqlServerCommand();
