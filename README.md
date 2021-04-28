@@ -47,10 +47,8 @@ queryable field with  `[SearchlightField]`.
 public class MyAccount
 {
     // These fields are queryable
-    [SearchlightField]
-    public string AccountName { get; set; }
-    [SearchlightField]
-    public DateTime Created { get; set; }
+    [SearchlightField] public string AccountName { get; set; }
+    [SearchlightField] public DateTime Created { get; set; }
 
     // This field will not be searchable
     public string SecretKey { get; set; }
@@ -60,18 +58,19 @@ public class MyAccount
 When someone queries your API, Searchlight can transform their query into a SQL or LINQ statement:
 
 ```csharp
+var engine = new SearchlightEngine().AddAssembly(this.GetType().Assembly);
 var list = new List<MyAccount>();
-var syntax = src.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
+var syntax = engine.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
 
-// To execute via SQL, this function gives you a parameterized SQL statement
-var sql = syntax.ToSqlServerCommand(_source, query);
-... execute SQL via whatever method you prefer ...
+// To execute via SQL Server
+var sql = syntax.ToSqlServerCommand();
+var results = conn.Execute(sql.CommandText, sql.Parameters);
 
 // To execute via an in-memory object collection using LINQ
 var results = syntax.QueryCollection<EmployeeObj>(list);
 ```
 
-# How can I implement Searchlight using Dapper and AutoMapper to maintain full database independence?
+# Database independence with Searchlight, Dapper, and AutoMapper
 
 Searchlight is designed to mix with other powerful frameworks such as [Dapper](https://github.com/StackExchange/Dapper) and [AutoMapper](https://automapper.org/) to help 
 provide high performance functionality on SQL Server. This example API demonstrates filtering, ordering, pagination, and the ability to return a full row count so the
@@ -105,9 +104,45 @@ public async Task<FetchResult<WidgetModel>> QueryWidgets([FromQuery]string filte
 }
 ```
 
+# Fetching child collections with Searchlight
+
+Searchlight allows you to specify optional child collections.  By default, child collections are not included in a query; but users can specify
+other child collections to retrieve along with their primary query.  These additional collections are fetched through the multi-recordset mode
+of Searchlight SQL, so you still have only one database query to retrieve all the information you need.
+
+Using the `include` parameter, you can fetch `WaitList` and `Copies` objects with a single query:
+
+```csharp
+[SearchlightModel]
+public class LibraryBook {
+    [SearchlightField]
+    public string ISBN { get; set; }
+
+    [SearchlightCollection(KeyName = "ISBN")]
+    public BookReservation[] WaitList { get; set; }
+
+    [SearchlightCollection(KeyName = "ISBN")]
+    public BookCopy[] Copies { get; set; }
+}
+
+[SearchlightModel]
+public class BookReservation
+{
+    [SearchlightField] public string ISBN { get; set; }
+    ... other fields ...
+}
+
+[SearchlightModel]
+public class BookCopy
+{
+    [SearchlightField] public string ISBN { get; set; }
+    ... other fields ...
+}
+```
+
 # What if a developer makes a mistake when querying?
 
-Searchlight provides detailed error messages that explicitly indicate what was wrong about the customer's query string.
+Searchlight provides detailed error messages that help you and your customers diagnose problems.
 
 * `EmptyClause` - The user sent a query with an empty open/close parenthesis, like "()".
 * `FieldNotFound` - The query specified a field whose name could not be found.
