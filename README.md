@@ -71,7 +71,7 @@ var results = conn.Execute(sql.CommandText, sql.Parameters);
 var results = syntax.QueryCollection<EmployeeObj>(list);
 ```
 
-# How can I implement Searchlight using Dapper and AutoMapper to maintain full database independence?
+# Database independence with Searchlight, Dapper, and AutoMapper
 
 Searchlight is designed to mix with other powerful frameworks such as [Dapper](https://github.com/StackExchange/Dapper) and [AutoMapper](https://automapper.org/) to help 
 provide high performance functionality on SQL Server. This example API demonstrates filtering, ordering, pagination, and the ability to return a full row count so the
@@ -105,9 +105,47 @@ public async Task<FetchResult<WidgetModel>> QueryWidgets([FromQuery]string filte
 }
 ```
 
+# Fetching child collections with Searchlight
+
+Searchlight allows you to specify optional child collections.  By default, child collections are not included in a query; but users can specify
+other child collections to retrieve along with their primary query.  These additional collections are fetched through the multi-recordset mode
+of Searchlight SQL, so you still have only one database query to retrieve all the information you need.
+
+Using the `include` parameter, you can fetch `WaitList` and `Copies` objects with a single query:
+
+```csharp
+[SearchlightModel]
+public class LibraryBook {
+    [SearchlightField]
+    public string ISBN { get; set; }
+
+    [SearchlightCollection(ForeignTableName = "BookReservation", LocalKey = "ISBN", ForeignTableKey = "ISBN")]
+    public BookReservation[] WaitList { get; set; }
+
+    [SearchlightCollection(ForeignTableName = "BookCopy", LocalKey = "ISBN", ForeignTableKey = "ISBN")]
+    public BookCopy[] Copies { get; set; }
+}
+
+[SearchlightModel]
+public class BookReservation
+{
+    [SearchlightField]
+    public string ISBN { get; set; }
+    ... other fields ...
+}
+
+[SearchlightModel]
+public class BookCopy
+{
+    [SearchlightField]
+    public string ISBN { get; set; }
+    ... other fields ...
+}
+```
+
 # What if a developer makes a mistake when querying?
 
-Searchlight provides detailed error messages that explicitly indicate what was wrong about the customer's query string.
+Searchlight provides detailed error messages that help you and your customers diagnose problems.
 
 * `EmptyClause` - The user sent a query with an empty open/close parenthesis, like "()".
 * `FieldNotFound` - The query specified a field whose name could not be found.

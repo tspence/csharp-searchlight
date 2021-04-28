@@ -177,7 +177,7 @@ namespace Searchlight
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();
                         if (collection != null)
                         {
-                            src.Commands.Add(new OptionalCollectionCommand(src, collection, pi.Name));
+                            src.Commands.Add(new CollectionCommand(src, collection, pi.Name));
                         }
                     }
                 }

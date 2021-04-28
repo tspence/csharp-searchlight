@@ -6,14 +6,14 @@ using Searchlight.Parsing;
 
 namespace Searchlight.Nesting
 {
-    public class OptionalCollectionCommand : ICommand
+    public class CollectionCommand : ICommand
     {
         private readonly HashSet<string> _aliases;
         private readonly SearchlightCollection _collection;
         private readonly DataSource _parentTable;
         private readonly string _fieldName; 
         
-        public OptionalCollectionCommand(DataSource table, SearchlightCollection coll, string fieldName)
+        public CollectionCommand(DataSource table, SearchlightCollection coll, string fieldName)
         {
             _aliases = new HashSet<string>();
             if (!string.IsNullOrWhiteSpace(fieldName))

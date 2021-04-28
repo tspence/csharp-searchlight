@@ -14,7 +14,7 @@
 		<releaseNotes>
 			0.8.7 - April 28, 2021
 
-			* Update the method signature for LINQ querying to be similar to SQL.
+			* Add foreign key functionality via SearchlightEngine
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2021</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
