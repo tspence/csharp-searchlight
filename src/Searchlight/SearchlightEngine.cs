@@ -37,9 +37,9 @@ namespace Searchlight
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
         public DataSource FindTable(string name)
         {
+            if (String.IsNullOrWhiteSpace(name)) return null;
             return _dictionary.TryGetValue(name, out var source) ? source : null;
         }
     }
