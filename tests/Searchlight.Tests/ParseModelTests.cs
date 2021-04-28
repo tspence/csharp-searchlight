@@ -193,5 +193,76 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("BookCopy"));
             Assert.AreEqual(1, engine.ModelErrors.Count);
         }
+
+        [TestMethod]
+        public void TestFetchRequestNullFilter()
+        {
+            // Arrange
+            var source = DataSource.Create(null, typeof(TestWithDefaultSort), AttributeMode.Strict);
+            var fetchRequest = new FetchRequest();
+            fetchRequest.Append(null);
+
+            // Act
+            var query = source.Parse(fetchRequest);
+
+            // Assert
+            Assert.AreEqual(0, query.Filter.Count);
+        }
+
+        [TestMethod]
+        public void TestFetchRequestSingleFilter()
+        {
+            // Arrange
+            var source = DataSource.Create(null, typeof(TestWithDefaultSort), AttributeMode.Strict);
+            var fetchRequest = new FetchRequest();
+            fetchRequest.Append("Name eq Test");
+
+            // Act
+            var query = source.Parse(fetchRequest);
+
+            // Assert
+            Assert.AreEqual(1, query.Filter.Count);
+
+            var firstClause = query.Filter.First() as CriteriaClause;
+            Assert.IsNotNull(firstClause);
+
+            Assert.AreEqual(ConjunctionType.NONE, firstClause.Conjunction);
+            Assert.AreEqual("Name", firstClause.Column.FieldName);
+            Assert.AreEqual(OperationType.Equals, firstClause.Operation);
+            Assert.AreEqual("Test", firstClause.Value);
+        }
+
+        [TestMethod]
+        public void TestFetchRequestMultipleFilters()
+        {
+            // Arrange
+            var source = DataSource.Create(null, typeof(TestWithDefaultSort), AttributeMode.Strict);
+            var fetchRequest = new FetchRequest();
+            fetchRequest.Append("Name eq Test");
+            fetchRequest.Append("Description != Whatever");
+
+            // Act
+            var query = source.Parse(fetchRequest);
+
+            // Assert
+            Assert.AreEqual(2, query.Filter.Count);
+
+            var firstClause = query.Filter.First() as CompoundClause;
+            Assert.IsNotNull(firstClause);
+            var firstCriteria = firstClause.Children.Single() as CriteriaClause;
+            Assert.IsNotNull(firstCriteria);
+
+            Assert.AreEqual(ConjunctionType.AND, firstClause.Conjunction);
+            Assert.AreEqual(1, firstClause.Children.Count);
+            Assert.AreEqual("Name", firstCriteria.Column.FieldName);
+            Assert.AreEqual(OperationType.Equals, firstCriteria.Operation);
+            Assert.AreEqual("Test", firstCriteria.Value);
+
+            var secondClause = query.Filter[1] as CriteriaClause;
+            Assert.IsNotNull(secondClause);
+            Assert.AreEqual("Description", secondClause.Column.FieldName);
+            Assert.AreEqual(OperationType.NotEqual, secondClause.Operation);
+            Assert.AreEqual("Whatever", secondClause.Value);
+        }
     }
 }
