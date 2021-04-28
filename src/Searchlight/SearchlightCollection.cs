@@ -13,17 +13,17 @@ namespace Searchlight
         public string[] Aliases { get; set; }
         
         /// <summary>
-        /// The name of the foreign table
+        /// The name of the foreign table. If null, uses the underlying collection type name.
         /// </summary>
         public string ForeignTableName { get; set; }
         
         /// <summary>
-        /// The local key to use to join this table to the foreign table
+        /// The name of the key to use to join this table to the foreign table
         /// </summary>
-        public string LocalKey { get; set; }
+        public string KeyName { get; set; }
         
         /// <summary>
-        /// The key to use on the foreign table to join with the local key
+        /// The name of the column to join on the foreign table. If null, uses `KeyName`.
         /// </summary>
         public string ForeignTableKey { get; set; }
     }

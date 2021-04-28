@@ -18,10 +18,10 @@ namespace Searchlight.Tests
             [SearchlightField] public string Name { get; set; }
             [SearchlightField] public string Author { get; set; }
 
-            [SearchlightCollection(ForeignTableName = "BookReservation", LocalKey = "ISBN", ForeignTableKey = "ISBN")]
+            [SearchlightCollection(KeyName = "ISBN")]
             public BookReservation[] WaitList { get; set; }
 
-            [SearchlightCollection(LocalKey = "ISBN", ForeignTableKey = "ISBN")]
+            [SearchlightCollection(KeyName = "ISBN")]
             public BookCopy[] Copies { get; set; }
         }
 

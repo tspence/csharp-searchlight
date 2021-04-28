@@ -47,10 +47,8 @@ queryable field with  `[SearchlightField]`.
 public class MyAccount
 {
     // These fields are queryable
-    [SearchlightField]
-    public string AccountName { get; set; }
-    [SearchlightField]
-    public DateTime Created { get; set; }
+    [SearchlightField] public string AccountName { get; set; }
+    [SearchlightField] public DateTime Created { get; set; }
 
     // This field will not be searchable
     public string SecretKey { get; set; }
@@ -119,26 +117,24 @@ public class LibraryBook {
     [SearchlightField]
     public string ISBN { get; set; }
 
-    [SearchlightCollection(ForeignTableName = "BookReservation", LocalKey = "ISBN", ForeignTableKey = "ISBN")]
+    [SearchlightCollection(KeyName = "ISBN")]
     public BookReservation[] WaitList { get; set; }
 
-    [SearchlightCollection(ForeignTableName = "BookCopy", LocalKey = "ISBN", ForeignTableKey = "ISBN")]
+    [SearchlightCollection(KeyName = "ISBN")]
     public BookCopy[] Copies { get; set; }
 }
 
 [SearchlightModel]
 public class BookReservation
 {
-    [SearchlightField]
-    public string ISBN { get; set; }
+    [SearchlightField] public string ISBN { get; set; }
     ... other fields ...
 }
 
 [SearchlightModel]
 public class BookCopy
 {
-    [SearchlightField]
-    public string ISBN { get; set; }
+    [SearchlightField] public string ISBN { get; set; }
     ... other fields ...
 }
 ```
