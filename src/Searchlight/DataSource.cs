@@ -15,6 +15,11 @@ namespace Searchlight
     public class DataSource
     {
         /// <summary>
+        /// The engine to use for related tables
+        /// </summary>
+        public SearchlightEngine Engine { get; set; }
+        
+        /// <summary>
         /// The externally visible name of this collection or table
         /// </summary>
         public string TableName { get; set; }
@@ -57,7 +62,9 @@ namespace Searchlight
         /// <summary>
         /// Add a column to this definition
         /// </summary>
+        /// <param name="filterName"></param>
         /// <param name="columnName"></param>
+        /// <param name="aliases"></param>
         /// <param name="columnType"></param>
         /// <returns></returns>
         public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType)
@@ -122,12 +129,14 @@ namespace Searchlight
         /// <summary>
         /// Create a searchlight data source based on an in-memory collection
         /// </summary>
+        /// <param name="engine">The engine containing all child tables for this data source; null if this is a standalone table</param>
         /// <param name="modelType">The type of the model for this data source</param>
         /// <param name="mode">The parsing mode for fields on this class</param>
         /// <returns></returns>
-        public static DataSource Create(Type modelType, AttributeMode mode)
+        public static DataSource Create(SearchlightEngine engine, Type modelType, AttributeMode mode)
         {
             var src = new DataSource();
+            src.Engine = engine;
             src.Commands = new List<ICommand>();
             var modelAttribute = modelType.GetCustomAttribute<SearchlightModel>();
             src.ModelType = modelType;
@@ -168,7 +177,7 @@ namespace Searchlight
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();
                         if (collection != null)
                         {
-                            src.Commands.Add(new OptionalCollectionCommand(pi.Name, collection));
+                            src.Commands.Add(new OptionalCollectionCommand(src, collection, pi.Name));
                         }
                     }
                 }

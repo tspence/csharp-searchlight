@@ -31,7 +31,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void TestLimitedFields()
         {
-            var source = DataSource.Create(typeof(TestStrictMode), AttributeMode.Strict);
+            var source = DataSource.Create(null, typeof(TestStrictMode), AttributeMode.Strict);
             var columns = source.GetColumnDefinitions().ToArray();
             Assert.AreEqual(2, columns.Length);
             Assert.AreEqual("Name", columns[0].FieldName);
@@ -55,7 +55,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void TestExpansiveFields()
         {
-            var source = DataSource.Create(typeof(TestStrictMode), AttributeMode.Loose);
+            var source = DataSource.Create(null, typeof(TestStrictMode), AttributeMode.Loose);
             var columns = source.GetColumnDefinitions().ToArray();
             Assert.AreEqual(3, columns.Length);
             Assert.AreEqual("Name", columns[0].FieldName);
@@ -83,7 +83,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void TestFieldRenaming()
         {
-            var source = DataSource.Create(typeof(TestFieldRenaming), AttributeMode.Strict);
+            var source = DataSource.Create(null, typeof(TestFieldRenaming), AttributeMode.Strict);
             var columns = source.GetColumnDefinitions().ToArray();
             Assert.AreEqual(3, columns.Length);
             Assert.AreEqual("Name", columns[0].FieldName);
@@ -137,7 +137,7 @@ namespace Searchlight.Tests
         {
             var ex = Assert.ThrowsException<DuplicateName>(() =>
             {
-                var source = DataSource.Create(typeof(TestFieldConflicts), AttributeMode.Strict);
+                var source = DataSource.Create(null, typeof(TestFieldConflicts), AttributeMode.Strict);
             });
             Assert.AreEqual("DESCRIPTION", ex.ConflictingName);
             Assert.AreEqual("Name", ex.ExistingColumn);
@@ -150,11 +150,11 @@ namespace Searchlight.Tests
             // "THIS" isn't a searchlight model; in strict mode it doesn't work
             var ex = Assert.ThrowsException<NonSearchlightModel>(() =>
             {
-                var source = DataSource.Create(this.GetType(), AttributeMode.Strict);
+                var source = DataSource.Create(null, this.GetType(), AttributeMode.Strict);
             });
 
             // But if I try it in loose mode, anything goes
-            var s2 = DataSource.Create(this.GetType(), AttributeMode.Loose);
+            var s2 = DataSource.Create(null, this.GetType(), AttributeMode.Loose);
             Assert.IsNotNull(s2);
         }
 
@@ -171,14 +171,14 @@ namespace Searchlight.Tests
         [TestMethod]
         public void TestDefaultSort()
         {
-            var source = DataSource.Create(typeof(TestWithDefaultSort), AttributeMode.Strict);
+            var source = DataSource.Create(null, typeof(TestWithDefaultSort), AttributeMode.Strict);
             var query = source.Parse(null, null, null);
             Assert.AreEqual(1, query.OrderBy.Count);
             Assert.AreEqual("Name", query.OrderBy[0].Column.FieldName);
             Assert.AreEqual(SortDirection.Ascending, query.OrderBy[0].Direction);
 
             // Now try the same thing with a class that doesn't have a default sort
-            var source2 = DataSource.Create(typeof(TestStrictMode), AttributeMode.Strict);
+            var source2 = DataSource.Create(null, typeof(TestStrictMode), AttributeMode.Strict);
             var query2 = source2.Parse(null, null, null);
             Assert.AreEqual(0, query2.OrderBy.Count);
         }

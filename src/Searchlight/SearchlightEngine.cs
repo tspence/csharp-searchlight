@@ -6,7 +6,7 @@ namespace Searchlight
 {
     public class SearchlightEngine
     {
-        private Dictionary<string, DataSource> _dictionary = new Dictionary<string, DataSource>();
+        private readonly Dictionary<string, DataSource> _dictionary = new Dictionary<string, DataSource>();
             
         /// <summary>
         /// Adds a new class to the engine
@@ -15,7 +15,7 @@ namespace Searchlight
         /// <returns></returns>
         public SearchlightEngine AddClass(Type type)
         {
-            var ds = DataSource.Create(type, AttributeMode.Strict);
+            var ds = DataSource.Create(this, type, AttributeMode.Strict);
             _dictionary.Add(type.Name, ds);
             return this;
         }
@@ -28,7 +28,19 @@ namespace Searchlight
         /// <exception cref="NotImplementedException"></exception>
         public SyntaxTree Parse(FetchRequest request)
         {
-            return _dictionary.TryGetValue(request.table, out var source) ? source.Parse(request) : null;
+            var source = FindTable(request.table);
+            return source?.Parse(request);
+        }
+
+        /// <summary>
+        /// Find a data source by name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public DataSource FindTable(string name)
+        {
+            return _dictionary.TryGetValue(name, out var source) ? source : null;
         }
     }
 }
