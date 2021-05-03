@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Searchlight.Exceptions;
-using Searchlight.Parsing;
 
 namespace Searchlight.Nesting
 {
@@ -14,6 +13,11 @@ namespace Searchlight.Nesting
         private readonly DataSource _parentTable;
         private readonly string _fieldName;
         private readonly PropertyInfo _property;
+
+        public string GetCollectionFieldName()
+        {
+            return _property.Name;
+        }
         
         public CollectionCommand(DataSource table, SearchlightCollection coll, PropertyInfo property)
         {
