@@ -9,12 +9,12 @@ namespace Searchlight
     public class SearchlightEngine
     {
         private readonly Dictionary<string, DataSource> _dictionary = new Dictionary<string, DataSource>();
-        
+
         /// <summary>
         /// Captures all known model errors
         /// </summary>
         public List<SearchlightException> ModelErrors { get; } = new List<SearchlightException>();
-            
+
         /// <summary>
         /// Adds a new class to the engine
         /// </summary>
@@ -24,6 +24,14 @@ namespace Searchlight
         {
             var ds = DataSource.Create(this, type, AttributeMode.Strict);
             _dictionary.Add(type.Name, ds);
+            var model = type.GetCustomAttributes<SearchlightModel>().FirstOrDefault();
+            if (model?.Aliases != null)
+            {
+                foreach (var alias in model.Aliases)
+                {
+                    _dictionary.Add(alias, ds);
+                }
+            }
             return this;
         }
 
