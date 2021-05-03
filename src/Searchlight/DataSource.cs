@@ -265,27 +265,22 @@ namespace Searchlight
         public List<SortInfo> ParseOrderBy(string orderBy)
         {
             List<SortInfo> list = new List<SortInfo>();
-
-            // Shortcut for case where user gives us an empty string
             if (String.IsNullOrWhiteSpace(orderBy))
             {
-                if (!String.IsNullOrWhiteSpace(DefaultSort))
-                {
-                    list.Add(new SortInfo()
-                    {
-                        Direction = SortDirection.Ascending,
-                        Column = IdentifyColumn(DefaultSort)
-                    });
-                }
+                orderBy = DefaultSort;
+            }
+
+            // If no sort is specified
+            if (String.IsNullOrWhiteSpace(orderBy))
+            {
                 return list;
             }
 
             // Okay, let's tokenize the orderBy statement and begin parsing
             var tokens = Tokenizer.GenerateTokens(orderBy);
-            SortInfo si = null;
             while (tokens.Count > 0)
             {
-                si = new SortInfo();
+                var si = new SortInfo();
                 si.Direction = SortDirection.Ascending;
                 list.Add(si);
 

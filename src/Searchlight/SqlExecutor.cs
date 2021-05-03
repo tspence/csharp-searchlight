@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -15,26 +16,14 @@ namespace Searchlight
         /// <param name="useMultiFetch">If true, will produce a multi result set query where the first result set is the total count of records for pagination purposes</param>
         public static SqlQuery ToSqlServerCommand(this SyntaxTree query, bool useMultiFetch)
         {
-            var sql = new SqlQuery();
-            foreach (var clause in query.Filter)
-            {
-                RenderClause(clause, sql);
-            }
+            var sql = new SqlQuery {Syntax = query};
+            sql.WhereClause = RenderJoinedClauses(query.Filter, sql);
+            sql.OrderByClause = RenderOrderByClause(query.OrderBy, sql);
+
+            // Sanity tests
             if (sql.Parameters.Count > query.Source.MaximumParameters && query.Source.MaximumParameters > 0)
             {
                 throw new TooManyParameters(query.Source.MaximumParameters, query.OriginalFilter);
-            }
-
-            for (int i = 0; i < query.OrderBy.Count; i++)
-            {
-                if (i > 0)
-                {
-                    sql.OrderByClause.Append(", ");
-                }
-
-                var sort = query.OrderBy[i];
-                var dir = sort.Direction == SortDirection.Ascending ? "ASC" : "DESC";
-                sql.OrderByClause.Append($"{sort.Column.OriginalName} {dir}");
             }
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
@@ -81,111 +70,111 @@ namespace Searchlight
             return sql;
         }
 
-        public static void RenderClause(BaseClause clause, SqlQuery sql)
+        public static string RenderOrderByClause(List<SortInfo> list, SqlQuery sql)
         {
-            if (clause is BetweenClause)
+            var sb = new StringBuilder();
+            for (int i = 0; i < list.Count; i++)
             {
-                var bc = clause as BetweenClause;
-                sql.WhereClause.Append($"{bc.Column.OriginalName} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}");
-            }
-            else if (clause is CompoundClause)
-            {
-                var cc = clause as CompoundClause;
-                sql.WhereClause.Append("(");
-                foreach (var child in cc.Children)
+                if (i > 0)
                 {
-                    RenderClause(child, sql);
+                    sb.Append(", ");
                 }
-                sql.WhereClause.Append(")");
+
+                var sort = list[i];
+                var dir = sort.Direction == SortDirection.Ascending ? "ASC" : "DESC";
+                sb.Append($"{sort.Column.OriginalName} {dir}");
             }
-            else if (clause is CriteriaClause)
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Render a list of joined clauses using specified conjunctions
+        /// </summary>
+        /// <param name="clause"></param>
+        /// <param name="sql"></param>
+        /// <returns></returns>
+        public static string RenderJoinedClauses(List<BaseClause> clause, SqlQuery sql)
+        {
+            var sb = new StringBuilder();
+            for (var i = 0; i < clause.Count; i++)
             {
-                var cc = clause as CriteriaClause;
-                switch (cc.Operation)
+                if (i > 0)
                 {
-                    case OperationType.Equals:
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} = {sql.AddParameter(cc.Value)}");
-                        break;
-                    case OperationType.GreaterThan:
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} > {sql.AddParameter(cc.Value)}");
-                        break;
-                    case OperationType.GreaterThanOrEqual:
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} >= {sql.AddParameter(cc.Value)}");
-                        break;
-                    case OperationType.LessThan:
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} < {sql.AddParameter(cc.Value)}");
-                        break;
-                    case OperationType.LessThanOrEqual:
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} <= {sql.AddParameter(cc.Value)}");
-                        break;
-                    case OperationType.NotEqual:
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}");
-                        break;
-                    case OperationType.Contains:
-                        if (!(cc.Value is string))
-                        {
-                            throw new Exception("Value was not a string type");
-                        }
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}");
-                        break;
-                    case OperationType.StartsWith:
-                        if (!(cc.Value is string))
-                        {
-                            throw new Exception("Value was not a string type");
-                        }
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}");
-                        break;
-                    case OperationType.EndsWith:
-                        if (!(cc.Value is string))
-                        {
-                            throw new Exception("Value was not a string type");
-                        }
-                        sql.WhereClause.Append($"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value)}");
-                        break;
-                    default:
-                        throw new Exception("Incorrect clause type");
-                }
-            }
-            else if (clause is InClause)
-            {
-                var ic = clause as InClause;
-                sql.WhereClause.Append(ic.Column.OriginalName);
-                sql.WhereClause.Append(" IN (");
-                for (int i = 0; i < ic.Values.Count; i++)
-                {
-                    if (i > 0)
+                    switch (clause[i - 1].Conjunction)
                     {
-                        sql.WhereClause.Append(", ");
+                        case ConjunctionType.AND:
+                            sb.Append(" AND ");
+                            break;
+                        case ConjunctionType.OR:
+                            sb.Append(" OR ");
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
-                    sql.WhereClause.Append(sql.AddParameter(ic.Values[i]));
                 }
-                sql.WhereClause.Append(")");
-
+                sb.Append(RenderClause(clause[i], sql));
             }
-            else if (clause is IsNullClause)
+            return sb.ToString();
+        }
+        
+        /// <summary>
+        /// Convert a single clause object into SQL-formatted "WHERE" text
+        /// </summary>
+        /// <param name="clause"></param>
+        /// <param name="sql"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static string RenderClause(BaseClause clause, SqlQuery sql)
+        {
+            switch (clause)
             {
-                var inc = clause as IsNullClause;
-                sql.WhereClause.Append(inc.Column.OriginalName);
-                if (inc.Negated)
-                {
-                    sql.WhereClause.Append(" IS NOT NULL");
-                }
-                else
-                {
-                    sql.WhereClause.Append(" IS NULL");
-                }
-
-            }
-            else
-            {
-                throw new Exception("Unrecognized clause type.");
-            }
-
-            // If there's another clause after this, add it
-            switch (clause.Conjunction)
-            {
-                case ConjunctionType.AND: sql.WhereClause.Append(" AND "); break;
-                case ConjunctionType.OR: sql.WhereClause.Append(" OR "); break;
+                case BetweenClause bc:
+                    return $"{bc.Column.OriginalName} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}";
+                case CompoundClause compoundClause:
+                    return $"({RenderJoinedClauses(compoundClause.Children, sql)})";
+                case CriteriaClause cc:
+                    switch (cc.Operation)
+                    {
+                        case OperationType.Equals:
+                            return $"{cc.Column.OriginalName} = {sql.AddParameter(cc.Value)}";
+                        case OperationType.GreaterThan:
+                            return $"{cc.Column.OriginalName} > {sql.AddParameter(cc.Value)}";
+                        case OperationType.GreaterThanOrEqual:
+                            return $"{cc.Column.OriginalName} >= {sql.AddParameter(cc.Value)}";
+                        case OperationType.LessThan:
+                            return $"{cc.Column.OriginalName} < {sql.AddParameter(cc.Value)}";
+                        case OperationType.LessThanOrEqual:
+                            return $"{cc.Column.OriginalName} <= {sql.AddParameter(cc.Value)}";
+                        case OperationType.NotEqual:
+                            return $"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}";
+                        case OperationType.Contains:
+                            if (cc.Value is not string)
+                            {
+                                throw new Exception("Value was not a string type");
+                            }
+                            return $"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}";
+                        case OperationType.StartsWith:
+                            if (cc.Value is not string)
+                            {
+                                throw new Exception("Value was not a string type");
+                            }
+                            return $"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}";
+                        case OperationType.EndsWith:
+                            if (cc.Value is not string)
+                            {
+                                throw new Exception("Value was not a string type");
+                            }
+                            return $"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value)}";
+                        default:
+                            throw new Exception("Incorrect clause type");
+                    }
+                case InClause ic:
+                    var paramValues = from v in ic.Values select sql.AddParameter(v);
+                    return $"{ic.Column.OriginalName} IN ({String.Join(", ", paramValues)})";
+                case IsNullClause inc:
+                    return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";
+                default:
+                    throw new Exception("Unrecognized clause type.");
             }
         }
     }

@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using System.Text;
+using Searchlight.Query;
 
 namespace Searchlight {
     public class SqlQuery
     {
+        public SyntaxTree Syntax { get; set; }
+        
         public SqlQuery()
         {
             Parameters = new Dictionary<string, object>();
-            WhereClause = new StringBuilder();
-            OrderByClause = new StringBuilder();
             ResultSetClauses = new List<string>();
         }
 
@@ -16,13 +17,13 @@ namespace Searchlight {
 
         public Dictionary<string, object> Parameters { get; }
 
-        public StringBuilder WhereClause { get; }
-        public StringBuilder OrderByClause { get; }
+        public string WhereClause { get; set;  }
+        public string OrderByClause { get; set;  }
         public List<string> ResultSetClauses { get; }
 
         internal string AddParameter(object p)
         {
-            int num = Parameters.Count + 1;
+            var num = Parameters.Count + 1;
             var name = $"@p{num}";
             Parameters.Add(name, p);
             return name;
