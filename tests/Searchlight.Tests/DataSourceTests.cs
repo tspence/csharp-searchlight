@@ -33,6 +33,30 @@ namespace Searchlight.Tests
         }
 
         [TestMethod]
+        public void ParseSortPatterns()
+        {
+            var list = _source.ParseOrderBy("a");
+            Assert.AreEqual(1, list.Count);
+            Assert.AreEqual("a", list[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Ascending, list[0].Direction);
+            
+            list = _source.ParseOrderBy("a, b desc");
+            Assert.AreEqual(2, list.Count);
+            Assert.AreEqual("a", list[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Ascending, list[0].Direction);
+            Assert.AreEqual("b", list[1].Column.FieldName);
+            Assert.AreEqual(SortDirection.Descending, list[1].Direction);
+
+            _source.DefaultSort = "a, b desc";
+            list = _source.ParseOrderBy("");
+            Assert.AreEqual(2, list.Count);
+            Assert.AreEqual("a", list[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Ascending, list[0].Direction);
+            Assert.AreEqual("b", list[1].Column.FieldName);
+            Assert.AreEqual(SortDirection.Descending, list[1].Direction);
+        }
+
+        [TestMethod]
         public void AllParenthesis()
         {
             // Basic problem: if you never close a parenthesis that's a syntax error

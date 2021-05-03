@@ -286,5 +286,24 @@ namespace Searchlight.Tests
                 sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
         }
+
+        [TestMethod]
+        public void MultipleNestedClausesSql()
+        {
+            // Fetch request including pagination
+            var fetch = new FetchRequest()
+                {filter = "collong gt 123456789123456 AND collong lt 987654321 AND (a eq 'Alice' or a eq 'Bob' or a eq 'Charlie') AND b < 10", order = null, pageNumber = 2, pageSize = 50};
+            var query = _source.Parse(fetch);
+            var sql = query.ToSqlServerCommand(true);
+            Assert.AreEqual("SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6;\n" +
+                            "SELECT * FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6 ORDER BY a ASC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\n",
+                sql.CommandText);
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
+            Assert.AreEqual((long)987654321, sql.Parameters["@p2"]);
+            Assert.AreEqual("Alice", sql.Parameters["@p3"]);
+            Assert.AreEqual("Bob", sql.Parameters["@p4"]);
+            Assert.AreEqual("Charlie", sql.Parameters["@p5"]);
+            Assert.AreEqual(10, sql.Parameters["@p6"]);
+        }
     }
 }
