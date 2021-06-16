@@ -530,6 +530,14 @@ namespace Searchlight
                 c.Operation = op;
                 c.Column = columnInfo;
                 c.Value = ParseParameter(columnInfo, tokens.Dequeue(), filter);
+                if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith 
+                                                            || c.Operation == OperationType.Contains)
+                {
+                    if (c.Column.FieldType != typeof(string))
+                    {
+                        throw new FieldTypeMismatch(c.Column.FieldName, c.Column.FieldType.ToString(), Convert.ToString(c.Value), filter);
+                    }
+                }
                 return c;
             }
         }
