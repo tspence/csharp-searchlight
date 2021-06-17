@@ -115,9 +115,10 @@ namespace Searchlight
                         return Expression.Call(field, typeof(string).GetMethod("EndsWith", new Type[] { typeof(string) }), value);
                     case OperationType.Contains:
                         return Expression.Call(field, typeof(string).GetMethod("Contains", new Type[] { typeof(string) }), value);
+                    case OperationType.NotEqual:
+                        return Expression.NotEqual(field, value);
                     case OperationType.In:
                     case OperationType.IsNull:
-                    case OperationType.NotEqual:
                     case OperationType.Between:
                         throw new NotImplementedException();
                 }
