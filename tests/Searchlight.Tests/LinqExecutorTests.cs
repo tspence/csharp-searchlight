@@ -216,5 +216,18 @@ namespace Searchlight.Tests
                 }
             );
         }
+
+        [TestMethod]
+        public void StringNotEqual()
+        {
+            var list = GetTestList();
+
+            var syntax = src.Parse("Name != 'Alice Smith'");
+
+            var result = syntax.QueryCollection<EmployeeObj>(list);
+
+            Assert.AreEqual(list.Count - 1, result.Count());
+            Assert.IsFalse(result.Any(p => p.name == "Alice Smith"));
+        }
     }
 }
