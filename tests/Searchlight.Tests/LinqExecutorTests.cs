@@ -202,5 +202,32 @@ namespace Searchlight.Tests
             Assert.AreEqual(list.Count - 1, result.Count());
             Assert.IsFalse(result.Any(p => p.name == "Alice Smith"));
         }
+
+        [TestMethod]
+        public void BooleanContains()
+        {
+            var list = GetTestList();
+
+            // Note that the "between" clause is inclusive
+            Assert.ThrowsException<FieldTypeMismatch>(() =>
+            {
+                var syntax = src.Parse("onduty contains 's'");
+            });
+            Assert.ThrowsException<FieldTypeMismatch>(() =>
+                {
+                    var syntax = src.Parse("onduty contains True");
+                }
+            );
+            Assert.ThrowsException<FieldTypeMismatch>(() =>
+                {
+                    var syntax = src.Parse("onduty startswith True");
+                }
+            );
+            Assert.ThrowsException<FieldTypeMismatch>(() =>
+                {
+                    var syntax = src.Parse("onduty endswith True");
+                }
+            );
+        }
     }
 }

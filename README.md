@@ -10,10 +10,11 @@ A lightweight, secure query language for searching through databases and in-memo
 Searchlight is a simple and safe query language for API design.  [Designed with security in mind](https://tedspence.com/protecting-apis-with-layered-security-8c989fb5a19f), 
 it works well with REST, provides complex features, and is easier to learn than GraphQL.  
 
-The Searchlight query language is safe from SQL injection attacks.  Searchlight allows you to expose robust query functionality while maintaining full control
-over the exact queries executed on your data store, whether those queries are executed via LINQ, SQL, or NoSQL.  You maintain the ability to enforce rules on
-end-user query complexity, you can enable or disable querying on certain columns based on performance metrics, or adjust query criteria to enforce separation
-of customer data.  All input fields provided from the customer are parameterized. 
+The Searchlight query language is safe from SQL injection attacks.  Searchlight allows you to expose robust query functionality 
+while maintaining full control over the exact queries executed on your data store, whether those queries are executed via LINQ, SQL, 
+or NoSQL.  You maintain the ability to enforce rules on end-user query complexity, you can enable or disable querying on certain 
+columns based on performance metrics, or adjust query criteria to enforce separation of customer data.  All input fields provided 
+from the customer are parameterized. 
 
 An example API with Searchlight looks like this:
 
@@ -21,10 +22,11 @@ An example API with Searchlight looks like this:
 GET /customers/?query=CreatedDate gt '2019-01-01' and (IsApproved = false OR (approvalCode IS NULL AND daysWaiting between 5 and 10))
 ```
 
-Searchlight uses type checking, validation, and parsing to convert this query text into an abstract syntax tree (AST) representing search clauses and parameters.  
-You can then convert that AST into various forms and execute it on an SQL database, an in-memory object collection using LINQ, a MongoDB database, or so on.  
-To ensure that no risky text is passed to your database, Searchlight reconstructs a completely new SQL query from string constants defined in your classes, and adds
-parameters as appropriate.  All field names are converted from "customer-visible" field names to "actual database" names.  The above query would be transformed 
+Searchlight uses type checking, validation, and parsing to convert this query text into an abstract syntax tree (AST) representing 
+search clauses and parameters.  You can then convert that AST into various forms and execute it on an SQL database, an in-memory 
+object collection using LINQ, a MongoDB database, or so on.  To ensure that no risky text is passed to your database, Searchlight 
+reconstructs a completely new SQL query from string constants defined in your classes, and adds parameters as appropriate.  All 
+field names are converted from "customer-visible" field names to "actual database" names.  The above query would be transformed 
 to the following:
 
 ```sql
@@ -60,7 +62,10 @@ When someone queries your API, Searchlight can transform their query into a SQL 
 ```csharp
 var engine = new SearchlightEngine().AddAssembly(this.GetType().Assembly);
 var list = new List<MyAccount>();
-var syntax = engine.Parse("AccountName startswith 'alice' and Created gt '2019-01-01'");
+var syntax = engine.Parse(new FetchRequest() { 
+    Table = "MyAccount", 
+    Filter = "AccountName startswith 'alice' and Created gt '2019-01-01'"
+});
 
 // To execute via SQL Server
 var sql = syntax.ToSqlServerCommand();
