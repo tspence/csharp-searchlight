@@ -151,6 +151,14 @@ namespace Searchlight
                 Expression value = Expression.Constant(inClause.Values, typeof(List<object>));
                 return Expression.Call(value, typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}), field);
             }
+
+            var nullClause = clause as IsNullClause;
+            if (nullClause != null)
+            {
+                Expression field = Expression.Property(select, nullClause.Column.FieldName);
+                return Expression.Equal(field, Expression.Constant(null));
+            }
+            
             // We didn't understand the clause!
             throw new NotImplementedException();
         }
