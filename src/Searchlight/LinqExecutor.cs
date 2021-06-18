@@ -118,6 +118,7 @@ namespace Searchlight
                     case OperationType.NotEqual:
                         return Expression.NotEqual(field, value);
                     case OperationType.In:
+                        //implemented below, not a CriteriaClause
                     case OperationType.IsNull:
                     case OperationType.Between:
                         throw new NotImplementedException();
@@ -143,6 +144,13 @@ namespace Searchlight
                 return BuildExpression(select, compound.Children, src);
             }
 
+            var inClause = clause as InClause;
+            if (inClause != null)
+            {
+                Expression field = Expression.Property(select, inClause.Column.FieldName);
+                Expression value = Expression.Constant(inClause.Values, typeof(List<object>));
+                return Expression.Call(value, typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}), field);
+            }
             // We didn't understand the clause!
             throw new NotImplementedException();
         }
