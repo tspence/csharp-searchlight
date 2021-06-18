@@ -30,6 +30,7 @@ namespace Searchlight.Tests
             list.Add(new EmployeeObj() { hired = DateTime.Today.AddMonths(-6), id = 3, name = "Charlie Prentiss", onduty = false, paycheck = 800.0m });
             list.Add(new EmployeeObj() { hired = DateTime.Today.AddMonths(-12), id = 4, name = "Danielle O'Shea", onduty = false, paycheck = 1200.0m });
             list.Add(new EmployeeObj() { hired = DateTime.Today.AddMonths(1), id = 5, name = "Ernest Nofzinger", onduty = true, paycheck = 1000.00m });
+            //list.Add(new EmployeeObj() { hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m });
             return list;
         }
 
@@ -122,6 +123,7 @@ namespace Searchlight.Tests
             }
         }
 
+      
         [TestMethod]
         public void StartsWithQuery()
         {
@@ -144,6 +146,7 @@ namespace Searchlight.Tests
             }
         }
 
+      
         [TestMethod]
         public void EndsWithQuery()
         {
@@ -191,7 +194,7 @@ namespace Searchlight.Tests
         
         
         [TestMethod]
-        public void StringNotEqual()
+        public void NotEqualQuery()
         {
             var list = GetTestList();
 
@@ -202,7 +205,8 @@ namespace Searchlight.Tests
             Assert.AreEqual(list.Count - 1, result.Count());
             Assert.IsFalse(result.Any(p => p.name == "Alice Smith"));
         }
-
+      
+      
         [TestMethod]
         public void BooleanContains()
         {
@@ -229,5 +233,53 @@ namespace Searchlight.Tests
                 }
             );
         }
+
+        
+        [TestMethod]
+        public void ContainsNull()
+        {
+            var list = GetTestList();
+            // when the query is Name contain null and there is a null name in the data it throws ContainsNull exception
+            // in the same case but with "Name contains A" it returns a correct value
+            // so the comparison between A and null is not causing an issue
+            var syntax = src.Parse("Name contains null");
+
+            var result = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.IsNotNull(result);
+        }
+        
+        
+        [TestMethod]
+        public void InQuery()
+        {
+            var list = GetTestList();
+            // getting not implemented error on this line
+            // make sure using right formatting, if so then in operator needs adjustment
+            var syntax = src.Parse("name in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
+
+            var result = syntax.QueryCollection<EmployeeObj>(list);
+            
+            Assert.IsTrue(result.Any(p => p.name == "Alice Smith"));
+            Assert.IsTrue(result.Any(p => p.name == "Bob Rogers"));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(2, result.Count());
+        }
+        
+        
+        // [TestMethod]
+        // public void InQueryInts()
+        // {
+        //     var list = GetTestList();
+        //     // getting not implemented error on this line
+        //     // make sure using right formatting, if so then in operator needs adjustment
+        //     var syntax = src.Parse("id in (1,2,57)");
+        //
+        //     var result = syntax.QueryCollection<EmployeeObj>(list);
+        //     
+        //     Assert.IsTrue(result.Any(p => p.id == 1));
+        //     Assert.IsTrue(result.Any(p => p.id == 2));
+        //     Assert.IsNotNull(result);
+        //     Assert.AreEqual(2, result.Count());
+        // }
     }
 }
