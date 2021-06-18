@@ -33,9 +33,9 @@ namespace Searchlight
             var whereCallExpression = Expression.Call(
                 typeof(Queryable),
                 "Where",
-                new Type[] { queryable.ElementType },
+                new Type[] {queryable.ElementType},
                 queryable.Expression,
-                Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] { select }));
+                Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] {select}));
 
             // Obtain a queryable interface
             return queryable.Provider.CreateQuery<T>(whereCallExpression);
@@ -73,6 +73,7 @@ namespace Searchlight
                 {
                     result = Expression.Or(result, clauseExpression);
                 }
+
                 ct = clause.Conjunction;
             }
 
@@ -93,7 +94,6 @@ namespace Searchlight
             var criteria = clause as CriteriaClause;
             if (criteria != null)
             {
-
                 // Obtain a parameter from this object
                 Expression field = Expression.Property(select, criteria.Column.FieldName);
                 Expression value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
@@ -110,11 +110,27 @@ namespace Searchlight
                     case OperationType.LessThanOrEqual:
                         return Expression.LessThanOrEqual(field, value);
                     case OperationType.StartsWith:
-                        return Expression.Call(field, typeof(string).GetMethod("StartsWith", new Type[] { typeof(string) }), value);
+                        return Expression.TryCatch(
+                            Expression.Call(field,
+                                typeof(string).GetMethod("StartsWith", new Type[] {typeof(string)}), value),
+                            Expression.MakeCatchBlock(typeof(Exception), null,
+                                Expression.Constant(false, typeof(Boolean)), null)
+                        );
+
                     case OperationType.EndsWith:
-                        return Expression.Call(field, typeof(string).GetMethod("EndsWith", new Type[] { typeof(string) }), value);
+                        return Expression.TryCatch(
+                            Expression.Call(field,
+                                typeof(string).GetMethod("EndsWith", new Type[] {typeof(string)}), value),
+                            Expression.MakeCatchBlock(typeof(Exception), null,
+                                Expression.Constant(false, typeof(Boolean)), null)
+                        );
                     case OperationType.Contains:
-                        return Expression.Call(field, typeof(string).GetMethod("Contains", new Type[] { typeof(string) }), value);
+                        return Expression.TryCatch(
+                            Expression.Call(field, typeof(string).GetMethod("Contains", new Type[] {typeof(string)}),
+                                value),
+                            Expression.MakeCatchBlock(typeof(Exception), null,
+                                Expression.Constant(false, typeof(Boolean)), null)
+                        );
                     case OperationType.NotEqual:
                         return Expression.NotEqual(field, value);
                     case OperationType.In:
@@ -149,8 +165,10 @@ namespace Searchlight
             {
                 Expression field = Expression.Property(select, inClause.Column.FieldName);
                 Expression value = Expression.Constant(inClause.Values, typeof(List<object>));
-                return Expression.Call(value, typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}), field);
+                return Expression.Call(value, typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}),
+                    field);
             }
+            
             // We didn't understand the clause!
             throw new NotImplementedException();
         }
