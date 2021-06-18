@@ -123,6 +123,7 @@ namespace Searchlight.Tests
             }
         }
 
+      
         [TestMethod]
         public void StartsWithQuery()
         {
@@ -145,6 +146,7 @@ namespace Searchlight.Tests
             }
         }
 
+      
         [TestMethod]
         public void EndsWithQuery()
         {
@@ -203,8 +205,8 @@ namespace Searchlight.Tests
             Assert.AreEqual(list.Count - 1, result.Count());
             Assert.IsFalse(result.Any(p => p.name == "Alice Smith"));
         }
-        
-        
+      
+      
         [TestMethod]
         public void BooleanContains()
         {
