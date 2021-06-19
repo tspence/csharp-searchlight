@@ -90,94 +90,87 @@ namespace Searchlight
         /// <returns></returns>
         private static Expression BuildOneExpression(ParameterExpression select, BaseClause clause, DataSource src)
         {
-            // Check if this is a basic criteria clause
-            var criteria = clause as CriteriaClause;
-            if (criteria != null)
-            {
-                // Obtain a parameter from this object
-                Expression field = Expression.Property(select, criteria.Column.FieldName);
-                Expression value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
-                switch (criteria.Operation)
-                {
-                    case OperationType.Equals:
-                        return Expression.Equal(field, value);
-                    case OperationType.GreaterThan:
-                        return Expression.GreaterThan(field, value);
-                    case OperationType.GreaterThanOrEqual:
-                        return Expression.GreaterThanOrEqual(field, value);
-                    case OperationType.LessThan:
-                        return Expression.LessThan(field, value);
-                    case OperationType.LessThanOrEqual:
-                        return Expression.LessThanOrEqual(field, value);
-                    case OperationType.StartsWith:
-                        return Expression.TryCatch(
-                            Expression.Call(field,
-                                typeof(string).GetMethod("StartsWith", new Type[] {typeof(string)}), value),
-                            Expression.MakeCatchBlock(typeof(Exception), null,
-                                Expression.Constant(false, typeof(Boolean)), null)
-                        );
-
-                    case OperationType.EndsWith:
-                        return Expression.TryCatch(
-                            Expression.Call(field,
-                                typeof(string).GetMethod("EndsWith", new Type[] {typeof(string)}), value),
-                            Expression.MakeCatchBlock(typeof(Exception), null,
-                                Expression.Constant(false, typeof(Boolean)), null)
-                        );
-                    case OperationType.Contains:
-                        return Expression.TryCatch(
-                            Expression.Call(field, typeof(string).GetMethod("Contains", new Type[] {typeof(string)}),
-                                value),
-                            Expression.MakeCatchBlock(typeof(Exception), null,
-                                Expression.Constant(false, typeof(Boolean)), null)
-                        );
-                    case OperationType.NotEqual:
-                        return Expression.NotEqual(field, value);
-                    case OperationType.In:
-                        //implemented below, not a CriteriaClause
-                    case OperationType.IsNull:
-                    case OperationType.Between:
-                        throw new NotImplementedException();
-                }
-            }
-
-            // Is this a between clause?
-            var between = clause as BetweenClause;
-            if (between != null)
-            {
-                Expression field = Expression.Property(select, between.Column.FieldName);
-                Expression lowerValue = Expression.Constant(between.LowerValue, between.Column.FieldType);
-                Expression upperValue = Expression.Constant(between.UpperValue, between.Column.FieldType);
-                Expression lower = Expression.GreaterThanOrEqual(field, lowerValue);
-                Expression upper = Expression.LessThanOrEqual(field, upperValue);
-                return Expression.And(lower, upper);
-            }
-
-            // Check if this is a compound clause and build it nested
-            var compound = clause as CompoundClause;
-            if (compound != null)
-            {
-                return BuildExpression(select, compound.Children, src);
-            }
-
-            var inClause = clause as InClause;
-            if (inClause != null)
-            {
-                Expression field = Expression.Property(select, inClause.Column.FieldName);
-                Expression value = Expression.Constant(inClause.Values, typeof(List<object>));
-                return Expression.Call(value, typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}),
-                    field);
-            }
-    
-            var nullClause = clause as IsNullClause;
-            if (nullClause != null)
-            {
-                Expression field = Expression.Property(select, nullClause.Column.FieldName);
-                return Expression.Equal(field, Expression.Constant(null));
-            }
+            Expression field;
+            Expression value;
             
-            // We didn't understand the clause!
-            throw new NotImplementedException();
+            switch (clause)
+            {
+                case CriteriaClause criteria:
+                    // Obtain a parameter from this object
+                    field = Expression.Property(@select, criteria.Column.FieldName);
+                    value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
+                    switch (criteria.Operation)
+                    {
+                        case OperationType.Equals:
+                            return Expression.Equal(field, value);
+                        case OperationType.GreaterThan:
+                            return Expression.GreaterThan(field, value);
+                        case OperationType.GreaterThanOrEqual:
+                            return Expression.GreaterThanOrEqual(field, value);
+                        case OperationType.LessThan:
+                            return Expression.LessThan(field, value);
+                        case OperationType.LessThanOrEqual:
+                            return Expression.LessThanOrEqual(field, value);
+                        case OperationType.StartsWith:
+                            return Expression.TryCatch(
+                                Expression.Call(field,
+                                    typeof(string).GetMethod("StartsWith", new Type[] {typeof(string)}), value),
+                                Expression.MakeCatchBlock(typeof(Exception), null,
+                                    Expression.Constant(false, typeof(Boolean)), null)
+                            );
+
+                        case OperationType.EndsWith:
+                            return Expression.TryCatch(
+                                Expression.Call(field,
+                                    typeof(string).GetMethod("EndsWith", new Type[] {typeof(string)}), value),
+                                Expression.MakeCatchBlock(typeof(Exception), null,
+                                    Expression.Constant(false, typeof(Boolean)), null)
+                            );
+                        case OperationType.Contains:
+                            return Expression.TryCatch(
+                                Expression.Call(field,
+                                    typeof(string).GetMethod("Contains", new Type[] {typeof(string)}),
+                                    value),
+                                Expression.MakeCatchBlock(typeof(Exception), null,
+                                    Expression.Constant(false, typeof(Boolean)), null)
+                            );
+                        case OperationType.NotEqual:
+                            return Expression.NotEqual(field, value);
+                        case OperationType.In:
+                        case OperationType.IsNull:
+                        case OperationType.Between:
+                        case OperationType.Unknown:
+                            // All three are implemented below and are not CriteriaClause objects
+                            throw new NotImplementedException();
+                        default:
+                            throw new NotImplementedException();
+                    }
+
+                case BetweenClause betweenClause:
+                    field = Expression.Property(@select, betweenClause.Column.FieldName);
+                    Expression lowerValue = Expression.Constant(betweenClause.LowerValue, betweenClause.Column.FieldType);
+                    Expression upperValue = Expression.Constant(betweenClause.UpperValue, betweenClause.Column.FieldType);
+                    Expression lower = Expression.GreaterThanOrEqual(field, lowerValue);
+                    Expression upper = Expression.LessThanOrEqual(field, upperValue);
+                    return Expression.And(lower, upper);
+                
+                case CompoundClause compoundClause:
+                    return BuildExpression(select, compoundClause.Children, src);
+                
+                case InClause inClause:
+                    field = Expression.Property(@select, inClause.Column.FieldName);
+                    value = Expression.Constant(inClause.Values, typeof(List<object>));
+                    return Expression.Call(value,
+                        typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}),
+                        field);
+                
+                case IsNullClause isNullClause:
+                    field = Expression.Property(@select, isNullClause.Column.FieldName);
+                    return Expression.Equal(field, Expression.Constant(null));
+                
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }

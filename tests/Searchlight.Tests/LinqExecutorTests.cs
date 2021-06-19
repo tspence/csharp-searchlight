@@ -48,6 +48,11 @@ namespace Searchlight.Tests
             });
             list.Add(new EmployeeObj()
                 {hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m});
+            list.Add(new EmployeeObj()
+            {
+                hired = DateTime.Today.AddMonths(2), id = 7, name = "Roderick 'null' Sqlkeywordtest", onduty = false,
+                paycheck = 578.00m
+            });
             return list;
         }
 
@@ -74,7 +79,7 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
-            Assert.AreEqual(4, results.Length);
+            Assert.AreEqual(5, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.id > 1);
@@ -109,11 +114,11 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
-            Assert.AreEqual(3, results.Length);
+            Assert.AreEqual(4, results.Length);
             foreach (var e in results)
             {
                 Assert.IsTrue(e.id > 1);
-                Assert.IsTrue(e.paycheck == 800.0m || e.paycheck == 1200.0m || e.paycheck == 10.0m);
+                Assert.IsTrue(e.paycheck is 800.0m or 1200.0m or 10.0m or 578.00m);
             }
         }
 
@@ -124,7 +129,7 @@ namespace Searchlight.Tests
 
             // Note that the "between" clause is inclusive
             var syntax = src.Parse("id between 2 and 4");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((BetweenClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue);
@@ -203,7 +208,7 @@ namespace Searchlight.Tests
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
             var resultsArr = results.ToArray();
-            Assert.AreEqual(3, resultsArr.Length);
+            Assert.AreEqual(4, resultsArr.Length);
             foreach (var e in resultsArr)
             {
                 Assert.IsTrue(e.name.Contains("s"));
@@ -223,8 +228,6 @@ namespace Searchlight.Tests
             Assert.AreEqual(list.Count - 1, result.Count());
             Assert.IsFalse(result.Any(p => p.name == "Alice Smith"));
         }
-
-
 
 
         [TestMethod]
@@ -255,8 +258,6 @@ namespace Searchlight.Tests
         }
 
 
-
-
         [TestMethod]
         public void IsNullQuery()
         {
@@ -265,13 +266,28 @@ namespace Searchlight.Tests
             var syntax = src.Parse("Name is NULL");
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
-            
+
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Any());
             Assert.AreEqual(1, result.Count());
         }
 
-        
+
+        [TestMethod]
+        public void ContainsNull()
+        {
+            var list = GetTestList();
+            // Searchlight interprets the un-apostrophed word "null" here to be the string value "null"
+            // instead of a null.
+            var syntax = src.Parse("Name contains null");
+
+            var result = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(result.Any(p => p.name == "Roderick 'null' Sqlkeywordtest"));
+        }
+
+
         [TestMethod]
         public void InQuery()
         {
@@ -287,7 +303,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(2, result.Count());
         }
 
-        
+
         // [TestMethod]
         // public void InQueryInts()
         // {
