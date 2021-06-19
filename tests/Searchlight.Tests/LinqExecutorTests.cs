@@ -258,16 +258,17 @@ namespace Searchlight.Tests
 
 
         [TestMethod]
-        public void ContainsNull()
+        public void IsNullQuery()
         {
             var list = GetTestList();
-            // when the query is Name contain null and there is a null name in the data it throws ContainsNull exception
-            // in the same case but with "Name contains A" it returns a correct value
-            // so the comparison between A and null is not causing an issue
-            var syntax = src.Parse("Name contains null");
+
+            var syntax = src.Parse("Name is NULL");
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
+            
             Assert.IsNotNull(result);
+            Assert.IsTrue(result.Any());
+            Assert.AreEqual(1, result.Count());
         }
 
         
@@ -275,8 +276,7 @@ namespace Searchlight.Tests
         public void InQuery()
         {
             var list = GetTestList();
-            // getting not implemented error on this line
-            // make sure using right formatting, if so then in operator needs adjustment
+
             var syntax = src.Parse("name in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
