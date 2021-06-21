@@ -304,20 +304,20 @@ namespace Searchlight.Tests
         }
 
 
-        // [TestMethod]
-        // public void InQueryInts()
-        // {
-        //     var list = GetTestList();
-        //     // getting not implemented error on this line
-        //     // make sure using right formatting, if so then in operator needs adjustment
-        //     var syntax = src.Parse("id in (1,2,57)");
-        //
-        //     var result = syntax.QueryCollection<EmployeeObj>(list);
-        //     
-        //     Assert.IsTrue(result.Any(p => p.id == 1));
-        //     Assert.IsTrue(result.Any(p => p.id == 2));
-        //     Assert.IsNotNull(result);
-        //     Assert.AreEqual(2, result.Count());
-        // }
+        [TestMethod]
+        public void InQueryInts()
+        {
+            var list = GetTestList();
+            // getting not implemented error on this line
+            // make sure using right formatting, if so then in operator needs adjustment
+            var syntax = src.Parse("id in (1,2,57)");
+
+            var result = syntax.QueryCollection<EmployeeObj>(list);
+
+            Assert.IsTrue(result.Any(p => p.id == 1));
+            Assert.IsTrue(result.Any(p => p.id == 2));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(2, result.Count());
+        }
     }
 }
