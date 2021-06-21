@@ -92,7 +92,7 @@ namespace Searchlight
         {
             Expression field;
             Expression value;
-            
+
             switch (clause)
             {
                 case CriteriaClause criteria:
@@ -148,26 +148,28 @@ namespace Searchlight
 
                 case BetweenClause betweenClause:
                     field = Expression.Property(@select, betweenClause.Column.FieldName);
-                    Expression lowerValue = Expression.Constant(betweenClause.LowerValue, betweenClause.Column.FieldType);
-                    Expression upperValue = Expression.Constant(betweenClause.UpperValue, betweenClause.Column.FieldType);
+                    Expression lowerValue =
+                        Expression.Constant(betweenClause.LowerValue, betweenClause.Column.FieldType);
+                    Expression upperValue =
+                        Expression.Constant(betweenClause.UpperValue, betweenClause.Column.FieldType);
                     Expression lower = Expression.GreaterThanOrEqual(field, lowerValue);
                     Expression upper = Expression.LessThanOrEqual(field, upperValue);
                     return Expression.And(lower, upper);
-                
+
                 case CompoundClause compoundClause:
                     return BuildExpression(select, compoundClause.Children, src);
-                
+
                 case InClause inClause:
-                    field = Expression.Property(@select, inClause.Column.FieldName);
+                    field = Expression.Convert(Expression.Property(@select, inClause.Column.FieldName), typeof(object));
                     value = Expression.Constant(inClause.Values, typeof(List<object>));
                     return Expression.Call(value,
                         typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}),
                         field);
-                
+
                 case IsNullClause isNullClause:
                     field = Expression.Property(@select, isNullClause.Column.FieldName);
                     return Expression.Equal(field, Expression.Constant(null));
-                
+
                 default:
                     throw new NotImplementedException();
             }
