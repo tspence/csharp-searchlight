@@ -319,5 +319,19 @@ namespace Searchlight.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual(2, result.Count());
         }
+
+        [TestMethod]
+        public void InQueryDecimals()
+        {
+            var list = GetTestList();
+
+            var syntax = src.Parse("paycheck in (578.00, 1.234)");
+
+            var result = syntax.QueryCollection(list);
+            
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.ToList()[0].id == 7);
+        }
     }
 }
