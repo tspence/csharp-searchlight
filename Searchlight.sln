@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Files", "Other Files"
 ProjectSection(SolutionItems) = preProject
 	Searchlight.nuspec = Searchlight.nuspec
 	README.md = README.md
+	PatchNotes.md = PatchNotes.md
 EndProjectSection
 EndProject
 Global
