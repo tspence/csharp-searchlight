@@ -187,7 +187,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(2, results.Length);
             foreach (var e in results)
             {
-                Assert.IsTrue(e.name.EndsWith("s"));
+                Assert.IsTrue(e.name.EndsWith("s", StringComparison.CurrentCultureIgnoreCase));
             }
         }
 
@@ -208,10 +208,10 @@ namespace Searchlight.Tests
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
             var resultsArr = results.ToArray();
-            Assert.AreEqual(4, resultsArr.Length);
+            Assert.AreEqual(6, resultsArr.Length);
             foreach (var e in resultsArr)
             {
-                Assert.IsTrue(e.name.Contains("s"));
+                Assert.IsTrue(e.name.Contains("s", StringComparison.CurrentCultureIgnoreCase));
             }
         }
 
