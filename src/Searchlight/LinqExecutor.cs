@@ -114,7 +114,8 @@ namespace Searchlight
                         case OperationType.StartsWith:
                             return Expression.TryCatch(
                                 Expression.Call(field,
-                                    typeof(string).GetMethod("StartsWith", new Type[] {typeof(string)}), value),
+                                    typeof(string).GetMethod("StartsWith", new Type[] {typeof(string), typeof(StringComparison)}), 
+                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
@@ -122,15 +123,16 @@ namespace Searchlight
                         case OperationType.EndsWith:
                             return Expression.TryCatch(
                                 Expression.Call(field,
-                                    typeof(string).GetMethod("EndsWith", new Type[] {typeof(string)}), value),
+                                    typeof(string).GetMethod("EndsWith", new Type[] {typeof(string), typeof(StringComparison)}),
+                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
                         case OperationType.Contains:
                             return Expression.TryCatch(
                                 Expression.Call(field,
-                                    typeof(string).GetMethod("Contains", new Type[] {typeof(string)}),
-                                    value),
+                                    typeof(string).GetMethod("Contains", new Type[] {typeof(string), typeof(StringComparison)}),
+                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
