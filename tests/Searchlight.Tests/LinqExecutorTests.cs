@@ -187,7 +187,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(2, results.Length);
             foreach (var e in results)
             {
-                Assert.IsTrue(e.name.EndsWith("s", StringComparison.CurrentCultureIgnoreCase));
+                Assert.IsTrue(e.name.EndsWith("s", StringComparison.OrdinalIgnoreCase));
             }
         }
 
@@ -211,7 +211,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(6, resultsArr.Length);
             foreach (var e in resultsArr)
             {
-                Assert.IsTrue(e.name.Contains("s", StringComparison.CurrentCultureIgnoreCase));
+                Assert.IsTrue(e.name.Contains("s", StringComparison.OrdinalIgnoreCase));
             }
         }
 

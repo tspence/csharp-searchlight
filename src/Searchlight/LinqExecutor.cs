@@ -115,7 +115,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("StartsWith", new Type[] {typeof(string), typeof(StringComparison)}), 
-                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
+                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
@@ -124,7 +124,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("EndsWith", new Type[] {typeof(string), typeof(StringComparison)}),
-                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
+                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
@@ -132,7 +132,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("Contains", new Type[] {typeof(string), typeof(StringComparison)}),
-                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
+                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
