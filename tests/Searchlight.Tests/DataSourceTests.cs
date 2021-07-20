@@ -31,6 +31,18 @@ namespace Searchlight.Tests
             Assert.AreEqual("Hello!", ex.FieldValue);
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
         }
+        
+        [TestMethod]
+        public void InvalidOperation()
+        {
+            string originalFilter = "a gt 'abc'";
+            var ex = Assert.ThrowsException<InvalidOperation>(() => _source.ParseFilter(originalFilter));
+            Assert.AreEqual("a", ex.FieldName);
+            Assert.AreEqual("System.String", ex.FieldType);
+            Assert.AreEqual("abc", ex.FieldValue);
+            Assert.AreEqual("System.String", ex.FieldValueType);
+            Assert.AreEqual(originalFilter, ex.OriginalFilter);
+        }
 
         [TestMethod]
         public void ParseSortPatterns()
