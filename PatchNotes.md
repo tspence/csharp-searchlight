@@ -1,3 +1,8 @@
+# 0.9.3
+July 20, 2021
+
+* LINQ executor can now handle comparatives for strings such as >, >=, GTE, and so on
+
 # 0.9.2 
 June 23, 2021
 
