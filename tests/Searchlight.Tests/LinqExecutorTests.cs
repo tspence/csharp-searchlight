@@ -214,7 +214,94 @@ namespace Searchlight.Tests
                 Assert.IsTrue(e.name.Contains("s", StringComparison.OrdinalIgnoreCase));
             }
         }
+        
+        [TestMethod]
+        public void GreaterThanQuery()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("name gt 'b'");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) syntax.Filter[0]).Operation);
+            Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value);
 
+            // Execute the query and ensure that each result matches
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var resultsArr = results.ToArray();
+            Assert.AreEqual(5, resultsArr.Length);
+            foreach (var e in resultsArr)
+            {
+                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) > 0);
+            }
+        }
+
+        [TestMethod]
+        public void GreaterThanOrEqualQuery()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("name ge 'bob rogers'");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause) syntax.Filter[0]).Operation);
+            Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value);
+
+            // Execute the query and ensure that each result matches
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var resultsArr = results.ToArray();
+            Assert.AreEqual(5, resultsArr.Length);
+            foreach (var e in resultsArr)
+            {
+                Assert.IsTrue(string.Compare(e.name.Substring(0, "bob rogers".Length), "bob rogers", StringComparison.CurrentCultureIgnoreCase) >= 0);
+            }
+        }
+        
+        [TestMethod]
+        public void LessThanQuery()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("name lt 'b'");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.LessThan, ((CriteriaClause) syntax.Filter[0]).Operation);
+            Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value);
+
+            // Execute the query and ensure that each result matches
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var resultsArr = results.ToArray();
+            Assert.AreEqual(1, resultsArr.Length);
+            foreach (var e in resultsArr)
+            {
+                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) < 0);
+            }
+        }
+        
+        [TestMethod]
+        public void LessThanOrEqualQuery()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("name le 'bob rogers'");
+            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause) syntax.Filter[0]).Operation);
+            Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value);
+
+            // Execute the query and ensure that each result matches
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var resultsArr = results.ToArray();
+            Assert.AreEqual(2, resultsArr.Length);
+            foreach (var e in resultsArr)
+            {
+                Assert.IsTrue(string.Compare(e.name.Substring(0, "bob rogers".Length), "bob rogers", StringComparison.CurrentCultureIgnoreCase) <= 0);
+            }
+        }
 
         [TestMethod]
         public void NotEqualQuery()

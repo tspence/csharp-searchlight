@@ -165,17 +165,17 @@ namespace Searchlight.Tests
             // Try all basic query expression types - should succeed
             Assert.AreEqual("a = @p1", ParseWhereClause("a = 'test'"));
             Assert.AreEqual("a = @p1", ParseWhereClause("a eq 'test'"));
-            Assert.AreEqual("b > @p1", ParseWhereClause("b > 123"));
-            Assert.AreEqual("b > @p1", ParseWhereClause("b gt 123"));
-            Assert.AreEqual("b >= @p1", ParseWhereClause("b >= 123"));
-            Assert.AreEqual("b >= @p1", ParseWhereClause("b ge 123"));
+            Assert.AreEqual("a > @p1", ParseWhereClause("a > 'test'"));
+            Assert.AreEqual("a > @p1", ParseWhereClause("a gt 'test'"));
+            Assert.AreEqual("a >= @p1", ParseWhereClause("a >= 'test'"));
+            Assert.AreEqual("a >= @p1", ParseWhereClause("a ge 'test'"));
             Assert.AreEqual("a <> @p1", ParseWhereClause("a <> 'test'"));
             Assert.AreEqual("a <> @p1", ParseWhereClause("a != 'test'"));
             Assert.AreEqual("a <> @p1", ParseWhereClause("a ne 'test'"));
-            Assert.AreEqual("b < @p1", ParseWhereClause("b < 123"));
-            Assert.AreEqual("b < @p1", ParseWhereClause("b lt 123"));
-            Assert.AreEqual("b <= @p1", ParseWhereClause("b <= 123"));
-            Assert.AreEqual("b <= @p1", ParseWhereClause("b le 123"));
+            Assert.AreEqual("a < @p1", ParseWhereClause("a < 'test'"));
+            Assert.AreEqual("a < @p1", ParseWhereClause("a lt 'test'"));
+            Assert.AreEqual("a <= @p1", ParseWhereClause("a <= 'test'"));
+            Assert.AreEqual("a <= @p1", ParseWhereClause("a le 'test'"));
 
             // Try slightly more complex query expression types - should succeed
             Assert.AreEqual("a BETWEEN @p1 AND @p2", ParseWhereClause("a between 'test1' and 'test9'"));

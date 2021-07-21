@@ -538,17 +538,6 @@ namespace Searchlight
                         throw new FieldTypeMismatch(c.Column.FieldName, c.Column.FieldType.ToString(), Convert.ToString(c.Value), filter);
                     }
                 }
-
-                if (c.Operation == OperationType.GreaterThan || c.Operation == OperationType.GreaterThanOrEqual ||
-                    c.Operation == OperationType.LessThan || c.Operation == OperationType.LessThanOrEqual)
-                {
-                    if (c.Column.FieldType == typeof(string))
-                    {
-                        throw new InvalidOperation(c.Column.FieldName, c.Column.FieldType.ToString(),
-                            Convert.ToString(c.Value), c.Value.GetType().ToString(), filter);
-                    }
-                    
-                }
                 return c;
             }
         }
