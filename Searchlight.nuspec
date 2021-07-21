@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.2</version>
+		<version>0.9.3</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -12,11 +12,10 @@
 		<description>Implements the Searchlight REST query language for CSharp.  The Searchlight language is database neutral and can support most database technologies.  Using Searchlight, you can provide a rich query language via your API, while still being completely safe from SQL injection attacks.  Searchlight enables you to use multiple database engines with the same functionality, and to transform queries using the in-memory abstract syntax tree prior to execution.</description>
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<releaseNotes>
-			0.9.2 - June 23, 2021
-			
-			* LINQ executor can handle `in` cluases for intrinsic data types with boxing
-			* Added tests for decimals and integer `in` clause queries
-			* Modified string operations to be case insensitive
+			# 0.9.3
+			July 20, 2021
+
+			* LINQ executor can now handle comparatives for strings such as >, >=, GTE, and so on
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2021</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
