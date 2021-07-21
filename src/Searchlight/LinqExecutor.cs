@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Searchlight.Query;
-using BindingFlags = System.Reflection.BindingFlags;
 
 namespace Searchlight
 {
