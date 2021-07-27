@@ -91,9 +91,8 @@ Searchlight supports most operators common to SQL, such as:
 * IsNull
 * AND
 * OR
-* NONE  
 
-As well as sort directions specified by `ASC` and `DESC`, and encapsulated quotes denoted by `''` or `""` for filters like `'Category eq Metallica''s Covers'`.
+As well as sort directions specified by `ASC` and `DESC`, and encapsulated quotes denoted by `''` or `""` for filters like `Category eq 'Metallica''s Covers'`.
 
 # Database independence with Searchlight, Dapper, and AutoMapper
 
