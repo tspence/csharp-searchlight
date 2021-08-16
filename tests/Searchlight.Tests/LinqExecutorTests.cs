@@ -328,10 +328,17 @@ namespace Searchlight.Tests
             var syntax = src.Parse("paycheck in (578.00, 1.234)");
 
             var result = syntax.QueryCollection(list);
-            
+
             Assert.IsNotNull(result);
             Assert.IsTrue(result.Any());
             Assert.IsTrue(result.ToList()[0].id == 7);
+        }
+        
+        [TestMethod]
+        public void InQueryEmptyList()
+        {
+            Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
+            Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Searchlight {
 
         public Dictionary<string, object> Parameters { get; }
 
-        public string WhereClause { get; set;  }
+        public string WhereClause { get; set; }
         public string OrderByClause { get; set;  }
         public List<string> ResultSetClauses { get; }
 
