@@ -1,3 +1,8 @@
+# 0.9.4
+August 16, 2021
+
+* Fix issue where `FieldName in ()` could result in a null pointer exception
+
 # 0.9.3
 July 20, 2021
 
