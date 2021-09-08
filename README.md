@@ -75,6 +75,25 @@ var results = conn.Execute(sql.CommandText, sql.Parameters);
 var results = syntax.QueryCollection<EmployeeObj>(list);
 ```
 
+# Constructing a Query
+
+Searchlight supports most operators common to SQL, such as:
+* Equals (=, EQ)
+* Greater Than (>, GT)
+* Greater Than Or Equal (>=, GE)
+* Less Than (<, LT)
+* Less Than Or Equal (<=, LE)
+* Not Equal (!=, NE, <>)
+* In
+* Contains
+* StartsWith
+* EndsWith
+* IsNull
+* AND
+* OR
+
+As well as sort directions specified by `ASC` and `DESC`, and encapsulated quotes denoted by `''` or `""` for filters like `Category eq 'Metallica''s Covers'`.
+
 # Database independence with Searchlight, Dapper, and AutoMapper
 
 Searchlight is designed to mix with other powerful frameworks such as [Dapper](https://github.com/StackExchange/Dapper) and [AutoMapper](https://automapper.org/) to help 
@@ -156,7 +175,7 @@ Searchlight provides detailed error messages that help you and your customers di
 * `InvalidToken` - The parser expected a token like "AND" or "OR", but something else was provided.
 * `TooManyParameters` - The user has sent too many criteria or parameters (some data sources have limits, for example, parameterized TSQL).
 * `TrailingConjunction` - The query ended with the word "AND" or "OR" but nothing after it.
-* `UnterminatedString` - A string value parameter is missing its end quotation mark.
+* `UnterminatedString` - A string value parameter is missing its end quotation mark, encapsulated quotes are supported using `''` or `""`.
 
 With these errors, your API can give direct and useful feedback to developers as they craft their interfaces.  In each case, Searchlight
 provides useful help:

@@ -14,7 +14,7 @@ namespace Searchlight
         /// <param name="originalFilter"></param>
         public EmptyClause(string originalFilter)
         {
-            this.OriginalFilter = originalFilter;
+            OriginalFilter = originalFilter;
         }
 
         public string OriginalFilter { get; set; }

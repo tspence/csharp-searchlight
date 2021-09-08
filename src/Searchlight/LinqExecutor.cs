@@ -104,18 +104,66 @@ namespace Searchlight
                         case OperationType.Equals:
                             return Expression.Equal(field, value);
                         case OperationType.GreaterThan:
-                            return Expression.GreaterThan(field, value);
+                            if (field.Type == typeof(string))
+                            {
+                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                    Expression.GreaterThan(Expression.Call(null,
+                                            typeof(string).GetMethod("Compare", 
+                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                        Expression.Constant(0)));
+                            }
+                            else
+                            {
+                                return Expression.GreaterThan(field, value);
+                            }
                         case OperationType.GreaterThanOrEqual:
-                            return Expression.GreaterThanOrEqual(field, value);
+                            if (field.Type == typeof(string))
+                            {
+                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                    Expression.GreaterThanOrEqual(Expression.Call(null,
+                                            typeof(string).GetMethod("Compare", 
+                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                        Expression.Constant(0)));
+                            }
+                            else
+                            {
+                                return Expression.GreaterThanOrEqual(field, value);
+                            }
                         case OperationType.LessThan:
-                            return Expression.LessThan(field, value);
+                            if (field.Type == typeof(string))
+                            {
+                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                    Expression.LessThan(Expression.Call(null,
+                                            typeof(string).GetMethod("Compare", 
+                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                        Expression.Constant(0)));
+                            }
+                            else
+                            {
+                                return Expression.LessThan(field, value);
+                            }
                         case OperationType.LessThanOrEqual:
-                            return Expression.LessThanOrEqual(field, value);
+                            if (field.Type == typeof(string))
+                            {
+                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                    Expression.LessThanOrEqual(Expression.Call(null,
+                                            typeof(string).GetMethod("Compare", 
+                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                        Expression.Constant(0)));
+                            }
+                            else
+                            {
+                                return Expression.LessThanOrEqual(field, value);
+                            }
                         case OperationType.StartsWith:
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("StartsWith", new Type[] {typeof(string), typeof(StringComparison)}), 
-                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
+                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
@@ -124,7 +172,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("EndsWith", new Type[] {typeof(string), typeof(StringComparison)}),
-                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
+                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
@@ -132,7 +180,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("Contains", new Type[] {typeof(string), typeof(StringComparison)}),
-                                    value, Expression.Constant(StringComparison.CurrentCultureIgnoreCase)),
+                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );

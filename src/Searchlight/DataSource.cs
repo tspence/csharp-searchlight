@@ -92,7 +92,7 @@ namespace Searchlight
             if (_fieldDict.ContainsKey(upperName))
             {
                 var existing = _fieldDict[upperName];
-                throw new DuplicateName()
+                throw new DuplicateName
                 {
                     ExistingColumn = existing.OriginalName, ConflictingColumn = col.OriginalName,
                     ConflictingName = upperName
@@ -120,8 +120,7 @@ namespace Searchlight
         public ColumnInfo IdentifyColumn(string filterToken)
         {
             if (String.IsNullOrWhiteSpace(filterToken)) return null;
-            ColumnInfo ci = null;
-            _fieldDict.TryGetValue(filterToken.ToUpper(), out ci);
+            _fieldDict.TryGetValue(filterToken.ToUpper(), out ColumnInfo ci);
             return ci;
         }
 
@@ -142,7 +141,7 @@ namespace Searchlight
             src.ModelType = modelType;
             if (modelAttribute == null && mode == AttributeMode.Strict)
             {
-                throw new NonSearchlightModel() { ModelTypeName = modelType.Name };
+                throw new NonSearchlightModel { ModelTypeName = modelType.Name };
             }
             if (modelAttribute != null)
             {
@@ -196,16 +195,17 @@ namespace Searchlight
         /// <returns></returns>
         public SyntaxTree Parse(string filter, string include = null, string orderBy = null)
         {
-            var fetch = new FetchRequest() {filter = filter, include = include, order = orderBy};
+            var fetch = new FetchRequest {filter = filter, include = include, order = orderBy};
             return Parse(fetch);
         }
 
         public SyntaxTree Parse(FetchRequest request)
         {
-            SyntaxTree query = new SyntaxTree();
-            query.Source = this;
-            query.OriginalFilter = request.filter;
-            query.Includes = ParseIncludes(request.include);
+            SyntaxTree query = new SyntaxTree
+            {
+                Source = this, OriginalFilter = request.filter, Includes = ParseIncludes(request.include)
+            };
+            
             foreach (var cmd in query.Includes)
             {
                 cmd.Preview(request);
@@ -218,12 +218,12 @@ namespace Searchlight
                 query.PageSize = request.pageSize ?? 50;
                 if (query.PageSize <= 1)
                 {
-                    throw new InvalidPageSize() {PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString()};
+                    throw new InvalidPageSize {PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString()};
                 }
 
                 if (query.PageNumber < 0)
                 {
-                    throw new InvalidPageNumber() { PageNumber = request.pageNumber == null ? "not specified" : request.pageNumber.ToString() };
+                    throw new InvalidPageNumber { PageNumber = request.pageNumber == null ? "not specified" : request.pageNumber.ToString() };
                 }
             }
 
@@ -240,7 +240,7 @@ namespace Searchlight
             var list = new List<ICommand>();
             if (!string.IsNullOrWhiteSpace(includes))
             {
-                foreach (var name in includes.Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var name in includes.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var matchingCommand = (from command in Commands where command.MatchesName(name) select command)
                         .FirstOrDefault();
@@ -280,8 +280,7 @@ namespace Searchlight
             var tokens = Tokenizer.GenerateTokens(orderBy);
             while (tokens.Count > 0)
             {
-                var si = new SortInfo();
-                si.Direction = SortDirection.Ascending;
+                var si = new SortInfo {Direction = SortDirection.Ascending};
                 list.Add(si);
 
                 // Identify the field being sorted
@@ -343,7 +342,7 @@ namespace Searchlight
             // First parse the incoming filter into tokens
             Queue<string> tokens = Tokenizer.GenerateTokens(filter);
 
-            // Parse a sequene of tokens
+            // Parse a sequence of tokens
             return ParseClauseList(filter, tokens, false);
         }
 
@@ -377,8 +376,7 @@ namespace Searchlight
 
                 // If not, we must have a conjunction
                 string upperToken = token.ToUpperInvariant();
-                string conjunction;
-                if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out conjunction))
+                if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out string conjunction))
                 {
                     throw new InvalidToken(upperToken, StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), filter);
                 }
@@ -394,7 +392,7 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new InvalidToken(upperToken, new string[] {"AND", "OR"}, filter);
+                    throw new InvalidToken(upperToken, new [] {"AND", "OR"}, filter);
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
@@ -419,7 +417,6 @@ namespace Searchlight
         /// </summary>
         /// <param name="filter"></param>
         /// <param name="tokens"></param>
-        /// <param name="source"></param>
         /// <returns></returns>
         private BaseClause ParseOneClause(string filter, Queue<string> tokens)
         {
@@ -429,8 +426,7 @@ namespace Searchlight
             // Is it a parenthesis?  If so, parse a compound clause list
             if (fieldToken == StringConstants.OPEN_PARENTHESIS)
             {
-                var compound = new CompoundClause();
-                compound.Children = ParseClauseList(filter, tokens, true);
+                var compound = new CompoundClause {Children = ParseClauseList(filter, tokens, true)};
                 if (compound.Children == null || compound.Children.Count == 0)
                 {
                     throw new EmptyClause(filter);
@@ -461,84 +457,90 @@ namespace Searchlight
             }
 
             // Next is the operation; must validate it against our list of safe tokens.  Case insensitive.
-            OperationType op = OperationType.Unknown;
-            if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out op))
+            if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out OperationType op))
             {
                 throw new InvalidToken(operationToken, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(),
                     filter);
             }
 
-            // Safe syntax for a "BETWEEN" expression is "column BETWEEN (param1) AND (param2)"
-            if (op == OperationType.Between)
+            switch (op)
             {
-                BetweenClause c = new BetweenClause();
-                c.Negated = negated;
-                c.Column = columnInfo;
-                c.LowerValue = ParseParameter(columnInfo, tokens.Dequeue(), filter);
-                Expect(StringConstants.AND, tokens.Dequeue(), filter);
-                c.UpperValue = ParseParameter(columnInfo, tokens.Dequeue(), filter);
-                return c;
-
+                // Safe syntax for a "BETWEEN" expression is "column BETWEEN (param1) AND (param2)"
+                case OperationType.Between:
+                    BetweenClause b = new BetweenClause
+                    {
+                        Negated = negated,
+                        Column = columnInfo,
+                        LowerValue = ParseParameter(columnInfo, tokens.Dequeue(), filter)
+                    };
+                    Expect(StringConstants.AND, tokens.Dequeue(), filter);
+                    b.UpperValue = ParseParameter(columnInfo, tokens.Dequeue(), filter);
+                    return b;
+                
                 // Safe syntax for an "IN" expression is "column IN (param[, param][, param]...)"
-            }
-            else if (op == OperationType.In)
-            {
-                InClause c = new InClause();
-                c.Column = columnInfo;
-                c.Negated = negated;
-                c.Values = new List<object>();
-                Expect(StringConstants.OPEN_PARENTHESIS, tokens.Dequeue(), filter);
-                while (true)
-                {
-                    c.Values.Add(ParseParameter(columnInfo, tokens.Dequeue(), filter));
-                    string commaOrParen = tokens.Dequeue();
-                    if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen))
+                case OperationType.In:
+                    InClause i = new InClause
                     {
-                        throw new InvalidToken(commaOrParen, StringConstants.SAFE_LIST_TOKENS, filter);
+                        Column = columnInfo, Negated = negated, Values = new List<object>()
+                    };
+                    Expect(StringConstants.OPEN_PARENTHESIS, tokens.Dequeue(), filter);
+
+                    if (tokens.Peek() != StringConstants.CLOSE_PARENTHESIS)
+                    {
+                        while (true)
+                        {
+                            i.Values.Add(ParseParameter(columnInfo, tokens.Dequeue(), filter));
+                            string commaOrParen = tokens.Dequeue();
+                            if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen))
+                            {
+                                throw new InvalidToken(commaOrParen, StringConstants.SAFE_LIST_TOKENS, filter);
+                            }
+
+                            if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
+                        }
+                    }
+                    else
+                    {
+                        throw new EmptyClause(filter);
                     }
 
-                    if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
-                }
-
-                return c;
-
+                    return i;
+                
                 // Safe syntax for an "IS NULL" expression is "column IS [NOT] NULL"
-            }
-            else if (op == OperationType.IsNull)
-            {
-                IsNullClause c = new IsNullClause();
-                c.Column = columnInfo;
+                case OperationType.IsNull:
+                    IsNullClause iN = new IsNullClause {Column = columnInfo};
 
-                // Allow "not" to come either before or after the "IS"
-                string next = tokens.Dequeue().ToUpperInvariant();
-                if (next == StringConstants.NOT)
-                {
-                    negated = true;
-                    next = tokens.Dequeue();
-                }
-
-                c.Negated = negated;
-                Expect(StringConstants.NULL, next, filter);
-                return c;
-
-                // Safe syntax for all other recognized expressions is "column op param"
-            }
-            else
-            {
-                CriteriaClause c = new CriteriaClause();
-                c.Negated = negated;
-                c.Operation = op;
-                c.Column = columnInfo;
-                c.Value = ParseParameter(columnInfo, tokens.Dequeue(), filter);
-                if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith 
-                                                            || c.Operation == OperationType.Contains)
-                {
-                    if (c.Column.FieldType != typeof(string))
+                    // Allow "not" to come either before or after the "IS"
+                    string next = tokens.Dequeue().ToUpperInvariant();
+                    if (next == StringConstants.NOT)
                     {
-                        throw new FieldTypeMismatch(c.Column.FieldName, c.Column.FieldType.ToString(), Convert.ToString(c.Value), filter);
+                        negated = true;
+                        next = tokens.Dequeue();
                     }
-                }
-                return c;
+
+                    iN.Negated = negated;
+                    Expect(StringConstants.NULL, next, filter);
+                    return iN;
+                
+                // Safe syntax for all other recognized expressions is "column op param"
+                default:
+                    CriteriaClause c = new CriteriaClause
+                    {
+                        Negated = negated,
+                        Operation = op,
+                        Column = columnInfo,
+                        Value = ParseParameter(columnInfo, tokens.Dequeue(), filter)
+                    };
+            
+                    if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith 
+                                                                || c.Operation == OperationType.Contains)
+                    {
+                        if (c.Column.FieldType != typeof(string))
+                        {
+                            throw new FieldTypeMismatch(c.Column.FieldName, c.Column.FieldType.ToString(), Convert.ToString(c.Value), filter);
+                        }
+                    }
+                    return c;
             }
         }
 
@@ -552,7 +554,7 @@ namespace Searchlight
         {
             if (!String.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidToken(actual, new string[] {expectedToken}, originalFilter);
+                throw new InvalidToken(actual, new [] {expectedToken}, originalFilter);
             }
         }
 
