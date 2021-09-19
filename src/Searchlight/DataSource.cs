@@ -18,7 +18,7 @@ namespace Searchlight
         /// The engine to use for related tables
         /// </summary>
         public SearchlightEngine Engine { get; set; }
-        
+
         /// <summary>
         /// The externally visible name of this collection or table
         /// </summary>
@@ -41,10 +41,17 @@ namespace Searchlight
         public List<ICommand> Commands { get; set; }
 
         /// <summary>
+        /// The list of flags that can be specified in the $include parameter
+        /// </summary>
+        public List<SearchlightFlag> Flags { get; set; }
+
+        /// <summary>
         /// Some data sources can only handle a specified number of parameters.
         /// </summary>
         public int MaximumParameters { get; set; }
 
+        private readonly List<string> _knownIncludes = new List<string>();
+        private readonly Dictionary<string, object> _includeDict = new Dictionary<string, object>();
         private readonly Dictionary<string, ColumnInfo> _fieldDict = new Dictionary<string, ColumnInfo>();
         private readonly List<ColumnInfo> _columns = new List<ColumnInfo>();
 
@@ -88,18 +95,37 @@ namespace Searchlight
         private void AddName(string name, ColumnInfo col)
         {
             if (string.IsNullOrWhiteSpace(name)) return;
-            var upperName = name.ToUpper();
+            var upperName = name.Trim().ToUpperInvariant();
             if (_fieldDict.ContainsKey(upperName))
             {
                 var existing = _fieldDict[upperName];
                 throw new DuplicateName
                 {
-                    ExistingColumn = existing.OriginalName, ConflictingColumn = col.OriginalName,
-                    ConflictingName = upperName
+                    Table = this.TableName,
+                    ExistingColumn = existing.FieldName,
+                    ConflictingColumn = col.FieldName,
+                    ConflictingName = upperName,
                 };
             }
 
             _fieldDict[upperName] = col;
+        }
+
+        private void AddInclude(string name, object incl)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return;
+            var upperName = name.Trim().ToUpperInvariant();
+            if (_includeDict.ContainsKey(upperName))
+            {
+                var existing = _includeDict[upperName];
+                throw new DuplicateInclude
+                {
+                    Table = this.TableName,
+                    ConflictingIncludeName = upperName
+                };
+            }
+
+            _includeDict[upperName] = incl;
         }
 
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
@@ -137,6 +163,7 @@ namespace Searchlight
             var src = new DataSource();
             src.Engine = engine;
             src.Commands = new List<ICommand>();
+            src.Flags = modelType.GetCustomAttributes<SearchlightFlag>().ToList();
             var modelAttribute = modelType.GetCustomAttribute<SearchlightModel>();
             src.ModelType = modelType;
             if (modelAttribute == null && mode == AttributeMode.Strict)
@@ -182,6 +209,26 @@ namespace Searchlight
                 }
             }
 
+            // Calculate the list of known "include" commands
+            foreach (var cmd in src.Commands)
+            {
+                src.AddInclude(cmd.GetName(), cmd);
+                src._knownIncludes.Add(cmd.GetName());
+                foreach (var name in cmd.GetAliases())
+                {
+                    src.AddInclude(name, cmd);
+                }
+            }
+            foreach (var flag in src.Flags)
+            {
+                src.AddInclude(flag.Name, flag);
+                src._knownIncludes.Add(flag.Name);
+                foreach (var alias in flag.Aliases)
+                {
+                    src.AddInclude(alias, flag);
+                }
+            }
+
             return src;
         }
 
@@ -195,7 +242,7 @@ namespace Searchlight
         /// <returns></returns>
         public SyntaxTree Parse(string filter, string include = null, string orderBy = null)
         {
-            var fetch = new FetchRequest {filter = filter, include = include, order = orderBy};
+            var fetch = new FetchRequest { filter = filter, include = include, order = orderBy };
             return Parse(fetch);
         }
 
@@ -203,13 +250,12 @@ namespace Searchlight
         {
             SyntaxTree query = new SyntaxTree
             {
-                Source = this, OriginalFilter = request.filter, Includes = ParseIncludes(request.include)
+                Source = this,
+                OriginalFilter = request.filter,
             };
-            
-            foreach (var cmd in query.Includes)
-            {
-                cmd.Preview(request);
-            }
+            var tuple = ParseIncludes(request.include);
+            query.Includes = tuple.Item1;
+            query.Flags = tuple.Item2;
             query.Filter = ParseFilter(request.filter);
             query.OrderBy = ParseOrderBy(request.order);
             if (request.pageNumber != null || request.pageSize != null)
@@ -218,7 +264,7 @@ namespace Searchlight
                 query.PageSize = request.pageSize ?? 50;
                 if (query.PageSize <= 1)
                 {
-                    throw new InvalidPageSize {PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString()};
+                    throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString() };
                 }
 
                 if (query.PageNumber < 0)
@@ -234,26 +280,41 @@ namespace Searchlight
         /// Specify the name of optional collections or commands to include in this fetch request separated by commas.
         /// </summary>
         /// <param name="includes">The names of collections to fetch</param>
-        public List<ICommand> ParseIncludes(string includes)
+        public Tuple<List<ICommand>, List<SearchlightFlag>> ParseIncludes(string includes)
         {
             // We will collect results here
             var list = new List<ICommand>();
+            var flags = new List<SearchlightFlag>();
             if (!string.IsNullOrWhiteSpace(includes))
             {
-                foreach (var name in includes.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
-                    var matchingCommand = (from command in Commands where command.MatchesName(name) select command)
-                        .FirstOrDefault();
-                    if (matchingCommand == null)
+                    var upperName = name.ToUpperInvariant();
+                    Object obj;
+                    if (_includeDict.TryGetValue(upperName, out obj))
                     {
-                        throw new FieldNotFound(name, ColumnNames().ToArray(), includes);
+                        if (obj is ICommand)
+                        {
+                            list.Add(obj as ICommand);
+                        }
+                        else if (obj is SearchlightFlag)
+                        {
+                            flags.Add(obj as SearchlightFlag);
+                        }
                     }
-                    list.Add(matchingCommand);
+                    else
+                    {
+                        throw new IncludeNotFound() { 
+                            OriginalInclude = includes, 
+                            IncludeName = name, 
+                            KnownIncludes = _knownIncludes.ToArray() 
+                        };
+                    }
                 }
             }
 
             // Here is the list of tested and validated commands
-            return list;
+            return new Tuple<List<ICommand>, List<SearchlightFlag>>(list, flags);
         }
 
         /// <summary>
@@ -280,7 +341,7 @@ namespace Searchlight
             var tokens = Tokenizer.GenerateTokens(orderBy);
             while (tokens.Count > 0)
             {
-                var si = new SortInfo {Direction = SortDirection.Ascending};
+                var si = new SortInfo { Direction = SortDirection.Ascending };
                 list.Add(si);
 
                 // Identify the field being sorted
@@ -392,7 +453,7 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new InvalidToken(upperToken, new [] {"AND", "OR"}, filter);
+                    throw new InvalidToken(upperToken, new[] { "AND", "OR" }, filter);
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
@@ -426,7 +487,7 @@ namespace Searchlight
             // Is it a parenthesis?  If so, parse a compound clause list
             if (fieldToken == StringConstants.OPEN_PARENTHESIS)
             {
-                var compound = new CompoundClause {Children = ParseClauseList(filter, tokens, true)};
+                var compound = new CompoundClause { Children = ParseClauseList(filter, tokens, true) };
                 if (compound.Children == null || compound.Children.Count == 0)
                 {
                     throw new EmptyClause(filter);
@@ -476,12 +537,14 @@ namespace Searchlight
                     Expect(StringConstants.AND, tokens.Dequeue(), filter);
                     b.UpperValue = ParseParameter(columnInfo, tokens.Dequeue(), filter);
                     return b;
-                
+
                 // Safe syntax for an "IN" expression is "column IN (param[, param][, param]...)"
                 case OperationType.In:
                     InClause i = new InClause
                     {
-                        Column = columnInfo, Negated = negated, Values = new List<object>()
+                        Column = columnInfo,
+                        Negated = negated,
+                        Values = new List<object>()
                     };
                     Expect(StringConstants.OPEN_PARENTHESIS, tokens.Dequeue(), filter);
 
@@ -505,10 +568,10 @@ namespace Searchlight
                     }
 
                     return i;
-                
+
                 // Safe syntax for an "IS NULL" expression is "column IS [NOT] NULL"
                 case OperationType.IsNull:
-                    IsNullClause iN = new IsNullClause {Column = columnInfo};
+                    IsNullClause iN = new IsNullClause { Column = columnInfo };
 
                     // Allow "not" to come either before or after the "IS"
                     string next = tokens.Dequeue().ToUpperInvariant();
@@ -521,7 +584,7 @@ namespace Searchlight
                     iN.Negated = negated;
                     Expect(StringConstants.NULL, next, filter);
                     return iN;
-                
+
                 // Safe syntax for all other recognized expressions is "column op param"
                 default:
                     CriteriaClause c = new CriteriaClause
@@ -531,8 +594,8 @@ namespace Searchlight
                         Column = columnInfo,
                         Value = ParseParameter(columnInfo, tokens.Dequeue(), filter)
                     };
-            
-                    if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith 
+
+                    if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
                                                                 || c.Operation == OperationType.Contains)
                     {
                         if (c.Column.FieldType != typeof(string))
@@ -554,7 +617,7 @@ namespace Searchlight
         {
             if (!String.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidToken(actual, new [] {expectedToken}, originalFilter);
+                throw new InvalidToken(actual, new[] { expectedToken }, originalFilter);
             }
         }
 
