@@ -1,3 +1,8 @@
+# 0.9.6
+September 19, 2021
+
+* LINQ executor now uses case insensitive string comparison correctly
+
 # 0.9.5
 September 19, 2021
 
