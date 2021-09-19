@@ -427,5 +427,19 @@ namespace Searchlight.Tests
             Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
             Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
         }
+
+        [TestMethod]
+        public void StringEqualsCaseInsensitive()
+        {
+            var list = GetTestList();
+
+            var syntax = src.Parse("name eq 'ALICE SMITH'");
+
+            var result = syntax.QueryCollection<EmployeeObj>(list);
+
+            Assert.IsTrue(result.Any(p => p.name == "Alice Smith"));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count());
+        }
     }
 }
