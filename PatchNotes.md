@@ -1,3 +1,9 @@
+# 0.9.5
+September 19, 2021
+
+* Added support for SearchlightFlags, a system you can use to detect options selected via the "$include" parameter
+* Added tests for flags and refactored the CommandCollection system for faster processing
+
 # 0.9.4
 August 16, 2021
 
