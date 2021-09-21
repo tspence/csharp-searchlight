@@ -427,5 +427,30 @@ namespace Searchlight.Tests
             Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
             Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
         }
+
+        [TestMethod]
+        public void DefinedDateOperators()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("hired < TODAY");
+
+            var result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 3);
+
+            syntax = src.Parse("hired < TOMORROW");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+            
+            syntax = src.Parse("hired > YESTERDAY");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+        }
     }
 }
