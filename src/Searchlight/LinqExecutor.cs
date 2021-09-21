@@ -102,7 +102,15 @@ namespace Searchlight
                     switch (criteria.Operation)
                     {
                         case OperationType.Equals:
-                            return Expression.Equal(field, value);
+                            if (field.Type == typeof(string))
+                            {
+                                return Expression.Call(null,
+                                    typeof(string).GetMethod("Equals", new Type[] { typeof(string), typeof(string), typeof(StringComparison) }),
+                                    field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                            } else
+                            {
+                                return Expression.Equal(field, value);
+                            }
                         case OperationType.GreaterThan:
                             if (field.Type == typeof(string))
                             {

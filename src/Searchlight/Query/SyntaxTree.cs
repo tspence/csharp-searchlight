@@ -27,6 +27,21 @@ namespace Searchlight.Query
         public List<ICommand> Includes { get; set; }
 
         /// <summary>
+        /// Returns true if a particular flag has been enabled in this syntax request
+        /// </summary>
+        /// <param name="flagName">The name of the flag to check</param>
+        /// <returns>True if this flag is enabled</returns>
+        public bool HasFlag(string flagName)
+        {
+            return (from f in Flags where String.Equals(f.Name, flagName, StringComparison.CurrentCultureIgnoreCase) select f).Any();
+        }
+
+        /// <summary>
+        /// Lists flags that were specified by choices in the "$include" parameter
+        /// </summary>
+        public List<SearchlightFlag> Flags { get; set; }
+
+        /// <summary>
         /// The prioritized list of sort statements specified by the "$orderBy" parameter
         /// </summary>
         public List<SortInfo> OrderBy { get; set; }
