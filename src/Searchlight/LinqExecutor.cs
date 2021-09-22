@@ -57,13 +57,9 @@ namespace Searchlight
                 
                 sortExpression += column + " " + ((direction == SortDirection.Ascending) ? "ASC" : "DESC");
             }
-            
-            if (string.IsNullOrWhiteSpace(sortExpression))
-            {
-                return filtered.AsQueryable().OrderBy(sortExpression);
-            }
 
-            return filtered;
+            return string.IsNullOrWhiteSpace(sortExpression) ? 
+                filtered : filtered.AsQueryable().OrderBy(sortExpression);
         }
 
         /// <summary>
