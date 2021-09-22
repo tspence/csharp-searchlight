@@ -592,17 +592,8 @@ namespace Searchlight.Tests
             
             list = GetTestList();
             control = (from item in GetTestList() orderby item.hired descending select item).ToList();
-            syntax = src.Parse("", null, "name DESC");
+            syntax = src.Parse("", null, "hired DESC");
             result = syntax.QueryCollection(list).ToList();
-            foreach (var a in control)
-            {
-                Console.WriteLine(a.hired);
-            }
-            Console.WriteLine();
-            foreach (var a in result)
-            {
-                Console.WriteLine(a.hired);
-            }
             for (int i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result[i].hired, control[i].hired);

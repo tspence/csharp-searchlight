@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Searchlight.Query;
+using System.Linq.Dynamic.Core;
 
 namespace Searchlight
 {
@@ -41,26 +42,24 @@ namespace Searchlight
                 // Obtain a queryable interface
                 filtered = queryable.Provider.CreateQuery<T>(whereCallExpression);
             }
+
+
+            string sortExpression = "";
             
-            var ordered = filtered;
             foreach (SortInfo order in tree.OrderBy)
             {
                 var column = order.Column.FieldName;
                 var direction = order.Direction;
-                var param = Expression.Parameter(typeof(T), column);
-                var sortExpression = Expression.Lambda<Func<T, object>>(
-                    Expression.Convert(Expression.Property(param, column), 
-                        typeof(object)), param);
-                if (direction == SortDirection.Ascending)
+                if (sortExpression != "")
                 {
-                    ordered = ordered.OrderBy(sortExpression);
+                    sortExpression += ", ";
                 }
-                else
-                {
-                    ordered = ordered.OrderByDescending(sortExpression);
-                }
+                
+                sortExpression += column + " " + ((direction == SortDirection.Ascending) ? "ASC" : "DESC");
             }
-            
+            Console.WriteLine(sortExpression);
+            var ordered = filtered.AsQueryable().OrderBy(sortExpression);
+
             return ordered;
         }
 
