@@ -1,3 +1,15 @@
+# 0.9.7
+September 22, 2021
+
+Searchlight queries now support date shorthand: TODAY, TOMORROW, YESTERDAY can be used as values for date criteria.
+This means you can now write queries such as `date between yesterday and tomorrow`.  We may add more support for
+date constants in the future.
+
+* LINQ executor sorts results according to the same logic as the SQL executor
+* LINQ executor works correctly if you send in a null or filter statement
+* Recognizes "ascending" and "descending" in addition to "asc" and "desc" for sort orders
+* Removed references to Dapper, which is no longer required to compile
+
 # 0.9.6
 September 19, 2021
 

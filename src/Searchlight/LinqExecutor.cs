@@ -24,42 +24,30 @@ namespace Searchlight
             // Here's how we'll do it:
             var queryable = collection.AsQueryable<T>();
 
-            // Construct a linq "select" expression (
-            ParameterExpression select = Expression.Parameter(typeof(T), "obj");
-
             // If the user specified a filter 
-            var filtered = queryable;
-            Expression expression = BuildExpression(select, tree.Filter, tree.Source);
+            var select = Expression.Parameter(typeof(T), "obj");
+            var expression = BuildExpression(select, tree.Filter, tree.Source);
             if (expression != null)
             {
-                // Convert that to a "where" method call
                 var whereCallExpression = Expression.Call(
                     typeof(Queryable),
                     "Where",
-                    new Type[] {queryable.ElementType},
+                    new Type[] { queryable.ElementType },
                     queryable.Expression,
-                    Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] {select}));
-                // Obtain a queryable interface
-                filtered = queryable.Provider.CreateQuery<T>(whereCallExpression);
+                    Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] { select }));
+                queryable = queryable.Provider.CreateQuery<T>(whereCallExpression);
             }
 
-
-            string sortExpression = "";
-            
-            foreach (SortInfo order in tree.OrderBy)
+            // If the user specified a sorting clause
+            if (tree.OrderBy.Any())
             {
-                var column = order.Column.FieldName;
-                var direction = order.Direction;
-                if (sortExpression != "")
-                {
-                    sortExpression += ", ";
-                }
-                
-                sortExpression += column + " " + ((direction == SortDirection.Ascending) ? "ASC" : "DESC");
+                var sortExpression = string.Join(", ",
+                    (from sort in tree.OrderBy select $"{sort.Column.FieldName} {sort.DirectionStr()}"));
+                queryable = queryable.OrderBy(sortExpression);
             }
 
-            return string.IsNullOrWhiteSpace(sortExpression) ? 
-                filtered : filtered.AsQueryable().OrderBy(sortExpression);
+            // Results are now filtered and ordered as requested
+            return queryable;
         }
 
         /// <summary>
@@ -126,9 +114,11 @@ namespace Searchlight
                             if (field.Type == typeof(string))
                             {
                                 return Expression.Call(null,
-                                    typeof(string).GetMethod("Equals", new Type[] { typeof(string), typeof(string), typeof(StringComparison) }),
+                                    typeof(string).GetMethod("Equals",
+                                        new Type[] { typeof(string), typeof(string), typeof(StringComparison) }),
                                     field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase));
-                            } else
+                            }
+                            else
                             {
                                 return Expression.Equal(field, value);
                             }
@@ -137,8 +127,11 @@ namespace Searchlight
                             {
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThan(Expression.Call(null,
-                                            typeof(string).GetMethod("Compare", 
-                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            typeof(string).GetMethod("Compare",
+                                                new Type[]
+                                                {
+                                                    typeof(string), typeof(string), typeof(StringComparison)
+                                                }),
                                             field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                         Expression.Constant(0)));
                             }
@@ -151,8 +144,11 @@ namespace Searchlight
                             {
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThanOrEqual(Expression.Call(null,
-                                            typeof(string).GetMethod("Compare", 
-                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            typeof(string).GetMethod("Compare",
+                                                new Type[]
+                                                {
+                                                    typeof(string), typeof(string), typeof(StringComparison)
+                                                }),
                                             field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                         Expression.Constant(0)));
                             }
@@ -165,8 +161,11 @@ namespace Searchlight
                             {
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThan(Expression.Call(null,
-                                            typeof(string).GetMethod("Compare", 
-                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            typeof(string).GetMethod("Compare",
+                                                new Type[]
+                                                {
+                                                    typeof(string), typeof(string), typeof(StringComparison)
+                                                }),
                                             field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                         Expression.Constant(0)));
                             }
@@ -179,8 +178,11 @@ namespace Searchlight
                             {
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThanOrEqual(Expression.Call(null,
-                                            typeof(string).GetMethod("Compare", 
-                                                new Type[] {typeof(string), typeof(string), typeof(StringComparison)}),
+                                            typeof(string).GetMethod("Compare",
+                                                new Type[]
+                                                {
+                                                    typeof(string), typeof(string), typeof(StringComparison)
+                                                }),
                                             field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                         Expression.Constant(0)));
                             }
@@ -191,7 +193,8 @@ namespace Searchlight
                         case OperationType.StartsWith:
                             return Expression.TryCatch(
                                 Expression.Call(field,
-                                    typeof(string).GetMethod("StartsWith", new Type[] {typeof(string), typeof(StringComparison)}), 
+                                    typeof(string).GetMethod("StartsWith",
+                                        new Type[] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
@@ -200,7 +203,8 @@ namespace Searchlight
                         case OperationType.EndsWith:
                             return Expression.TryCatch(
                                 Expression.Call(field,
-                                    typeof(string).GetMethod("EndsWith", new Type[] {typeof(string), typeof(StringComparison)}),
+                                    typeof(string).GetMethod("EndsWith",
+                                        new Type[] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
@@ -208,7 +212,8 @@ namespace Searchlight
                         case OperationType.Contains:
                             return Expression.TryCatch(
                                 Expression.Call(field,
-                                    typeof(string).GetMethod("Contains", new Type[] {typeof(string), typeof(StringComparison)}),
+                                    typeof(string).GetMethod("Contains",
+                                        new Type[] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
@@ -242,7 +247,7 @@ namespace Searchlight
                     field = Expression.Convert(Expression.Property(@select, inClause.Column.FieldName), typeof(object));
                     value = Expression.Constant(inClause.Values, typeof(List<object>));
                     return Expression.Call(value,
-                        typeof(List<object>).GetMethod("Contains", new Type[] {typeof(object)}),
+                        typeof(List<object>).GetMethod("Contains", new Type[] { typeof(object) }),
                         field);
 
                 case IsNullClause isNullClause:
