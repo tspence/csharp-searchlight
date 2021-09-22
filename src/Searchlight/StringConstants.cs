@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Searchlight.Parsing
+namespace Searchlight
 {
     /// <summary>
     /// This class contains all whitelisted SQL tokens that can be placed into a legitimate SQL string
     /// </summary>
-    public class StringConstants
+    public static class StringConstants
     {
         /// <summary>
         /// Represents the list of query expressions we would recognize if the user passed them in a filter.
