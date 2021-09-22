@@ -63,7 +63,7 @@ namespace Searchlight
                 return filtered.AsQueryable().OrderBy(sortExpression);
             }
 
-            return queryable;
+            return filtered;
         }
 
         /// <summary>
