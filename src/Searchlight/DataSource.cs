@@ -562,7 +562,8 @@ namespace Searchlight
         {
             if (StringConstants.DefinedDates.Keys.Contains(valueToken, StringComparer.OrdinalIgnoreCase))
             {
-                return StringConstants.DefinedDates[valueToken];
+                StringConstants.DefinedDates.TryGetValue(valueToken.ToUpper(), out var result);
+                if (result != null) return result.Invoke();
             }
 
             return valueToken;

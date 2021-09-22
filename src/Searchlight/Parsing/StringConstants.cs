@@ -132,11 +132,11 @@ namespace Searchlight.Parsing
         /// <summary>
         /// Used as shorthand for typing today's date
         /// </summary>
-        public static readonly Dictionary<string, DateTime> DefinedDates = new Dictionary<string, DateTime>
+        public static readonly Dictionary<string, Func<DateTime>> DefinedDates = new Dictionary<string, Func<DateTime>>
         {
-            {"TODAY", DateTime.Today},
-            {"TOMORROW", DateTime.Today.AddDays(1)},
-            {"YESTERDAY", DateTime.Today.AddDays(-1)}
+            {"TODAY", () => DateTime.Today},
+            {"TOMORROW", () => DateTime.Today.AddDays(1)},
+            {"YESTERDAY", () => DateTime.Today.AddDays(-1)}
         };
     }
 }
