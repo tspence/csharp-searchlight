@@ -26,19 +26,42 @@ namespace Searchlight
             // Construct a linq "select" expression (
             ParameterExpression select = Expression.Parameter(typeof(T), "obj");
 
-            // Construct a linq "filter" expression 
+            // If the user specified a filter 
+            var filtered = queryable;
             Expression expression = BuildExpression(select, tree.Filter, tree.Source);
-
-            // Convert that to a "where" method call
-            var whereCallExpression = Expression.Call(
-                typeof(Queryable),
-                "Where",
-                new Type[] {queryable.ElementType},
-                queryable.Expression,
-                Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] {select}));
-
-            // Obtain a queryable interface
-            return queryable.Provider.CreateQuery<T>(whereCallExpression);
+            if (expression != null)
+            {
+                // Convert that to a "where" method call
+                var whereCallExpression = Expression.Call(
+                    typeof(Queryable),
+                    "Where",
+                    new Type[] {queryable.ElementType},
+                    queryable.Expression,
+                    Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] {select}));
+                // Obtain a queryable interface
+                filtered = queryable.Provider.CreateQuery<T>(whereCallExpression);
+            }
+            
+            var ordered = filtered;
+            foreach (SortInfo order in tree.OrderBy)
+            {
+                var column = order.Column.FieldName;
+                var direction = order.Direction;
+                var param = Expression.Parameter(typeof(T), column);
+                var sortExpression = Expression.Lambda<Func<T, object>>(
+                    Expression.Convert(Expression.Property(param, column), 
+                        typeof(object)), param);
+                if (direction == SortDirection.Ascending)
+                {
+                    ordered = ordered.OrderBy(sortExpression);
+                }
+                else
+                {
+                    ordered = ordered.OrderByDescending(sortExpression);
+                }
+            }
+            
+            return ordered;
         }
 
         /// <summary>

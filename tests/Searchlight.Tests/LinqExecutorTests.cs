@@ -491,5 +491,124 @@ namespace Searchlight.Tests
 
             Assert.IsFalse(result.Any());
         }
+
+        [TestMethod]
+        public void SortedQueries()
+        {
+            // id test ascending and descending
+            var list = GetTestList();
+            var control = (from item in GetTestList() orderby item.id ascending select item).ToList();
+            var syntax = src.Parse(null, null, "id ASC");
+            var result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].id, control[i].id);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.id descending select item).ToList();
+            syntax = src.Parse("", null, "id descending");
+            result = syntax.QueryCollection(list).ToList();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].id, control[i].id);
+            }
+            
+            // name test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.name ascending select item).ToList();
+            syntax = src.Parse("", null, "name ASC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].name, control[i].name);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.name descending select item).ToList();
+            syntax = src.Parse("", null, "name DESC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].name, control[i].name);
+            }
+            
+            // paycheck test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.paycheck ascending select item).ToList();
+            syntax = src.Parse("", null, "paycheck ASC");
+            result = syntax.QueryCollection(list).ToList();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].paycheck, control[i].paycheck);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.paycheck descending select item).ToList();
+            syntax = src.Parse("", null, "paycheck DESC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].paycheck, control[i].paycheck);
+            }
+            
+            // onduty test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.onduty ascending select item).ToList();
+            syntax = src.Parse("", null, "onduty ASC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].onduty, control[i].onduty);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.onduty descending select item).ToList();
+            syntax = src.Parse("", null, "onduty DESC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].onduty, control[i].onduty);
+            }
+            
+            // hired test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.hired ascending select item).ToList();
+            syntax = src.Parse("", null, "hired ASC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].hired, control[i].hired);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.hired descending select item).ToList();
+            syntax = src.Parse("", null, "name DESC");
+            result = syntax.QueryCollection(list).ToList();
+            foreach (var a in control)
+            {
+                Console.WriteLine(a.hired);
+            }
+            Console.WriteLine();
+            foreach (var a in result)
+            {
+                Console.WriteLine(a.hired);
+            }
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].hired, control[i].hired);
+            }
+            
+            //TODO: add test that sorts multiple fields
+        }
     }
 }
