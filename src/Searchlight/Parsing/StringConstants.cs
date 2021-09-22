@@ -98,11 +98,13 @@ namespace Searchlight.Parsing
         /// Represents descending sort
         /// </summary>
         public static readonly string DESCENDING = "DESC";
+        public static readonly string DESCENDING_ABR = "DESCENDING";
 
         /// <summary>
         /// Represents ascending sort
         /// </summary>
         public static readonly string ASCENDING = "ASC";
+        public static readonly string ASCENDING_ABR = "ASCENDING";
 
         /// <summary>
         /// User specified an inverse operation

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Searchlight.Query;
+using System.Linq.Dynamic.Core;
 
 namespace Searchlight
 {
@@ -26,19 +27,39 @@ namespace Searchlight
             // Construct a linq "select" expression (
             ParameterExpression select = Expression.Parameter(typeof(T), "obj");
 
-            // Construct a linq "filter" expression 
+            // If the user specified a filter 
+            var filtered = queryable;
             Expression expression = BuildExpression(select, tree.Filter, tree.Source);
+            if (expression != null)
+            {
+                // Convert that to a "where" method call
+                var whereCallExpression = Expression.Call(
+                    typeof(Queryable),
+                    "Where",
+                    new Type[] {queryable.ElementType},
+                    queryable.Expression,
+                    Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] {select}));
+                // Obtain a queryable interface
+                filtered = queryable.Provider.CreateQuery<T>(whereCallExpression);
+            }
 
-            // Convert that to a "where" method call
-            var whereCallExpression = Expression.Call(
-                typeof(Queryable),
-                "Where",
-                new Type[] {queryable.ElementType},
-                queryable.Expression,
-                Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] {select}));
 
-            // Obtain a queryable interface
-            return queryable.Provider.CreateQuery<T>(whereCallExpression);
+            string sortExpression = "";
+            
+            foreach (SortInfo order in tree.OrderBy)
+            {
+                var column = order.Column.FieldName;
+                var direction = order.Direction;
+                if (sortExpression != "")
+                {
+                    sortExpression += ", ";
+                }
+                
+                sortExpression += column + " " + ((direction == SortDirection.Ascending) ? "ASC" : "DESC");
+            }
+
+            return string.IsNullOrWhiteSpace(sortExpression) ? 
+                filtered : filtered.AsQueryable().OrderBy(sortExpression);
         }
 
         /// <summary>

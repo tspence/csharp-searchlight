@@ -355,7 +355,7 @@ namespace Searchlight
                 // Was that the last token?
                 if (tokens.Count == 0) break;
 
-                // Next, we allow ASC, DESC, or a comma (indicating another sort).
+                // Next, we allow ASC or ASCENDING, DESC or DESCENDING, or a comma (indicating another sort).
                 // First, check for the case of a comma
                 var token = tokens.Dequeue();
                 if (token == StringConstants.COMMA)
@@ -366,11 +366,13 @@ namespace Searchlight
 
                 // Allow ASC or DESC
                 var tokenUpper = token.ToUpperInvariant();
-                if (tokenUpper == StringConstants.ASCENDING)
+                if (tokenUpper == StringConstants.ASCENDING || 
+                    tokenUpper == StringConstants.ASCENDING_ABR)
                 {
                     si.Direction = SortDirection.Ascending;
                 }
-                else if (tokenUpper == StringConstants.DESCENDING)
+                else if (tokenUpper == StringConstants.DESCENDING || 
+                         tokenUpper == StringConstants.DESCENDING_ABR)
                 {
                     si.Direction = SortDirection.Descending;
                 }
