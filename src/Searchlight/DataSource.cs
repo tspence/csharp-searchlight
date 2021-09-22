@@ -621,6 +621,17 @@ namespace Searchlight
             }
         }
 
+        private static object DefinedDateOperators(string valueToken)
+        {
+            if (StringConstants.DefinedDates.Keys.Contains(valueToken, StringComparer.OrdinalIgnoreCase))
+            {
+                StringConstants.DefinedDates.TryGetValue(valueToken.ToUpper(), out var result);
+                if (result != null) return result.Invoke();
+            }
+
+            return valueToken;
+        }
+
         /// <summary>
         /// Parse one value out of a token
         /// </summary>
@@ -662,6 +673,12 @@ namespace Searchlight
                     }
 
                     // All others use the default behavior
+                }
+                else if (fieldType == typeof(DateTime))
+                {
+                    var definedDate = DefinedDateOperators(valueToken);
+                    // if date is same as the original, convert to DateTime, else make pvalue defined date
+                    pvalue = definedDate.ToString() == valueToken ? Convert.ChangeType(valueToken, fieldType) : definedDate;
                 }
                 else
                 {

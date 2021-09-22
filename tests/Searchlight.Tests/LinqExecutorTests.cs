@@ -427,8 +427,8 @@ namespace Searchlight.Tests
             Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
             Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
         }
-
-        [TestMethod]
+      
+        [TestMethod]  
         public void StringEqualsCaseInsensitive()
         {
             var list = GetTestList();
@@ -440,6 +440,56 @@ namespace Searchlight.Tests
             Assert.IsTrue(result.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.Count());
+        }
+      
+        [TestMethod]
+        public void DefinedDateOperators()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("hired < TODAY");
+
+            var result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 3);
+
+            syntax = src.Parse("hired < TOMORROW");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+            
+            syntax = src.Parse("hired < tomorrow");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+            
+            syntax = src.Parse("hired > YESTERDAY");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+            
+            Assert.ThrowsException<FieldTypeMismatch>(() => src.Parse("hired > yesteryear"));
+        }
+
+        [TestMethod]
+        public void NormalDateQueries()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("hired > 2020-01-01");
+            var result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == list.Count);
+            
+            syntax = src.Parse("hired < 1985-01-01");
+            result = syntax.QueryCollection(list);
+
+            Assert.IsFalse(result.Any());
         }
     }
 }

@@ -128,5 +128,15 @@ namespace Searchlight.Parsing
         /// Used for identifying the separator in a list
         /// </summary>
         public static readonly string COMMA = ",";
+
+        /// <summary>
+        /// Used as shorthand for typing today's date
+        /// </summary>
+        public static readonly Dictionary<string, Func<DateTime>> DefinedDates = new Dictionary<string, Func<DateTime>>
+        {
+            {"TODAY", () => DateTime.Today},
+            {"TOMORROW", () => DateTime.Today.AddDays(1)},
+            {"YESTERDAY", () => DateTime.Today.AddDays(-1)}
+        };
     }
 }
