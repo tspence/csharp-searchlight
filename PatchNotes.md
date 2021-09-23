@@ -1,7 +1,14 @@
+# 0.9.10
+September 23, 2021
+
+* Fixed bug with foreign table SQL requesting data for multiple tables
+* Added tests to verify that multiple searchlight flags work as expected
+* Fixed issue where a searchlight flag without aliases caused a crash
+
 # 0.9.8
 September 23, 2021
 
-Fixed bug with foreign table SQL requesting data for multiple tables
+Fixed compile issue where LINQ dynamic core was not referenced correctly
 
 # 0.9.7
 September 22, 2021

@@ -223,9 +223,12 @@ namespace Searchlight
             {
                 src.AddInclude(flag.Name, flag);
                 src._knownIncludes.Add(flag.Name);
-                foreach (var alias in flag.Aliases)
+                if (flag.Aliases != null)
                 {
-                    src.AddInclude(alias, flag);
+                    foreach (var alias in flag.Aliases)
+                    {
+                        src.AddInclude(alias, flag);
+                    }
                 }
             }
 
