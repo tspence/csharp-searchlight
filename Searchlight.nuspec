@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.9</version>
+		<version>0.9.10</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -12,7 +12,7 @@
 		<description>Implements the Searchlight REST query language for CSharp.  The Searchlight language is database neutral and can support most database technologies.  Using Searchlight, you can provide a rich query language via your API, while still being completely safe from SQL injection attacks.  Searchlight enables you to use multiple database engines with the same functionality, and to transform queries using the in-memory abstract syntax tree prior to execution.</description>
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<releaseNotes>
-			# 0.9.9
+			# 0.9.10
 			September 23, 2021
 
 			* Fixed bug with foreign table SQL requesting data for multiple tables
@@ -23,7 +23,9 @@
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
 		<repository type="git" url="https://github.com/tspence/csharp-searchlight" />
 		<dependencies>
-			<group targetFramework="net5.0"/>
+			<group targetFramework="net5.0">
+				<dependency id="System.Linq.Dynamic.Core" version="1.2.12" />
+			</group>
 		</dependencies>
 	</metadata>
 	<files>

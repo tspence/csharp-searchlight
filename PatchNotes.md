@@ -1,4 +1,4 @@
-# 0.9.9
+# 0.9.10
 September 23, 2021
 
 * Fixed bug with foreign table SQL requesting data for multiple tables
