@@ -1,3 +1,8 @@
+# 0.9.8
+September 23, 2021
+
+Fixed bug with foreign table SQL requesting data for multiple tables
+
 # 0.9.7
 September 22, 2021
 
