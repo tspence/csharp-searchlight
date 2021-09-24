@@ -66,12 +66,6 @@ namespace Searchlight
                     queryable = queryable.Take((int) tree.PageSize);
 
                     break;
-                
-                // catch all: take the first 200 entries
-                default:
-                    queryable = queryable.Take(200);
-
-                    break;
             }
 
             return queryable;
