@@ -45,8 +45,23 @@ namespace Searchlight
                     (from sort in tree.OrderBy select $"{sort.Column.FieldName} {sort.DirectionStr()}"));
                 queryable = queryable.OrderBy(sortExpression);
             }
+            
+            // If the user requested pagination
+            switch ((tree.PageNumber, tree.PageSize))
+            {
+                // case 1: user specified page number and page size
+                case (> 0, > 0):
+                    queryable = queryable.Skip((int) (tree.PageSize * tree.PageNumber)).Take((int) tree.PageSize);
+                    
+                    break;
+                
+                // case 2: user specified a page size but no page number
+                case (null, > 0):
+                    queryable = queryable.Take((int) tree.PageSize);
 
-            // Results are now filtered and ordered as requested
+                    break;
+            }
+
             return queryable;
         }
 
