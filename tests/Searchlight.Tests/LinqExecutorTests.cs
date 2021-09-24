@@ -623,7 +623,7 @@ namespace Searchlight.Tests
             var list = GetTestList();
             var syntax = src.Parse("", null, null);
             syntax.PageNumber = 2;
-            syntax.PageSize = null;
+            syntax.PageSize = 0; // default is 0
 
             var result = syntax.QueryCollection(list).ToList();
             
@@ -636,6 +636,7 @@ namespace Searchlight.Tests
         {
             var list = GetTestList();
             var syntax = src.Parse("", null, null);
+            
             syntax.PageSize = 2;
             syntax.PageNumber = 0; // no page number defaults to 0
 
