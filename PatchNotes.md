@@ -1,3 +1,8 @@
+# 0.9.11
+September 24, 2021
+
+* Added support for pagination for LINQ Executor
+
 # 0.9.10
 September 23, 2021
 
