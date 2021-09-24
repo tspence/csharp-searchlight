@@ -5,6 +5,7 @@ using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Searchlight.Exceptions;
 
 namespace Searchlight.Tests
 {
@@ -602,12 +603,59 @@ namespace Searchlight.Tests
             //TODO: add test that sorts multiple fields
         }
 
-        // [TestMethod]
-        // public void DefaultReturn()
-        // {
-        //     var list = GetTestList();
-        //     var syntax =src.Parse()
-        //     
-        // }
+        [TestMethod]
+        public void DefaultReturn()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            syntax.PageNumber = null;
+            syntax.PageSize = null;
+            
+            var result = syntax.QueryCollection(list).ToList();
+            
+            // default takes 200, so should be the same length as original list
+            Assert.AreEqual(list.Count, result.Count);
+        }
+        
+        [TestMethod]
+        public void PageNumberNoPageSize()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            syntax.PageNumber = 2;
+            syntax.PageSize = null;
+
+            var result = syntax.QueryCollection(list).ToList();
+            
+            // should walk off the end of the queryable, empty
+            Assert.AreEqual(result.Count, 0);
+        }
+
+        [TestMethod]
+        public void PageSizeNoPageNumber()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            syntax.PageSize = 2;
+            syntax.PageNumber = null;
+
+            var result = syntax.QueryCollection(list).ToList();
+            
+            // should take the first 2 elements
+            Assert.AreEqual(result.Count, 2);
+        }
+
+        [TestMethod]
+        public void PageSizeAndPageNumber()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            syntax.PageSize = 1;
+            syntax.PageNumber = 2;
+
+            var result = syntax.QueryCollection(list).ToList();
+            
+            Assert.AreEqual(result.Count, 1);
+        }
     }
 }
