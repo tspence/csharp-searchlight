@@ -47,20 +47,34 @@ namespace Searchlight
             }
             
             // If the user requested pagination
-            return (tree.PageNumber, tree.PageSize) switch
+            switch ((tree.PageNumber, tree.PageSize))
             {
                 // case 1: user specified page number and page size
-                (> 0, > 0) => queryable.Skip((int) (tree.PageSize * tree.PageNumber)).Take((int) tree.PageSize),
+                case (> 0, > 0):
+                    queryable = queryable.Skip((int) (tree.PageSize * tree.PageNumber)).Take((int) tree.PageSize);
+                    
+                    break;
                 
                 // case 2: user specified a page number but no page size
-                (> 0, null) => queryable.Skip((int) (tree.PageNumber * 200)).Take(200),
+                case (> 0, null):
+                    queryable = queryable.Skip((int) tree.PageNumber * 200).Take(200);
+
+                    break;
                 
                 // case 3: user specified a page size but no page number
-                (null, > 0) => queryable.Take((int) tree.PageSize),
+                case (null, > 0):
+                    queryable = queryable.Take((int) tree.PageSize);
+
+                    break;
                 
-                // default: return the first 200
-                _ => queryable.Take(200)
-            };
+                // catch all: take the first 200 entries
+                default:
+                    queryable = queryable.Take(200);
+
+                    break;
+            }
+
+            return queryable;
         }
 
         /// <summary>

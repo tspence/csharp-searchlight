@@ -601,5 +601,13 @@ namespace Searchlight.Tests
             
             //TODO: add test that sorts multiple fields
         }
+
+        // [TestMethod]
+        // public void DefaultReturn()
+        // {
+        //     var list = GetTestList();
+        //     var syntax =src.Parse()
+        //     
+        // }
     }
 }
