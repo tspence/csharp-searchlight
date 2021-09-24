@@ -627,8 +627,8 @@ namespace Searchlight.Tests
 
             var result = syntax.QueryCollection(list).ToList();
             
-            // should walk off the end of the queryable, empty
-            Assert.AreEqual(result.Count, 0);
+            // return everything
+            Assert.AreEqual(result.Count, list.Count);
         }
 
         [TestMethod]

@@ -55,13 +55,7 @@ namespace Searchlight
                     
                     break;
                 
-                // case 2: user specified a page number but no page size
-                case (> 0, null):
-                    queryable = queryable.Skip((int) tree.PageNumber * 200).Take(200);
-
-                    break;
-                
-                // case 3: user specified a page size but no page number
+                // case 2: user specified a page size but no page number
                 case (null, > 0):
                     queryable = queryable.Take((int) tree.PageSize);
 
