@@ -45,9 +45,22 @@ namespace Searchlight
                     (from sort in tree.OrderBy select $"{sort.Column.FieldName} {sort.DirectionStr()}"));
                 queryable = queryable.OrderBy(sortExpression);
             }
-
-            // Results are now filtered and ordered as requested
-            return queryable;
+            
+            // If the user requested pagination
+            return (tree.PageNumber, tree.PageSize) switch
+            {
+                // case 1: user specified page number and page size
+                (> 0, > 0) => queryable.Skip((int) (tree.PageSize * tree.PageNumber)).Take((int) tree.PageSize),
+                
+                // case 2: user specified a page number but no page size
+                (> 0, null) => queryable.Skip((int) (tree.PageNumber * 200)).Take(200),
+                
+                // case 3: user specified a page size but no page number
+                (null, > 0) => queryable.Take((int) tree.PageSize),
+                
+                // default: return the first 200
+                _ => queryable.Take(200)
+            };
         }
 
         /// <summary>
