@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.4</version>
+		<version>0.9.11</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -12,16 +12,18 @@
 		<description>Implements the Searchlight REST query language for CSharp.  The Searchlight language is database neutral and can support most database technologies.  Using Searchlight, you can provide a rich query language via your API, while still being completely safe from SQL injection attacks.  Searchlight enables you to use multiple database engines with the same functionality, and to transform queries using the in-memory abstract syntax tree prior to execution.</description>
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<releaseNotes>
-			# 0.9.4
-			August 16, 2021
+			# 0.9.11
+			September 24, 2021
 
-			* Fix issue where `FieldName in ()` could result in a null pointer exception
+			* Added support for pagination for LINQ Executor
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2021</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
 		<repository type="git" url="https://github.com/tspence/csharp-searchlight" />
 		<dependencies>
-			<group targetFramework="net5.0"/>
+			<group targetFramework="net5.0">
+				<dependency id="System.Linq.Dynamic.Core" version="1.2.12" />
+			</group>
 		</dependencies>
 	</metadata>
 	<files>

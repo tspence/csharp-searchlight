@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Searchlight.Parsing
+namespace Searchlight
 {
     /// <summary>
     /// This class contains all whitelisted SQL tokens that can be placed into a legitimate SQL string
     /// </summary>
-    public class StringConstants
+    public static class StringConstants
     {
         /// <summary>
         /// Represents the list of query expressions we would recognize if the user passed them in a filter.
@@ -98,11 +98,13 @@ namespace Searchlight.Parsing
         /// Represents descending sort
         /// </summary>
         public static readonly string DESCENDING = "DESC";
+        public static readonly string DESCENDING_ABR = "DESCENDING";
 
         /// <summary>
         /// Represents ascending sort
         /// </summary>
         public static readonly string ASCENDING = "ASC";
+        public static readonly string ASCENDING_ABR = "ASCENDING";
 
         /// <summary>
         /// User specified an inverse operation
@@ -128,5 +130,15 @@ namespace Searchlight.Parsing
         /// Used for identifying the separator in a list
         /// </summary>
         public static readonly string COMMA = ",";
+
+        /// <summary>
+        /// Used as shorthand for typing today's date
+        /// </summary>
+        public static readonly Dictionary<string, Func<DateTime>> DefinedDates = new Dictionary<string, Func<DateTime>>
+        {
+            {"TODAY", () => DateTime.Today},
+            {"TOMORROW", () => DateTime.Today.AddDays(1)},
+            {"YESTERDAY", () => DateTime.Today.AddDays(-1)}
+        };
     }
 }

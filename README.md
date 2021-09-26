@@ -10,13 +10,49 @@ A lightweight, secure query language for searching through databases and in-memo
 Searchlight is a simple and safe query language for API design.  [Designed with security in mind](https://tedspence.com/protecting-apis-with-layered-security-8c989fb5a19f), 
 it works well with REST, provides complex features, and is easier to learn than GraphQL.  
 
-The Searchlight query language is safe from SQL injection attacks.  Searchlight allows you to expose robust query functionality 
-while maintaining full control over the exact queries executed on your data store, whether those queries are executed via LINQ, SQL, 
-or NoSQL.  You maintain the ability to enforce rules on end-user query complexity, you can enable or disable querying on certain 
-columns based on performance metrics, or adjust query criteria to enforce separation of customer data.  All input fields provided 
-from the customer are parameterized. 
+* **Safe from SQL injection** 
+As a compiled language, the Searchlight query language is safe from SQL injection attacks.  Malformed queries generate clear
+error messages within Searchlight, and if you choose to use Searchlight on top of an SQL database, all queries executed on 
+your database will use parameterized values.
+* **Database independent**
+You can use Searchlight against SQL databases, NoSQL databases, or in-memory collections.  If you change your mind later
+and decide to switch to a different database technology, Searchlight still works.
+* **Search in memory**
+With Searchlight, you can search in-memory collections or use REDIS to cache data.  You can still search the data just like
+it was in a SQL-based database.
+* **Powerful queries**
+Searchlight lets you execute complex search statements such as `in`, `startsWith`, `contains`, and others.  You can create
+complex queries using parenthesis and conjunctions (AND/OR).
+* **Reduce database usage**
+You can use Searchlight to make multiple-result-set database calls with an SQL database to avoid executing multiple
+fetch statements.
+* **Self-documenting**
+If you mistype the name of a field, you get an error that indicates exactly which field name was misspelled, and a list of all
+known fields you can use.
+* **Standardized queries**
+The Searchlight API pattern allows for filtering, fetching extra data, sorting, and pagination.  
+* **Programmatic control**
+You can examine the Searchlight abstract syntax tree for performance problems, inappropriate filters, or query statements
+too complex for your database and reject those queries before they waste unnecessary query cycles on your data store.
+* **Human readable**
+Unlike JSON-based query systems, Searchlight is easily readable and should be familiar to most people who are comfortable
+using SQL and LINQ languages.  Searchlight uses words instead of symbols to avoid unnecessary escaping rules for HTML and HTTP
+requests.
 
-An example API with Searchlight looks like this:
+# Using Searchlight
+The typical API pattern for Searchlight works as follows:
+
+```
+GET /api/v1/elements?filter=active eq true&include=comments&order=name&pageNumber=2&pageSize=100
+```
+
+This example query does the following things:
+* Fetch data from the `elements` collection
+* Only fetch `elements` whose `active` flags are set to true
+* Include the extra data element known as `comments`
+* Paginate the results into pages of size 100, and fetch page number two
+
+A more complex Searchlight query might include multiple filter criteria, with more complex conjunctions:
 
 ```
 GET /customers/?query=CreatedDate gt '2019-01-01' and (IsApproved = false OR (approvalCode IS NULL AND daysWaiting between 5 and 10))
@@ -30,7 +66,10 @@ field names are converted from "customer-visible" field names to "actual databas
 to the following:
 
 ```sql
-SELECT * FROM customers WHERE created_date >= @p1 AND (approval_flag = @p2 OR (approval_code_str IS NULL AND days_waiting BETWEEN @p3 AND @p4))
+SELECT * 
+  FROM customers 
+ WHERE created_date >= @p1 
+   AND (approval_flag = @p2 OR (approval_code_str IS NULL AND days_waiting BETWEEN @p3 AND @p4))
 
 Parameters:
     - @p1: '2019-01-01'

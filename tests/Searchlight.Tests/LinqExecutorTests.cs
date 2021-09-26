@@ -5,6 +5,7 @@ using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Searchlight.Exceptions;
 
 namespace Searchlight.Tests
 {
@@ -426,6 +427,236 @@ namespace Searchlight.Tests
         {
             Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
             Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
+        }
+      
+        [TestMethod]  
+        public void StringEqualsCaseInsensitive()
+        {
+            var list = GetTestList();
+
+            var syntax = src.Parse("name eq 'ALICE SMITH'");
+
+            var result = syntax.QueryCollection<EmployeeObj>(list);
+
+            Assert.IsTrue(result.Any(p => p.name == "Alice Smith"));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.Count());
+        }
+      
+        [TestMethod]
+        public void DefinedDateOperators()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("hired < TODAY");
+
+            var result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 3);
+
+            syntax = src.Parse("hired < TOMORROW");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+            
+            syntax = src.Parse("hired < tomorrow");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+            
+            syntax = src.Parse("hired > YESTERDAY");
+            result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == 4);
+            
+            Assert.ThrowsException<FieldTypeMismatch>(() => src.Parse("hired > yesteryear"));
+        }
+
+        [TestMethod]
+        public void NormalDateQueries()
+        {
+            var list = GetTestList();
+            
+            var syntax = src.Parse("hired > 2020-01-01");
+            var result = syntax.QueryCollection(list);
+            
+            Assert.IsTrue(result.Any());
+            Assert.IsTrue(result.Count() == list.Count);
+            
+            syntax = src.Parse("hired < 1985-01-01");
+            result = syntax.QueryCollection(list);
+
+            Assert.IsFalse(result.Any());
+        }
+
+        [TestMethod]
+        public void SortedQueries()
+        {
+            // id test ascending and descending
+            var list = GetTestList();
+            var control = (from item in GetTestList() orderby item.id ascending select item).ToList();
+            var syntax = src.Parse(null, null, "id ASC");
+            var result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].id, control[i].id);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.id descending select item).ToList();
+            syntax = src.Parse("", null, "id descending");
+            result = syntax.QueryCollection(list).ToList();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].id, control[i].id);
+            }
+            
+            // name test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.name ascending select item).ToList();
+            syntax = src.Parse("", null, "name ASC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].name, control[i].name);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.name descending select item).ToList();
+            syntax = src.Parse("", null, "name DESC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].name, control[i].name);
+            }
+            
+            // paycheck test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.paycheck ascending select item).ToList();
+            syntax = src.Parse("", null, "paycheck ASC");
+            result = syntax.QueryCollection(list).ToList();
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].paycheck, control[i].paycheck);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.paycheck descending select item).ToList();
+            syntax = src.Parse("", null, "paycheck DESC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].paycheck, control[i].paycheck);
+            }
+            
+            // onduty test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.onduty ascending select item).ToList();
+            syntax = src.Parse("", null, "onduty ASC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].onduty, control[i].onduty);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.onduty descending select item).ToList();
+            syntax = src.Parse("", null, "onduty DESC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].onduty, control[i].onduty);
+            }
+            
+            // hired test ascending and descending
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.hired ascending select item).ToList();
+            syntax = src.Parse("", null, "hired ASC");
+            result = syntax.QueryCollection(list).ToList();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].hired, control[i].hired);
+            }
+            
+            list = GetTestList();
+            control = (from item in GetTestList() orderby item.hired descending select item).ToList();
+            syntax = src.Parse("", null, "hired DESC");
+            result = syntax.QueryCollection(list).ToList();
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.AreEqual(result[i].hired, control[i].hired);
+            }
+            
+            //TODO: add test that sorts multiple fields
+        }
+
+        [TestMethod]
+        public void DefaultReturn()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            syntax.PageNumber = 0; // default is 0
+            syntax.PageSize = 0; // default is 0
+            
+            var result = syntax.QueryCollection(list).ToList();
+            
+            // return everything
+            Assert.AreEqual(list.Count, result.Count);
+        }
+        
+        [TestMethod]
+        public void PageNumberNoPageSize()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            syntax.PageNumber = 2;
+            syntax.PageSize = 0; // default is 0
+
+            var result = syntax.QueryCollection(list).ToList();
+            
+            // return everything
+            Assert.AreEqual(result.Count, list.Count);
+        }
+
+        [TestMethod]
+        public void PageSizeNoPageNumber()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            
+            syntax.PageSize = 2;
+            syntax.PageNumber = 0; // no page number defaults to 0
+
+            var result = syntax.QueryCollection(list).ToList();
+            
+            // should take the first 2 elements
+            Assert.AreEqual(result.Count, 2);
+        }
+
+        [TestMethod]
+        public void PageSizeAndPageNumber()
+        {
+            var list = GetTestList();
+            var syntax = src.Parse("", null, null);
+            syntax.PageSize = 1;
+            syntax.PageNumber = 2;
+
+            var result = syntax.QueryCollection(list).ToList();
+            
+            Assert.AreEqual(result.Count, 1);
         }
     }
 }

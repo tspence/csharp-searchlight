@@ -1,3 +1,43 @@
+# 0.9.11
+September 24, 2021
+
+* Added support for pagination for LINQ Executor
+
+# 0.9.10
+September 23, 2021
+
+* Fixed bug with foreign table SQL requesting data for multiple tables
+* Added tests to verify that multiple searchlight flags work as expected
+* Fixed issue where a searchlight flag without aliases caused a crash
+
+# 0.9.8
+September 23, 2021
+
+Fixed compile issue where LINQ dynamic core was not referenced correctly
+
+# 0.9.7
+September 22, 2021
+
+Searchlight queries now support date shorthand: TODAY, TOMORROW, YESTERDAY can be used as values for date criteria.
+This means you can now write queries such as `date between yesterday and tomorrow`.  We may add more support for
+date constants in the future.
+
+* LINQ executor sorts results according to the same logic as the SQL executor
+* LINQ executor works correctly if you send in a null or filter statement
+* Recognizes "ascending" and "descending" in addition to "asc" and "desc" for sort orders
+* Removed references to Dapper, which is no longer required to compile
+
+# 0.9.6
+September 19, 2021
+
+* LINQ executor now uses case insensitive string comparison correctly
+
+# 0.9.5
+September 19, 2021
+
+* Added support for SearchlightFlags, a system you can use to detect options selected via the "$include" parameter
+* Added tests for flags and refactored the CommandCollection system for faster processing
+
 # 0.9.4
 August 16, 2021
 
