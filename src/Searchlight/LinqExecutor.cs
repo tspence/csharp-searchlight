@@ -46,23 +46,19 @@ namespace Searchlight
                 queryable = queryable.OrderBy(sortExpression);
             }
 
-            int totalCount = queryable.Count();
+            // Compute the list once and keep track of full length
+            var filteredAndSorted = queryable.ToList();
+            var totalCount = filteredAndSorted.Count;
             
             // If the user requested pagination
-            switch ((tree.PageNumber, tree.PageSize))
+            var paginated = (tree.PageNumber, tree.PageSize) switch
             {
                 // case 1: user specified page number and page size
-                case (> 0, > 0):
-                    queryable = queryable.Skip((int) (tree.PageSize * tree.PageNumber)).Take((int) tree.PageSize);
-
-                    break;
-                
+                (> 0, > 0) => filteredAndSorted.Skip((int)(tree.PageSize * tree.PageNumber)).Take((int)tree.PageSize),
                 // case 2: user specified a page size but no page number
-                case (0, > 0):
-                    queryable = queryable.Take((int) tree.PageSize);
-
-                    break;
-            }
+                (0, > 0) => filteredAndSorted.Take((int)tree.PageSize),
+                _ => filteredAndSorted
+            };
 
             // construct the return fetch result
             var result = new FetchResult<T>
@@ -70,7 +66,7 @@ namespace Searchlight
                 pageSize = tree.PageSize,
                 pageNumber = tree.PageNumber,
                 totalCount = totalCount,
-                records = queryable.ToArray()
+                records = paginated.ToArray()
             };
 
             return result;
