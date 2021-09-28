@@ -45,6 +45,8 @@ namespace Searchlight
                     (from sort in tree.OrderBy select $"{sort.Column.FieldName} {sort.DirectionStr()}"));
                 queryable = queryable.OrderBy(sortExpression);
             }
+
+            int totalCount = queryable.Count();
             
             // If the user requested pagination
             switch ((tree.PageNumber, tree.PageSize))
@@ -67,7 +69,7 @@ namespace Searchlight
             {
                 pageSize = tree.PageSize,
                 pageNumber = tree.PageNumber,
-                totalCount = queryable.Count(),
+                totalCount = totalCount,
                 records = queryable.ToArray()
             };
 
