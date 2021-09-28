@@ -14,6 +14,11 @@ namespace Searchlight
         /// Captures all known model errors
         /// </summary>
         public List<SearchlightException> ModelErrors { get; } = new List<SearchlightException>();
+        
+        /// <summary>
+        /// Represents the maximum size of a single page
+        /// </summary>
+        public static int MaximumPageSize { get; set; }
 
         /// <summary>
         /// Adds a new class to the engine
