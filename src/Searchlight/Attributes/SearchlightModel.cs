@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Searchlight
 {
@@ -23,8 +24,9 @@ namespace Searchlight
         public int MaximumParameters { get; set; }
         
         /// <summary>
-        /// The default sort criteria to use when none are specified, if any
+        /// The default sort criteria to use when none are specified
         /// </summary>
+        [Required(ErrorMessage = "DefaultSort is required.")]
         public string DefaultSort { get; set; }
     }
 }
