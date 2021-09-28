@@ -1,3 +1,9 @@
+# 0.9.12
+September 28, 2021
+
+* Fixed LINQ executor bug with handling of null pageNumber values in pagination
+* LINQ executor now works correctly with pagination and returns a FetchResult object with pagination information including total count
+
 # 0.9.11
 September 24, 2021
 
