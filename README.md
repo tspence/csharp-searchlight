@@ -10,39 +10,31 @@ A lightweight, secure query language for searching through databases and in-memo
 Searchlight is a simple and safe query language for API design.  [Designed with security in mind](https://tedspence.com/protecting-apis-with-layered-security-8c989fb5a19f), 
 it works well with REST, provides complex features, and is easier to learn than GraphQL.  
 
-## Searchlight is secure
+* **Safe from SQL injection** 
 As a compiled language, the Searchlight query language is safe from SQL injection attacks.  Malformed queries generate clear
 error messages within Searchlight, and if you choose to use Searchlight on top of an SQL database, all queries executed on 
 your database will use parameterized values.
-
-## Searchlight enables database independence
+* **Database independent**
 You can use Searchlight against SQL databases, NoSQL databases, or in-memory collections.  If you change your mind later
 and decide to switch to a different database technology, Searchlight still works.
-
-## Searchlight is fast
+* **Search in memory**
 With Searchlight, you can search in-memory collections or use REDIS to cache data.  You can still search the data just like
 it was in a SQL-based database.
-
-## Searchlight is powerful
+* **Powerful queries**
 Searchlight lets you execute complex search statements such as `in`, `startsWith`, `contains`, and others.  You can create
 complex queries using parenthesis and conjunctions (AND/OR).
-
-## Searchlight avoids excessive database calls
+* **Reduce database usage**
 You can use Searchlight to make multiple-result-set database calls with an SQL database to avoid executing multiple
 fetch statements.
-
-## Searchlight is self-documenting
+* **Self-documenting**
 If you mistype the name of a field, you get an error that indicates exactly which field name was misspelled, and a list of all
 known fields you can use.
-
-## Searchlight standardizes querying in your API
+* **Standardized queries**
 The Searchlight API pattern allows for filtering, fetching extra data, sorting, and pagination.  
-
-## Searchlight allows you to restrict queries
+* **Programmatic control**
 You can examine the Searchlight abstract syntax tree for performance problems, inappropriate filters, or query statements
 too complex for your database and reject those queries before they waste unnecessary query cycles on your data store.
-
-## Searchlight is human readable
+* **Human readable**
 Unlike JSON-based query systems, Searchlight is easily readable and should be familiar to most people who are comfortable
 using SQL and LINQ languages.  Searchlight uses words instead of symbols to avoid unnecessary escaping rules for HTML and HTTP
 requests.

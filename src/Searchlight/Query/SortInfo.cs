@@ -17,5 +17,16 @@ namespace Searchlight.Query
         /// The direction the field is sorted
         /// </summary>
         public SortDirection Direction { get; set; }
+
+        /// <summary>
+        /// Convenience to return the abbreviated string for directions
+        /// </summary>
+        /// <returns></returns>
+        public string DirectionStr()
+        {
+            return Direction == SortDirection.Ascending
+                ? StringConstants.ASCENDING_ABR
+                : StringConstants.DESCENDING_ABR;
+        }
     }
 }

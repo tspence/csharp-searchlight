@@ -12,6 +12,7 @@ namespace Searchlight.Tests
     {
         [SearchlightModel]
         [SearchlightFlag(Name = "TestFlag", Aliases = new string[] { "AliasOne", "AliasTwo" })]
+        [SearchlightFlag(Name = "TestTwo")]
         public class FlagTestClass
         {
         }
@@ -31,6 +32,8 @@ namespace Searchlight.Tests
             Assert.AreEqual(1, syntax.Flags.Count);
             Assert.AreEqual("TestFlag", syntax.Flags[0].Name);
             Assert.AreEqual(true, syntax.HasFlag("TestFlag"));
+            Assert.AreEqual(false, syntax.HasFlag("TestTwo"));
+            Assert.AreEqual(false, syntax.HasFlag("SomeFlagThatDoesntExist"));
 
             // Test whether the flag can be found by its alias
             syntax = engine.Parse(new FetchRequest()
@@ -49,6 +52,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(1, syntax.Flags.Count);
             Assert.AreEqual("TestFlag", syntax.Flags[0].Name);
             Assert.AreEqual(true, syntax.HasFlag("TestFlag"));
+            Assert.AreEqual(false, syntax.HasFlag("TestTwo"));
 
             // Test whether the flag is false by default
             syntax = engine.Parse(new FetchRequest()
@@ -57,6 +61,7 @@ namespace Searchlight.Tests
             });
             Assert.AreEqual(0, syntax.Flags.Count);
             Assert.AreEqual(false, syntax.HasFlag("TestFlag"));
+            Assert.AreEqual(false, syntax.HasFlag("TestTwo"));
 
             // Test whether an unknown flag throws the correct error
             var ex = Assert.ThrowsException<IncludeNotFound>(() =>
@@ -70,6 +75,16 @@ namespace Searchlight.Tests
             Assert.AreEqual("AnUnknownAlias", ex.IncludeName);
             Assert.AreEqual("TestFlag, AnUnknownAlias, AnotherUnknownAliasButThisOneDoesntGetTestedBecauseTheFirstOneFails", ex.OriginalInclude);
             Assert.IsTrue(ex.KnownIncludes.Contains("TestFlag"));
+            
+            // Check whether two flags can be specified
+            syntax = engine.Parse(new FetchRequest()
+            {
+                table = "FlagTestClass",
+                include = "TestFlag, TestTwo"
+            });
+            Assert.AreEqual(2, syntax.Flags.Count);
+            Assert.AreEqual(true, syntax.HasFlag("TestFlag"));
+            Assert.AreEqual(true, syntax.HasFlag("TestTwo"));
         }
     }
 }

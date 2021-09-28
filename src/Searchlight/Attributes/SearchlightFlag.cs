@@ -9,6 +9,7 @@ namespace Searchlight
     /// <summary>
     /// Represents a flag that you can set using the "$include" parameter
     /// </summary>
+    [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
     public class SearchlightFlag : Attribute
     {
         /// <summary>
