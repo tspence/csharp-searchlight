@@ -3,6 +3,7 @@ using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using Searchlight.Exceptions;
@@ -33,6 +34,7 @@ namespace Searchlight
         /// The field name of the default sort field, if none are specified.
         /// This is necessary to ensure reliable pagination.
         /// </summary>
+        [Required(ErrorMessage = "DefaultSort is required")]
         public string DefaultSort { get; set; }
 
         /// <summary>
