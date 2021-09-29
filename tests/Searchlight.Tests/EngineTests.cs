@@ -7,7 +7,7 @@ namespace Searchlight.Tests
     public class EngineTests
     {
 
-        [SearchlightModel(Aliases = new string[] {"TestAlias1", "TestAlias2" })]
+        [SearchlightModel(Aliases = new string[] {"TestAlias1", "TestAlias2" }, DefaultSort = nameof(Name))]
         public class TestTableAliases
         {
             [SearchlightField]

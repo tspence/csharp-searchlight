@@ -2,21 +2,12 @@
 namespace Searchlight
 {
     /// <summary>
-    /// Filter contained no usable filter criteria
+    /// The filter contained an empty parenthesis with no criteria within it.
+    ///
+    /// Example: `(name eq Alice) or ()`
     /// </summary>
     public class EmptyClause : SearchlightException
     {
-        /// <summary>
-        /// Throw this exception if the query did not have parseable filter criteria - 
-        /// for example, if it was made up entirely of AND/OR/parenthesis clauses, or
-        /// if there was an empty parenthesis clause
-        /// </summary>
-        /// <param name="originalFilter"></param>
-        public EmptyClause(string originalFilter)
-        {
-            OriginalFilter = originalFilter;
-        }
-
-        public string OriginalFilter { get; set; }
+        public string OriginalFilter { get; internal set; }
     }
 }

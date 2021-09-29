@@ -3,6 +3,8 @@ using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Searchlight.Exceptions;
@@ -128,6 +130,13 @@ namespace Searchlight
             _includeDict[upperName] = incl;
         }
 
+        private static bool CheckPresence(string sort, PropertyInfo[] props)
+        {
+            return (from prop in props
+                where String.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase)
+                select prop).Any();
+        }
+
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
         {
             return _columns;
@@ -207,6 +216,13 @@ namespace Searchlight
                         }
                     }
                 }
+            }
+            
+            // default sort cannot be null and must be a valid column
+            if (src.DefaultSort is null || !CheckPresence(src.DefaultSort, modelType.GetProperties()))
+            {
+                throw new InvalidDefaultSort
+                    {DefaultSort = src.DefaultSort == null ? "not specified" : "not a valid column"};
             }
 
             // Calculate the list of known "include" commands
@@ -293,16 +309,15 @@ namespace Searchlight
                 foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
                     var upperName = name.ToUpperInvariant();
-                    Object obj;
-                    if (_includeDict.TryGetValue(upperName, out obj))
+                    if (_includeDict.TryGetValue(upperName, out var obj))
                     {
-                        if (obj is ICommand)
+                        if (obj is ICommand command)
                         {
-                            list.Add(obj as ICommand);
+                            list.Add(command);
                         }
-                        else if (obj is SearchlightFlag)
+                        else if (obj is SearchlightFlag flag)
                         {
-                            flags.Add(obj as SearchlightFlag);
+                            flags.Add(flag);
                         }
                     }
                     else
@@ -352,7 +367,10 @@ namespace Searchlight
                 si.Column = IdentifyColumn(colName);
                 if (si.Column == null)
                 {
-                    throw new FieldNotFound(colName, ColumnNames().ToArray(), orderBy);
+                    throw new FieldNotFound()
+                    {
+                        FieldName = colName, KnownFields = ColumnNames().ToArray(), OriginalFilter = orderBy
+                    };
                 }
 
                 // Was that the last token?
@@ -363,7 +381,7 @@ namespace Searchlight
                 var token = tokens.Dequeue();
                 if (token == StringConstants.COMMA)
                 {
-                    if (tokens.Count == 0) throw new TrailingConjunction(orderBy);
+                    if (tokens.Count == 0) throw new TrailingConjunction() { OriginalFilter = orderBy };
                     continue;
                 }
 
@@ -444,7 +462,7 @@ namespace Searchlight
                 string upperToken = token.ToUpperInvariant();
                 if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out string conjunction))
                 {
-                    throw new InvalidToken(upperToken, StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), filter);
+                    throw new InvalidToken() { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = filter};
                 }
 
                 // Store the value of the conjunction
@@ -458,20 +476,20 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new InvalidToken(upperToken, new[] { "AND", "OR" }, filter);
+                    throw new InvalidToken() { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = filter };
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
                 if (tokens.Count == 0)
                 {
-                    throw new TrailingConjunction(filter);
+                    throw new TrailingConjunction() { OriginalFilter = filter };
                 }
             }
 
             // If we expected to end with a parenthesis, but didn't, throw an exception here
             if (expectCloseParenthesis)
             {
-                throw new OpenClause(filter);
+                throw new OpenClause() { OriginalFilter = filter };
             }
 
             // Here's your clause!
@@ -495,7 +513,7 @@ namespace Searchlight
                 var compound = new CompoundClause { Children = ParseClauseList(filter, tokens, true) };
                 if (compound.Children == null || compound.Children.Count == 0)
                 {
-                    throw new EmptyClause(filter);
+                    throw new EmptyClause() { OriginalFilter = filter};
                 }
 
                 return compound;
@@ -507,10 +525,10 @@ namespace Searchlight
             {
                 if (String.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
                 {
-                    throw new EmptyClause(filter);
+                    throw new EmptyClause() { OriginalFilter = filter};
                 }
 
-                throw new FieldNotFound(fieldToken, ColumnNames().ToArray(), filter);
+                throw new FieldNotFound() { FieldName = fieldToken, KnownFields = ColumnNames().ToArray(), OriginalFilter = filter };
             }
 
             // Allow "NOT" tokens here
@@ -525,8 +543,12 @@ namespace Searchlight
             // Next is the operation; must validate it against our list of safe tokens.  Case insensitive.
             if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out OperationType op))
             {
-                throw new InvalidToken(operationToken, StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(),
-                    filter);
+                throw new InvalidToken()
+                {
+                    BadToken = operationToken,
+                    ExpectedTokens = StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(),
+                    OriginalFilter = filter
+                };
             }
 
             switch (op)
@@ -561,7 +583,7 @@ namespace Searchlight
                             string commaOrParen = tokens.Dequeue();
                             if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen))
                             {
-                                throw new InvalidToken(commaOrParen, StringConstants.SAFE_LIST_TOKENS, filter);
+                                throw new InvalidToken() { BadToken = commaOrParen, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
                             }
 
                             if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
@@ -569,7 +591,7 @@ namespace Searchlight
                     }
                     else
                     {
-                        throw new EmptyClause(filter);
+                        throw new EmptyClause() { OriginalFilter = filter };
                     }
 
                     return i;
@@ -605,7 +627,12 @@ namespace Searchlight
                     {
                         if (c.Column.FieldType != typeof(string))
                         {
-                            throw new FieldTypeMismatch(c.Column.FieldName, c.Column.FieldType.ToString(), Convert.ToString(c.Value), filter);
+                            throw new FieldTypeMismatch() { 
+                                FieldName = c.Column.FieldName, 
+                                FieldType = c.Column.FieldType.ToString(), 
+                                FieldValue = Convert.ToString(c.Value), 
+                                OriginalFilter = filter
+                            };
                         }
                     }
                     return c;
@@ -622,19 +649,14 @@ namespace Searchlight
         {
             if (!String.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidToken(actual, new[] { expectedToken }, originalFilter);
+                throw new InvalidToken() { BadToken = actual, ExpectedTokens = new[] { expectedToken }, OriginalFilter = originalFilter };
             }
         }
 
         private static object DefinedDateOperators(string valueToken)
         {
-            if (StringConstants.DefinedDates.Keys.Contains(valueToken, StringComparer.OrdinalIgnoreCase))
-            {
-                StringConstants.DefinedDates.TryGetValue(valueToken.ToUpper(), out var result);
-                if (result != null) return result.Invoke();
-            }
-
-            return valueToken;
+            StringConstants.DEFINED_DATES.TryGetValue(valueToken.ToUpper(), out var result);
+            return (result != null) ? result.Invoke() : valueToken;
         }
 
         /// <summary>
@@ -667,8 +689,7 @@ namespace Searchlight
                 }
                 else if (fieldType == typeof(UInt64))
                 {
-                    bool boolVal;
-                    if (bool.TryParse(valueToken, out boolVal))
+                    if (bool.TryParse(valueToken, out var boolVal))
                     {
                         pvalue = boolVal ? 1UL : 0;
                     }
@@ -694,7 +715,12 @@ namespace Searchlight
             }
             catch
             {
-                throw new FieldTypeMismatch(column.FieldName, fieldType.ToString(), valueToken, originalFilter);
+                throw new FieldTypeMismatch() { 
+                    FieldName = column.FieldName, 
+                    FieldType = fieldType.ToString(), 
+                    FieldValue = valueToken, 
+                    OriginalFilter = originalFilter
+                };
             }
 
             // Put this into an SQL Parameter list

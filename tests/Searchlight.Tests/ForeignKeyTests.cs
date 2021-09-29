@@ -8,7 +8,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class ForeignKeyTests
     {
-        [SearchlightModel]
+        [SearchlightModel(DefaultSort = nameof(Name))]
         public class LibraryBook
         {
             [SearchlightField]
@@ -25,7 +25,7 @@ namespace Searchlight.Tests
             public BookCopy[] Copies { get; set; }
         }
 
-        [SearchlightModel]
+        [SearchlightModel(DefaultSort = nameof(ISBN))]
         public class BookReservation
         {
             [SearchlightField]
@@ -36,7 +36,7 @@ namespace Searchlight.Tests
             [SearchlightField] public string CustomerName { get; set; }
         }
 
-        [SearchlightModel(OriginalName = "BookCopies")]
+        [SearchlightModel(OriginalName = "BookCopies", DefaultSort = nameof(CustomerName))]
         public class BookCopy
         {
             [SearchlightField]

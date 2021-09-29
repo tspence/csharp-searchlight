@@ -1,16 +1,15 @@
 ﻿
 namespace Searchlight
 {
+    /// <summary>
+    /// A filter statement contained an unterminated string.  An opening apostrophe was observed but the remainder
+    /// of the string did not contain a closing apostrophe.
+    ///
+    /// Example: `(name eq 'Alice`
+    /// </summary>
     public class UnterminatedString : SearchlightException
     {
-        public UnterminatedString(string token, string originalFilter)
-        {
-            Token = token;
-            OriginalFilter = originalFilter;
-        }
-
-        public string OriginalFilter { get; set; }
-
-        public string Token { get; private set; }
+        public string OriginalFilter { get; internal set; }
+        public string Token { get; internal set; }
     }
 }
