@@ -293,16 +293,15 @@ namespace Searchlight
                 foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
                     var upperName = name.ToUpperInvariant();
-                    Object obj;
-                    if (_includeDict.TryGetValue(upperName, out obj))
+                    if (_includeDict.TryGetValue(upperName, out var obj))
                     {
-                        if (obj is ICommand)
+                        if (obj is ICommand command)
                         {
-                            list.Add(obj as ICommand);
+                            list.Add(command);
                         }
-                        else if (obj is SearchlightFlag)
+                        else if (obj is SearchlightFlag flag)
                         {
-                            flags.Add(obj as SearchlightFlag);
+                            flags.Add(flag);
                         }
                     }
                     else
@@ -628,13 +627,8 @@ namespace Searchlight
 
         private static object DefinedDateOperators(string valueToken)
         {
-            if (StringConstants.DefinedDates.Keys.Contains(valueToken, StringComparer.OrdinalIgnoreCase))
-            {
-                StringConstants.DefinedDates.TryGetValue(valueToken.ToUpper(), out var result);
-                if (result != null) return result.Invoke();
-            }
-
-            return valueToken;
+            StringConstants.DEFINED_DATES.TryGetValue(valueToken.ToUpper(), out var result);
+            return (result != null) ? result.Invoke() : valueToken;
         }
 
         /// <summary>
@@ -667,8 +661,7 @@ namespace Searchlight
                 }
                 else if (fieldType == typeof(UInt64))
                 {
-                    bool boolVal;
-                    if (bool.TryParse(valueToken, out boolVal))
+                    if (bool.TryParse(valueToken, out var boolVal))
                     {
                         pvalue = boolVal ? 1UL : 0;
                     }

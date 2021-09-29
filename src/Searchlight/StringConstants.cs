@@ -65,19 +65,9 @@ namespace Searchlight
         };
 
         /// <summary>
-        /// Represents the list of conjunctions that can safely terminate a statement
-        /// </summary>
-        public static readonly string[] SAFE_ENDING_CONJUNCTIONS = new string[] { ")" };
-
-        /// <summary>
         /// Represents the list of single-character operators for tokenization
         /// </summary>
         public static readonly char[] SINGLE_CHARACTER_OPERATORS = new char[] { '=', '>', '<', '(', ')', ',', '!' };
-
-        /// <summary>
-        /// Represents the list of allowed sort-by orders
-        /// </summary>
-        public static readonly string[] SAFE_SORT_BY = new string[] { "ASC", "DESC" };
 
         /// <summary>
         /// Represents a single quote character for tokenization of strings
@@ -134,7 +124,7 @@ namespace Searchlight
         /// <summary>
         /// Used as shorthand for typing today's date
         /// </summary>
-        public static readonly Dictionary<string, Func<DateTime>> DefinedDates = new Dictionary<string, Func<DateTime>>
+        public static readonly Dictionary<string, Func<DateTime>> DEFINED_DATES = new Dictionary<string, Func<DateTime>>
         {
             {"TODAY", () => DateTime.Today},
             {"TOMORROW", () => DateTime.Today.AddDays(1)},

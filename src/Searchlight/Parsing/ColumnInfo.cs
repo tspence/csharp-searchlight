@@ -9,18 +9,6 @@ namespace Searchlight.Parsing
     public class ColumnInfo
     {
         /// <summary>
-        /// Simple constructor for a column and a type
-        /// </summary>
-        /// <param name="fieldName"></param>
-        /// <param name="fieldType"></param>
-        public ColumnInfo(string fieldName, Type fieldType)
-        {
-            FieldName = fieldName;
-            OriginalName = fieldName;
-            FieldType = fieldType;
-        }
-
-        /// <summary>
         /// Constructor for a column that should be renamed in the parser
         /// </summary>
         /// <param name="filterName">The name supplied in the raw filter</param>
