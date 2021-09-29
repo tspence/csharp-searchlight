@@ -10,11 +10,12 @@ namespace Searchlight.Tests
     [TestClass]
     public class FlagTests
     {
-        [SearchlightModel]
+        [SearchlightModel(DefaultSort = nameof(Name))]
         [SearchlightFlag(Name = "TestFlag", Aliases = new string[] { "AliasOne", "AliasTwo" })]
         [SearchlightFlag(Name = "TestTwo")]
         public class FlagTestClass
         {
+            [SearchlightField] public string Name { get; set; }
         }
 
         [TestMethod]

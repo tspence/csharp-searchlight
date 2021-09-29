@@ -6,8 +6,13 @@ using System.Threading.Tasks;
 
 namespace Searchlight.Exceptions
 {
+    /// <summary>
+    /// The query specified a page size that is not valid.
+    ///
+    /// Example: `?pageSize=-1`
+    /// </summary>
     public class InvalidPageSize : SearchlightException
     {
-        public string PageSize { get; set; }
+        public string PageSize { get; internal set; }
     }
 }

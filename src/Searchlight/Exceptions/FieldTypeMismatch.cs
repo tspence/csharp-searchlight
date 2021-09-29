@@ -2,21 +2,15 @@
 namespace Searchlight
 {
     /// <summary>
-    /// Represents a failure in the SQL validation
+    /// The filter specified a field criteria that had a data type mismatch and could not be executed.
+    ///
+    /// Example: `(numberOfDays > 'Alice')` where `numberOfDays` is an integer
     /// </summary>
     public class FieldTypeMismatch : SearchlightException
     {
-        public FieldTypeMismatch(string fieldName, string fieldType, string fieldValue, string originalFilter)
-        {
-            OriginalFilter = originalFilter;
-            FieldName = fieldName;
-            FieldType = fieldType;
-            FieldValue = fieldValue;
-        }
-
-        public string OriginalFilter { get; set; }
-        public string FieldName { get; set; }
-        public string FieldValue { get; set; }
-        public string FieldType { get; set; }
+        public string OriginalFilter { get; internal set; }
+        public string FieldName { get; internal set; }
+        public string FieldValue { get; internal set; }
+        public string FieldType { get; internal set; }
     }
 }
