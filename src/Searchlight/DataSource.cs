@@ -269,11 +269,6 @@ namespace Searchlight
                 {
                     throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString() };
                 }
-                
-                if (SearchlightEngine.MaximumPageSize > 1 & query.PageSize > SearchlightEngine.MaximumPageSize)
-                {
-                    throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : "larger than the allowed MaximumPageSize" };
-                }
 
                 if (query.PageNumber < 0)
                 {
