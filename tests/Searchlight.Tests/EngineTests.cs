@@ -43,7 +43,7 @@ namespace Searchlight.Tests
         };
             
         [TestMethod]
-        public void Test_ParsingRequestWithoutMaxPSUsesDefault()
+        public void Test_ParsingNewRequestWithoutMaxPS()
         {
             var engine = new SearchlightEngine();
             engine.Parse(mockFetchRequest);
