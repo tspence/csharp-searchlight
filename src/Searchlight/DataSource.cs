@@ -132,15 +132,9 @@ namespace Searchlight
 
         private static bool CheckPresence(string sort, PropertyInfo[] props)
         {
-            foreach (var prop in props)
-            {
-                if (String.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return (from prop in props
+                where String.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase)
+                select prop).Any();
         }
 
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
