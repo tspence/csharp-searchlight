@@ -26,11 +26,6 @@ namespace Searchlight
         /// For pagination: The page size to use for this query.
         /// </summary>
         public int? pageSize { get; set; }
-        
-        /// <summary>
-        /// For pagination: Sets the maximum page size for this query.
-        /// </summary>
-        public int maximumPageSize { get; set; }
 
         /// <summary>
         /// For pagination: After the records above are skipped, the maximum number of records to take.  Default is unlimited.
