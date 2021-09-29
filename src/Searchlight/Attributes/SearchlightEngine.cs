@@ -56,7 +56,7 @@ namespace Searchlight
             }
             if (request.pageSize > MaximumPageSize)
             {
-                throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : "larger than the allowed maximum pageSize, " + Convert.ToString(MaximumPageSize) };
+                throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};
             }
             return source?.Parse(request);
         }
