@@ -4,6 +4,7 @@ using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Searchlight.Exceptions;
@@ -34,7 +35,6 @@ namespace Searchlight
         /// The field name of the default sort field, if none are specified.
         /// This is necessary to ensure reliable pagination.
         /// </summary>
-        [Required(ErrorMessage = "DefaultSort is required")]
         public string DefaultSort { get; set; }
 
         /// <summary>
@@ -130,6 +130,19 @@ namespace Searchlight
             _includeDict[upperName] = incl;
         }
 
+        private static bool CheckPresence(string sort, PropertyInfo[] props)
+        {
+            foreach (var prop in props)
+            {
+                if (String.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
         {
             return _columns;
@@ -209,6 +222,13 @@ namespace Searchlight
                         }
                     }
                 }
+            }
+            
+            // default sort cannot be null and must be a valid column
+            if (src.DefaultSort is null || !CheckPresence(src.DefaultSort, modelType.GetProperties()))
+            {
+                throw new InvalidDefaultSort
+                    {DefaultSort = src.DefaultSort == null ? "not specified" : "not a valid column"};
             }
 
             // Calculate the list of known "include" commands

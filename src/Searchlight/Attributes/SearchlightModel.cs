@@ -26,7 +26,6 @@ namespace Searchlight
         /// <summary>
         /// The default sort criteria to use when none are specified
         /// </summary>
-        [Required(ErrorMessage = "DefaultSort is required.")]
         public string DefaultSort { get; set; }
     }
 }
