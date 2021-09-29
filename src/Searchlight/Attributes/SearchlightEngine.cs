@@ -50,10 +50,6 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             var source = FindTable(request.table);
-            if (request.maximumPageSize > 0)
-            {
-                MaximumPageSize = request.maximumPageSize;
-            }
             if (request.pageSize > MaximumPageSize)
             {
                 throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : "larger than the allowed MaximumPageSize, " + Convert.ToString(MaximumPageSize) };
