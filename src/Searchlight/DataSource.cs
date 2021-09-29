@@ -269,9 +269,6 @@ namespace Searchlight
                 {
                     throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString() };
                 }
-<<<<<<< HEAD
-=======
->>>>>>> 6a6e8d2a408236db87f2e21d9e7e4e51f724e801
                 if (query.PageNumber < 0)
                 {
                     throw new InvalidPageNumber { PageNumber = request.pageNumber == null ? "not specified" : request.pageNumber.ToString() };
