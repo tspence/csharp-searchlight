@@ -43,33 +43,14 @@ namespace Searchlight.Tests
         };
             
         [TestMethod]
-        public void Test_ParsingNewRequestWithoutMaxPS()
+        public void Test_ParsingNewRequestValidPageSize()
         {
             var engine = new SearchlightEngine();
             engine.Parse(mockFetchRequest);
-            Assert.IsTrue(engine.MaximumPageSize == 1000);
-        }
-        
-        [TestMethod]
-        public void Test_ParsingRequestWithMaxPS()
-        {
-            mockFetchRequest.maximumPageSize = 10;
-            var engine = new SearchlightEngine();
-            engine.Parse(mockFetchRequest);
-            Assert.IsTrue(engine.MaximumPageSize == 10);
-        }
+            Assert.IsTrue(mockFetchRequest.pageSize < engine.MaximumPageSize); }
 
         [TestMethod]
-        public void Test_ParsingRequestWithNewMaxPSAndInvalidPageSize()
-        {
-            mockFetchRequest.pageSize = 2000;
-            mockFetchRequest.maximumPageSize = 1500;
-            var engine = new SearchlightEngine();
-            Assert.ThrowsException<InvalidPageSize>(() => engine.Parse(mockFetchRequest));
-        }
-
-        [TestMethod]
-        public void Test_ParsingRequestWithInvalidPageSize()
+        public void Test_ParsingRequestInvalidPageSize()
         {
             mockFetchRequest.pageSize = 2000; // default MaxPS is 1000
             var engine = new SearchlightEngine();
