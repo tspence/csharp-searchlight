@@ -23,7 +23,7 @@ namespace Searchlight
             // Sanity tests
             if (sql.Parameters.Count > query.Source.MaximumParameters && query.Source.MaximumParameters > 0)
             {
-                throw new TooManyParameters(query.Source.MaximumParameters, query.OriginalFilter);
+                throw new TooManyParameters() { MaximumParameterCount = query.Source.MaximumParameters, OriginalFilter = query.OriginalFilter };
             }
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
