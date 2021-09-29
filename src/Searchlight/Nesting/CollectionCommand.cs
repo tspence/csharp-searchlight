@@ -39,8 +39,8 @@ namespace Searchlight.Nesting
             var foreignKey = foreignTable.IdentifyColumn(fkName);
             if (foreignKey == null) throw new InvalidCollection() { TableName = _parentTable.TableName, CollectionName = _fieldName, CollectionErrorMessage = $"Foreign key {fkName} not found on table {foreignTable.TableName}" };
 
-            var num = sql.ResultSetClauses.Count() + 1;
-            sql.ResultSetClauses.Add($"SELECT * FROM {foreignTable.TableName} t{num} INNER JOIN #temp ON t{num}.{foreignKey.OriginalName} = #temp.{parentKey.OriginalName};");
+            var num = sql.ResultSetClauses.Count + 1;
+            sql.ResultSetClauses.Add($"SELECT t{num}.* FROM {foreignTable.TableName} t{num} INNER JOIN #temp ON t{num}.{foreignKey.OriginalName} = #temp.{parentKey.OriginalName};");
         }
 
         public string[] GetAliases()
