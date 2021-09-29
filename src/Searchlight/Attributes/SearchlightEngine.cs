@@ -19,7 +19,7 @@ namespace Searchlight
         /// <summary>
         /// Represents the maximum size of a single page
         /// </summary>
-        public static int MaximumPageSize { get; set; } = 1000;
+        public static int MaximumPageSize { get; } = 1000;
 
         /// <summary>
         /// Adds a new class to the engine
@@ -56,7 +56,7 @@ namespace Searchlight
             }
             if (request.pageSize > MaximumPageSize)
             {
-                throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : "larger than the allowed MaximumPageSize, " + Convert.ToString(MaximumPageSize) };
+                throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : "larger than the allowed maximum pageSize, " + Convert.ToString(MaximumPageSize) };
             }
             return source?.Parse(request);
         }
