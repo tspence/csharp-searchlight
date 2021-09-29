@@ -627,7 +627,7 @@ namespace Searchlight
 
         private static object DefinedDateOperators(string valueToken)
         {
-            StringConstants.DefinedDates.TryGetValue(valueToken.ToUpper(), out var result);
+            StringConstants.DEFINED_DATES.TryGetValue(valueToken.ToUpper(), out var result);
             return (result != null) ? result.Invoke() : valueToken;
         }
 
