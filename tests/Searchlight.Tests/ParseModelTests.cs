@@ -2,10 +2,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight;
 using Searchlight.Query;
 using System.Linq;
+using Searchlight.Exceptions;
 
 namespace Searchlight.Tests
 {
-    [SearchlightModel]
+    [SearchlightModel(DefaultSort = nameof(Name))]
     public class TestStrictMode
     {
         [SearchlightField] public string Name { get; set; }
@@ -13,7 +14,7 @@ namespace Searchlight.Tests
         public string NotASearchlightField { get; set; }
     }
 
-    [SearchlightModel()]
+    [SearchlightModel(DefaultSort = nameof(Name))]
     public class TestFieldRenaming
     {
         [SearchlightField(OriginalName = "field_name")]
@@ -148,14 +149,17 @@ namespace Searchlight.Tests
         public void TestNonSearchlightModel()
         {
             // "THIS" isn't a searchlight model; in strict mode it doesn't work
-            var ex = Assert.ThrowsException<NonSearchlightModel>(() =>
+            Assert.ThrowsException<NonSearchlightModel>(() =>
             {
                 var source = DataSource.Create(null, this.GetType(), AttributeMode.Strict);
             });
 
-            // But if I try it in loose mode, anything goes
-            var s2 = DataSource.Create(null, this.GetType(), AttributeMode.Loose);
-            Assert.IsNotNull(s2);
+            // But if I try it in loose mode, will skip NonSearchlightModel error
+            // And throw a InvalidDefaultSort error
+            Assert.ThrowsException<InvalidDefaultSort>(() =>
+            {
+                DataSource.Create(null, this.GetType(), AttributeMode.Loose);
+            });
         }
 
         [SearchlightModel(DefaultSort = "name")]
@@ -168,6 +172,26 @@ namespace Searchlight.Tests
             public string Description { get; set; }
         }
 
+        [SearchlightModel]
+        public class TestWithNoDefaultSort
+        {
+            [SearchlightField(Aliases = new string[] {"fullName"})]
+            public string Name { get; set; }
+            
+            [SearchlightField(Aliases = new string[] {"DescriptionText"})]
+            public string Description { get; set; }
+        }
+
+        [SearchlightModel(DefaultSort = "Invalid")]
+        public class TestInvalidDefaultSort
+        {
+            [SearchlightField(Aliases = new string[] {"fullName"})]
+            public string Name { get; set; }
+            
+            [SearchlightField(Aliases = new string[] {"DescriptionText"})]
+            public string Description { get; set; }
+        }
+
         [TestMethod]
         public void TestDefaultSort()
         {
@@ -176,11 +200,24 @@ namespace Searchlight.Tests
             Assert.AreEqual(1, query.OrderBy.Count);
             Assert.AreEqual("Name", query.OrderBy[0].Column.FieldName);
             Assert.AreEqual(SortDirection.Ascending, query.OrderBy[0].Direction);
+        }
 
-            // Now try the same thing with a class that doesn't have a default sort
-            var source2 = DataSource.Create(null, typeof(TestStrictMode), AttributeMode.Strict);
-            var query2 = source2.Parse(null, null, null);
-            Assert.AreEqual(0, query2.OrderBy.Count);
+        [TestMethod]
+        public void TestNoDefaultSortException()
+        {
+            Assert.ThrowsException<InvalidDefaultSort>(() =>
+            {
+                DataSource.Create(null, typeof(TestWithNoDefaultSort), AttributeMode.Strict);
+            });
+        }
+
+        [TestMethod]
+        public void TestWithInvalidDefaultSort()
+        {
+            Assert.ThrowsException<InvalidDefaultSort>(() =>
+            {
+                DataSource.Create(null, typeof(TestInvalidDefaultSort), AttributeMode.Strict);
+            });
         }
 
         [TestMethod]
@@ -191,7 +228,9 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("TestWithDefaultSort"));
             Assert.IsNotNull(engine.FindTable("BookReservation"));
             Assert.IsNotNull(engine.FindTable("BookCopy"));
-            Assert.AreEqual(1, engine.ModelErrors.Count);
+            
+            // duplicate name error, and 2 invaliddefaultsort errors
+            Assert.AreEqual(3, engine.ModelErrors.Count);
         }
 
         [TestMethod]

@@ -3,6 +3,8 @@ using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Searchlight.Exceptions;
@@ -128,6 +130,13 @@ namespace Searchlight
             _includeDict[upperName] = incl;
         }
 
+        private static bool CheckPresence(string sort, PropertyInfo[] props)
+        {
+            return (from prop in props
+                where String.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase)
+                select prop).Any();
+        }
+
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
         {
             return _columns;
@@ -207,6 +216,13 @@ namespace Searchlight
                         }
                     }
                 }
+            }
+            
+            // default sort cannot be null and must be a valid column
+            if (src.DefaultSort is null || !CheckPresence(src.DefaultSort, modelType.GetProperties()))
+            {
+                throw new InvalidDefaultSort
+                    {DefaultSort = src.DefaultSort == null ? "not specified" : "not a valid column"};
             }
 
             // Calculate the list of known "include" commands

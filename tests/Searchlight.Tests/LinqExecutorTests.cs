@@ -13,7 +13,8 @@ namespace Searchlight.Tests
     public class LinqExecutorTests
     {
         private DataSource src;
-
+        
+        [SearchlightModel(DefaultSort = nameof(name))]
         public class EmployeeObj
         {
             public string name { get; set; }
