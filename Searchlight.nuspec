@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.12</version>
+		<version>0.9.13</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -12,11 +12,15 @@
 		<description>Implements the Searchlight REST query language for CSharp.  The Searchlight language is database neutral and can support most database technologies.  Using Searchlight, you can provide a rich query language via your API, while still being completely safe from SQL injection attacks.  Searchlight enables you to use multiple database engines with the same functionality, and to transform queries using the in-memory abstract syntax tree prior to execution.</description>
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<releaseNotes>
-			# 0.9.12
-			September 28, 2021
+			# 0.9.13
+			September 29, 2021
 
-			* Fixed LINQ executor bug with handling of null pageNumber values in pagination
-			* LINQ executor now works correctly with pagination and returns a FetchResult object with pagination information including total count
+			* The LINQ Executor now returns `FetchResult&lt;T&gt;` with pagination information.
+			* Searchlight can now enforce a `MaximumPageSize` across all queries on the SearchlightEngine.  The goal is for implementors to decide how much data is too much
+			and be able to exercise control over API calls.
+			* `DefaultSort` is required for a searchlight model.  Omitting this value will throw an exception during construction of the SearchlightEngine.
+			This is necessary to ensure consistency of pagination.  Records not sorted will not paginate correctly.
+			* All Searchlight errors now include XMLDOCs explaining the problem.  A future improvement would be for errors to have a human-friendly string as well.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2021</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
