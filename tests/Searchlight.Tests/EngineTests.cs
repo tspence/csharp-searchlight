@@ -50,8 +50,9 @@ namespace Searchlight.Tests
         [TestMethod]
         public void Test_ParsingRequestWithInvalidPageSize()
         {
-            mockFetchRequest.pageSize = 2000; // default MaxPS is 1000
+            mockFetchRequest.pageSize = 2000;
             var engine = new SearchlightEngine();
+            engine.MaximumPageSize = 1000;
             Assert.ThrowsException<InvalidPageSize>(() => engine.Parse(mockFetchRequest));
         }
     }

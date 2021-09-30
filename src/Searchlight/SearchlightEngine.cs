@@ -19,7 +19,7 @@ namespace Searchlight
         /// <summary>
         /// Represents the maximum size of a single page
         /// </summary>
-        public int MaximumPageSize { get; set;  } = 1000;
+        public int? MaximumPageSize { get; set; }
 
         /// <summary>
         /// Adds a new class to the engine
@@ -50,13 +50,16 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             var source = FindTable(request.table);
-            if (request.pageSize == null)
+            if (MaximumPageSize != null)
             {
-                request.pageSize = MaximumPageSize;
-            }
-            if (request.pageSize > MaximumPageSize)
-            {
-                throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};
+                if (request.pageSize == null)
+                {
+                    request.pageSize = MaximumPageSize;
+                }
+                if (request.pageSize > MaximumPageSize)
+                {
+                    throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};
+                }
             }
             return source?.Parse(request);
         }
