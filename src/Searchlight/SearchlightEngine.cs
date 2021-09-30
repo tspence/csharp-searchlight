@@ -14,7 +14,7 @@ namespace Searchlight
         /// Captures all known model errors
         /// </summary>
         public List<SearchlightException> ModelErrors { get; } = new List<SearchlightException>();
-        
+
         /// <summary>
         /// Adds a new class to the engine
         /// </summary>
