@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿
+namespace Searchlight
 {
     /// <summary>
     /// The query had a different number of open parenthesis and closing parenthesis.

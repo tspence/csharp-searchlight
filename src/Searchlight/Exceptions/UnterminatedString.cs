@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿
+namespace Searchlight
 {
     /// <summary>
     /// A filter statement contained an unterminated string.  An opening apostrophe was observed but the remainder

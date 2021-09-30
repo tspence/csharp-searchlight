@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿
+namespace Searchlight
 {
     /// <summary>
     /// The filter ended with a conjunction but no elements after it.

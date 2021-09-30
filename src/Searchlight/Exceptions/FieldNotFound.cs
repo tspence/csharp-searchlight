@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿
+namespace Searchlight
 {
     /// <summary>
     /// The filter specified a field name that was not known.  Check the list of known fields to see if the filter

@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿
+namespace Searchlight
 {
     /// <summary>
     /// SETEC ASTRONOMY

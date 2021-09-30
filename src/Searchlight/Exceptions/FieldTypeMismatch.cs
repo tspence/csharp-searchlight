@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿
+namespace Searchlight
 {
     /// <summary>
     /// The filter specified a field criteria that had a data type mismatch and could not be executed.
