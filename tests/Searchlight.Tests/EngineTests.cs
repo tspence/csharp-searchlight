@@ -27,10 +27,10 @@ namespace Searchlight.Tests
         }
         
         [TestMethod]
-        public void Test_MaxPSInitialized()
+        public void Test_MaxPSUpdatedFromDefault()
         {
-            var engine = new SearchlightEngine();
-            Assert.IsTrue(engine.MaximumPageSize == 1000);
+            var engine = new SearchlightEngine() { MaximumPageSize = 50 };
+            Assert.IsTrue(engine.MaximumPageSize == 50);
         }
 
         private FetchRequest mockFetchRequest = new FetchRequest
