@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Searchlight.Exceptions;
 
 namespace Searchlight.Tests
 {
@@ -23,6 +24,36 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("TestAlias2"));
             Assert.IsNotNull(engine.FindTable("TestTableAliases"));
             Assert.AreEqual(engine.FindTable("TestTableAliases"), engine.FindTable("TestAlias1"));
+        }
+        
+        [TestMethod]
+        public void Test_MaxPSUpdatedFromDefault()
+        {
+            var engine = new SearchlightEngine() { MaximumPageSize = 50 };
+            Assert.IsTrue(engine.MaximumPageSize == 50);
+        }
+
+        private FetchRequest mockFetchRequest = new FetchRequest
+        {
+            table = "tableau",
+            include = "include me",
+            filter = "",
+        };
+
+        [TestMethod]
+        public void Test_SettingRequestPageSizeWhenNotSpecified()
+        {
+            var engine = new SearchlightEngine();
+            engine.Parse(mockFetchRequest);
+            Assert.IsTrue(mockFetchRequest.pageSize == engine.MaximumPageSize); }
+
+        [TestMethod]
+        public void Test_ParsingRequestWithInvalidPageSize()
+        {
+            mockFetchRequest.pageSize = 2000;
+            var engine = new SearchlightEngine();
+            engine.MaximumPageSize = 1000;
+            Assert.ThrowsException<InvalidPageSize>(() => engine.Parse(mockFetchRequest));
         }
     }
 }

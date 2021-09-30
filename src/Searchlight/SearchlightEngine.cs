@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Searchlight.Query;
+using Searchlight.Exceptions;
 
 namespace Searchlight
 {
@@ -14,6 +15,11 @@ namespace Searchlight
         /// Captures all known model errors
         /// </summary>
         public List<SearchlightException> ModelErrors { get; } = new List<SearchlightException>();
+
+        /// <summary>
+        /// Represents the maximum size of a single page
+        /// </summary>
+        public int? MaximumPageSize { get; set; }
 
         /// <summary>
         /// Adds a new class to the engine
@@ -44,6 +50,17 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             var source = FindTable(request.table);
+            if (MaximumPageSize != null)
+            {
+                if (request.pageSize == null)
+                {
+                    request.pageSize = MaximumPageSize;
+                }
+                if (request.pageSize > MaximumPageSize)
+                {
+                    throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};
+                }
+            }
             return source?.Parse(request);
         }
 
