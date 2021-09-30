@@ -30,7 +30,7 @@ namespace Searchlight.Tests
         public void Test_MaxPSInitialized()
         {
             var engine = new SearchlightEngine();
-            Assert.IsTrue(SearchlightEngine.MaximumPageSize == 1000);
+            Assert.IsTrue(engine.MaximumPageSize == 1000);
         }
 
         private FetchRequest mockFetchRequest = new FetchRequest
@@ -45,7 +45,7 @@ namespace Searchlight.Tests
         {
             var engine = new SearchlightEngine();
             engine.Parse(mockFetchRequest);
-            Assert.IsTrue(mockFetchRequest.pageSize == SearchlightEngine.MaximumPageSize); }
+            Assert.IsTrue(mockFetchRequest.pageSize == engine.MaximumPageSize); }
 
         [TestMethod]
         public void Test_ParsingRequestWithInvalidPageSize()

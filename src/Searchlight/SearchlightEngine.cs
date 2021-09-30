@@ -19,7 +19,7 @@ namespace Searchlight
         /// <summary>
         /// Represents the maximum size of a single page
         /// </summary>
-        public static int MaximumPageSize { get; } = 1000;
+        public int MaximumPageSize { get; set;  } = 1000;
 
         /// <summary>
         /// Adds a new class to the engine
