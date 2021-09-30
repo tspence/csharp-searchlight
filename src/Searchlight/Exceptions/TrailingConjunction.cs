@@ -13,5 +13,5 @@ namespace Searchlight
         public string ErrorMessage { get; internal set; } = 
             "The filter ended with a conjunction but no elements after it. " +
             "Example: `(name eq 'Alice') AND`";
-    };
+    }
 }
