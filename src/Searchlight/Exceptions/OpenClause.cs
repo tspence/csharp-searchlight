@@ -10,7 +10,10 @@ namespace Searchlight
     {
         public string OriginalFilter { get; internal set; }
 
-        public string ErrorMessage { get; internal set;  } =
-            "The query had a different number of open parenthesis and closing parenthesis. Example: `(name eq Alice`";
+        public string ErrorMessage
+        {
+            get =>
+                $"The query filter, {OriginalFilter}, had a different number of open parenthesis and closing parenthesis.";
+        }
     }
 }

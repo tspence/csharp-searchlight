@@ -9,7 +9,10 @@ namespace Searchlight
     public class EmptyClause : SearchlightException
     {
         public string OriginalFilter { get; internal set; }
-        public string ErrorMessage { get; internal set; } = 
-            "The filter contained an empty parenthesis with no criteria within it. Example: `(name eq Alice) or ()`";
+
+        public string ErrorMessage
+        {
+            get => $"The query filter, {OriginalFilter} contained an empty parenthesis with no criteria within it.";
+        }
     }
 }
