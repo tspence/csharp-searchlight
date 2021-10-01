@@ -14,7 +14,6 @@ namespace Searchlight.Exceptions
     public class InvalidPageSize : SearchlightException
     {
         public string PageSize { get; internal set; }
-
         public string ErrorMessage
         {
             get => $"The specified page size, {PageSize}, is invalid. Query page sizes must be integers greater than 1.";

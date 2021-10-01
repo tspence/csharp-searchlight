@@ -14,7 +14,6 @@ namespace Searchlight.Exceptions
     public class InvalidDefaultSort : SearchlightException
     {
         public string DefaultSort { get; internal set; }
-
         public string ErrorMessage
         {
             get =>

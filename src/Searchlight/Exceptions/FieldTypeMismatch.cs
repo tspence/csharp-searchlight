@@ -12,7 +12,6 @@ namespace Searchlight
         public string FieldName { get; internal set; }
         public string FieldValue { get; internal set; }
         public string FieldType { get; internal set; }
-
         public string ErrorMessage
         {
             get =>

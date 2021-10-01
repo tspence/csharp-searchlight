@@ -11,7 +11,6 @@ namespace Searchlight
     {
         public string OriginalFilter { get; internal set; }
         public string Token { get; internal set; }
-
         public string ErrorMessage
         {
             get =>

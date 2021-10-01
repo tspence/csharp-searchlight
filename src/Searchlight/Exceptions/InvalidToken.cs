@@ -15,7 +15,6 @@ namespace Searchlight
         public string OriginalFilter { get; internal set; }
         public string BadToken { get; internal set; }
         public string[] ExpectedTokens { get; internal set; }
-
         public string ErrorMessage
         {
             get => $"The filter statement contained an unexpected token, {BadToken}. Searchlight expects to find one of these next: {ExpectedTokens}" +

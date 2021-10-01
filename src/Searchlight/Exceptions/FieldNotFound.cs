@@ -14,7 +14,6 @@ namespace Searchlight
         public string FieldName { get; internal set; }
 
         public string[] KnownFields { get; internal set; }
-
         public string ErrorMessage
         {
             get =>

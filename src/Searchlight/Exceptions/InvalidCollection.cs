@@ -10,7 +10,6 @@ namespace Searchlight.Exceptions
         public string TableName { get; internal set; }
         public string CollectionName { get; internal set; }
         public string CollectionErrorMessage { get; internal set; }
-
         public string ErrorMessage
         {
             get => $"The SearchlightCollection attribute was not correctly applied to the specified table. {CollectionErrorMessage}";

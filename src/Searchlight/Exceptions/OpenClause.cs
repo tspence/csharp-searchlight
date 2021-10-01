@@ -9,7 +9,6 @@ namespace Searchlight
     public class OpenClause : SearchlightException
     {
         public string OriginalFilter { get; internal set; }
-
         public string ErrorMessage
         {
             get =>
