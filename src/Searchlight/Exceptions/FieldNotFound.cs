@@ -10,9 +10,7 @@ namespace Searchlight
     public class FieldNotFound : SearchlightException
     {
         public string OriginalFilter { get; internal set; }
-
         public string FieldName { get; internal set; }
-
         public string[] KnownFields { get; internal set; }
         public string ErrorMessage
         {

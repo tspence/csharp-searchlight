@@ -8,7 +8,6 @@
         /// ensure that all field names and aliases are unique.
         /// </summary>
         public string Table { get; internal set; }
-
         public string ConflictingName { get; internal set; }
         public string ExistingColumn { get; internal set; }
         public string ConflictingColumn { get; internal set; }
