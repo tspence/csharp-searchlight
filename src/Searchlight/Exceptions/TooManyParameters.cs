@@ -10,5 +10,10 @@ namespace Searchlight
     {
         public string OriginalFilter { get; internal set; }
         public int MaximumParameterCount { get; internal set; }
+        public string ErrorMessage
+        {
+            get =>
+                $"The request exceeds the maximum parameter count, {MaximumParameterCount}.";
+        }
     }
 }

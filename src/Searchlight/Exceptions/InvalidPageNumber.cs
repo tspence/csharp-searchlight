@@ -14,5 +14,8 @@ namespace Searchlight.Exceptions
     public class InvalidPageNumber : SearchlightException
     {
         public string PageNumber { get; internal set; }
+        public string ErrorMessage { 
+            get => $"The specified page number, {PageNumber}, is not valid. Page numbers must be nonnegative integers.";
+        }
     }
 }

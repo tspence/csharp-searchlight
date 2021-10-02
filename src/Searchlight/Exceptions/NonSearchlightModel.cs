@@ -6,5 +6,9 @@
     public class NonSearchlightModel : SearchlightException
     {
         public string ModelTypeName { get; internal set; }
+        public string ErrorMessage
+        {
+            get => "The specified model, {ModelTypeName}, is not present in the Searchlight engine.";
+        }
     }
 }

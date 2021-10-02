@@ -8,5 +8,8 @@
     {
         public string Table { get; internal set; }
         public string ConflictingIncludeName { get; internal set; }
+        public string ErrorMessage { 
+            get => $"The Searchlight model {Table} had two different included data sets with the name '{ConflictingIncludeName}'.";
+        }
     }
 }

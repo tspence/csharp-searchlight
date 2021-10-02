@@ -9,5 +9,9 @@ namespace Searchlight
     public class TrailingConjunction : SearchlightException
     {
         public string OriginalFilter { get; internal set; }
+        public string ErrorMessage
+        {
+            get => $"The query filter, {OriginalFilter}, ended with a conjunction but no elements after it.";
+        }
     }
 }

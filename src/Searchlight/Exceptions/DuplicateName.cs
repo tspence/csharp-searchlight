@@ -11,5 +11,9 @@
         public string ConflictingName { get; internal set; }
         public string ExistingColumn { get; internal set; }
         public string ConflictingColumn { get; internal set; }
+        public string ErrorMessage
+        {
+            get => $"The Searchlight model {Table} had two different included fields with the name '{ConflictingName}'.";
+        }
     }
 }

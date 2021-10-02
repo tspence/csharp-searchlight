@@ -9,5 +9,9 @@ namespace Searchlight
     public class EmptyClause : SearchlightException
     {
         public string OriginalFilter { get; internal set; }
+        public string ErrorMessage
+        {
+            get => $"The query filter, {OriginalFilter} contained an empty parenthesis with no criteria within it.";
+        }
     }
 }

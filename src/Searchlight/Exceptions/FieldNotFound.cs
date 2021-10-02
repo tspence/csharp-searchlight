@@ -14,5 +14,11 @@ namespace Searchlight
         public string FieldName { get; internal set; }
 
         public string[] KnownFields { get; internal set; }
+
+        public string ErrorMessage
+        {
+            get =>
+                $"The query filter, {OriginalFilter}, had a field name that was not known. Check the list of known fields to see if the filter contains a typographical error: {KnownFields}";
+        }
     }
 }
