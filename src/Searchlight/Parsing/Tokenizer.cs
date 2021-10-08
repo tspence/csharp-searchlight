@@ -46,7 +46,6 @@ namespace Searchlight.Parsing
                     }
 
                     // If the token is actually part of a >= or <= block, add the equal sign to it.
-                    var s = c.ToString();
                     char? c2 = (i + 1 < line.Length) ? line[i + 1] : null;
                     switch (c, c2)
                     {
