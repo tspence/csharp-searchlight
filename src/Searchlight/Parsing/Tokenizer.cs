@@ -26,9 +26,9 @@ namespace Searchlight.Parsing
             {
                 var c = line[i];
 
-                // Whitespace characters always end a token)
                 if (char.IsWhiteSpace(c))
                 {
+                    // Whitespace characters always end a token)
                     if (inToken)
                     {
                         tokens.Enqueue(sb.ToString());
@@ -36,12 +36,9 @@ namespace Searchlight.Parsing
                         inToken = false;
                     }
                 }
-
-                // If this is one of the special chars (>, =, etc) end token and count char as its own token
-                if (IsSpecialChar(c))
+                else if (IsSpecialChar(c))
                 {
-
-                    // Signify end of the token preceding it
+                    // If this is one of the special chars (>, =, etc) end the previous token and count char as its own token
                     if (inToken)
                     {
                         tokens.Enqueue(sb.ToString());
@@ -50,53 +47,37 @@ namespace Searchlight.Parsing
 
                     // If the token is actually part of a >= or <= block, add the equal sign to it.
                     var s = c.ToString();
-                    switch (c)
+                    char? c2 = (i + 1 < line.Length) ? line[i + 1] : null;
+                    switch (c, c2)
                     {
-                        case '!':
-                        {
-                            if (line[i + 1] == '=')
-                            {
-                                s += line[i + 1];
-                                i++;
-                            }
-
-                            break;
-                        }
-                        case '<':
-                        {
-                            if (line[i + 1] == '>')
-                            {
-                                s += line[i + 1];
-                                i++;
-                            }
-
-                            break;
-                        }
-                    }
-                    if (c is '>' or '<')
-                    {
-                        if (line[i + 1] == '=')
-                        {
-                            s += line[i + 1];
+                        case ('!', '='):
+                        case ('<', '>'):
+                        case ('<', '='):
+                        case ('>', '='):
+                            tokens.Enqueue(line.Substring(i, 2));
                             i++;
-                        }
+                            break;
+                        case ('<', _):
+                        case ('>', _):
+                            tokens.Enqueue(c.ToString());
+                            break;
+                        // This probably means it's a syntax error, but let's let the parser figure that out
+                        default:
+                            tokens.Enqueue(c.ToString());
+                            break;
                     }
 
-                    tokens.Enqueue(s);
                     sb.Length = 0;
                 }
-
-                // Apostrophes trigger string mode
-                if (c == StringConstants.SINGLE_QUOTE)
+                else if (c == StringConstants.SINGLE_QUOTE)
                 {
+                    // Apostrophes trigger string mode
                     var inString = true;
-
                     while (++i < line.Length)
                     {
                         c = line[i];
                         if (c == StringConstants.SINGLE_QUOTE)
                         {
-
                             // If there's a double apostrophe, treat it as a single one
                             if ((i + 1 <= line.Length - 1) && (line[i + 1] == StringConstants.SINGLE_QUOTE))
                             {
@@ -110,7 +91,6 @@ namespace Searchlight.Parsing
                                 inString = false;
                                 break;
                             }
-
                         }
                         else
                         {
@@ -121,13 +101,12 @@ namespace Searchlight.Parsing
                     // If the string failed to end properly, throw an error
                     if (inString)
                     {
-                        throw new UnterminatedString() { Token = sb.ToString(), OriginalFilter = line};
+                        throw new UnterminatedString() { Token = sb.ToString(), OriginalFilter = line };
                     }
-
-                    // Normal characters just get added to the token
                 }
                 else
                 {
+                    // Normal characters just get added to the token
                     if (char.IsWhiteSpace(c) == false && !IsSpecialChar(c))
                     {
                         sb.Append(c);
