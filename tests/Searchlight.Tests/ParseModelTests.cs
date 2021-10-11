@@ -342,6 +342,13 @@ namespace Searchlight.Tests
             [SearchlightField(OriginalName = "field_name")]
             public string Name { get; set; }
         }
+        
+        [SearchlightModel(DefaultSort = "Name ascending")]
+        public class TestOtherDefaultSortDirectionClass
+        {
+            [SearchlightField(OriginalName = "field_name")]
+            public string Name { get; set; }
+        }
 
         [TestMethod]
         public void TestDefaultSortDirection()
@@ -356,6 +363,27 @@ namespace Searchlight.Tests
 
             // Assert
             Assert.AreEqual(1, syntax.Filter.Count);
+            Assert.AreEqual(1, syntax.OrderBy.Count);
+            Assert.AreEqual("Name", syntax.OrderBy[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Descending, syntax.OrderBy[0].Direction);
+        }
+
+        [TestMethod]
+        public void TestOtherDefaultSortDirection()
+        {
+            // Arrange
+            var source = DataSource.Create(null, typeof(TestOtherDefaultSortDirectionClass), AttributeMode.Strict);
+            var fetchRequest = new FetchRequest();
+            fetchRequest.Append("Name eq Test");
+
+            // Act
+            var syntax = source.Parse(fetchRequest);
+
+            // Assert
+            Assert.AreEqual(1, syntax.Filter.Count);
+            Assert.AreEqual(1, syntax.OrderBy.Count);
+            Assert.AreEqual("Name", syntax.OrderBy[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Ascending, syntax.OrderBy[0].Direction);
         }
     }
 }
