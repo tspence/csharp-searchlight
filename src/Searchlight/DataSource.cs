@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Searchlight.Exceptions;
 
 namespace Searchlight
@@ -219,10 +220,27 @@ namespace Searchlight
             }
             
             // default sort cannot be null and must be a valid column
-            if (src.DefaultSort is null || !CheckPresence(src.DefaultSort, modelType.GetProperties()))
+            if (src.DefaultSort is not null)
+            {
+                try
+                {
+                    var sort = src.ParseOrderBy(src.DefaultSort);
+                    if (sort.Count == 0)
+                    {
+                        throw new InvalidDefaultSort
+                            {Table = src.TableName, DefaultSort = src.DefaultSort};
+                    }
+                }
+                catch
+                {
+                    throw new InvalidDefaultSort
+                        {Table = src.TableName, DefaultSort = src.DefaultSort};
+                }
+            }
+            else
             {
                 throw new InvalidDefaultSort
-                    {DefaultSort = src.DefaultSort == null ? "not specified" : "not a valid column"};
+                    {Table = src.TableName, DefaultSort = "NULL"};
             }
 
             // Calculate the list of known "include" commands
