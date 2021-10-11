@@ -229,8 +229,40 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("BookReservation"));
             Assert.IsNotNull(engine.FindTable("BookCopy"));
             
-            // duplicate name error, and 2 invaliddefaultsort errors
-            Assert.AreEqual(3, engine.ModelErrors.Count);
+            // This is the list of expected errors
+            Assert.AreEqual(4, engine.ModelErrors.Count);
+            Assert.IsTrue(engine.ModelErrors.Any(err =>
+            {
+                if (err is InvalidDefaultSort defSort)
+                {
+                    return (defSort.Table == "EmployeeObj");
+                }
+                return false;
+            }));
+            Assert.IsTrue(engine.ModelErrors.Any(err =>
+            {
+                if (err is DuplicateName duplicateName)
+                {
+                    return (duplicateName.Table == "TestFieldConflicts");
+                }
+                return false;
+            }));
+            Assert.IsTrue(engine.ModelErrors.Any(err =>
+            {
+                if (err is InvalidDefaultSort defSort)
+                {
+                    return (defSort.Table == "TestWithNoDefaultSort");
+                }
+                return false;
+            }));
+            Assert.IsTrue(engine.ModelErrors.Any(err =>
+            {
+                if (err is InvalidDefaultSort defSort)
+                {
+                    return (defSort.Table == "TestInvalidDefaultSort");
+                }
+                return false;
+            }));
         }
 
         [TestMethod]
@@ -302,6 +334,56 @@ namespace Searchlight.Tests
             Assert.AreEqual("Description", secondClause.Column.FieldName);
             Assert.AreEqual(OperationType.NotEqual, secondClause.Operation);
             Assert.AreEqual("Whatever", secondClause.Value);
+        }
+        
+        [SearchlightModel(DefaultSort = "Name DESC")]
+        public class TestDefaultSortDirectionClass
+        {
+            [SearchlightField(OriginalName = "field_name")]
+            public string Name { get; set; }
+        }
+        
+        [SearchlightModel(DefaultSort = "Name ascending")]
+        public class TestOtherDefaultSortDirectionClass
+        {
+            [SearchlightField(OriginalName = "field_name")]
+            public string Name { get; set; }
+        }
+
+        [TestMethod]
+        public void TestDefaultSortDirection()
+        {
+            // Arrange
+            var source = DataSource.Create(null, typeof(TestDefaultSortDirectionClass), AttributeMode.Strict);
+            var fetchRequest = new FetchRequest();
+            fetchRequest.Append("Name eq Test");
+
+            // Act
+            var syntax = source.Parse(fetchRequest);
+
+            // Assert
+            Assert.AreEqual(1, syntax.Filter.Count);
+            Assert.AreEqual(1, syntax.OrderBy.Count);
+            Assert.AreEqual("Name", syntax.OrderBy[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Descending, syntax.OrderBy[0].Direction);
+        }
+
+        [TestMethod]
+        public void TestOtherDefaultSortDirection()
+        {
+            // Arrange
+            var source = DataSource.Create(null, typeof(TestOtherDefaultSortDirectionClass), AttributeMode.Strict);
+            var fetchRequest = new FetchRequest();
+            fetchRequest.Append("Name eq Test");
+
+            // Act
+            var syntax = source.Parse(fetchRequest);
+
+            // Assert
+            Assert.AreEqual(1, syntax.Filter.Count);
+            Assert.AreEqual(1, syntax.OrderBy.Count);
+            Assert.AreEqual("Name", syntax.OrderBy[0].Column.FieldName);
+            Assert.AreEqual(SortDirection.Ascending, syntax.OrderBy[0].Direction);
         }
     }
 }
