@@ -5,16 +5,18 @@ VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight", "src\Searchlight\Searchlight.csproj", "{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Searchlight", "src\Searchlight\Searchlight.csproj", "{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight.Tests", "tests\Searchlight.Tests\Searchlight.Tests.csproj", "{C87B0E18-33A4-43FC-BCE7-C0343FC60228}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Searchlight.Tests", "tests\Searchlight.Tests\Searchlight.Tests.csproj", "{C87B0E18-33A4-43FC-BCE7-C0343FC60228}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Files", "Other Files", "{6FA550FB-FF83-4552-A9C0-3F7C2736385D}"
-ProjectSection(SolutionItems) = preProject
-	Searchlight.nuspec = Searchlight.nuspec
-	README.md = README.md
-	PatchNotes.md = PatchNotes.md
-EndProjectSection
+	ProjectSection(SolutionItems) = preProject
+		PatchNotes.md = PatchNotes.md
+		README.md = README.md
+		Searchlight.nuspec = Searchlight.nuspec
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Searchlight.MongoDB", "src\Searchlight.MongoDB\Searchlight.MongoDB.csproj", "{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +32,10 @@ Global
 		{C87B0E18-33A4-43FC-BCE7-C0343FC60228}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C87B0E18-33A4-43FC-BCE7-C0343FC60228}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C87B0E18-33A4-43FC-BCE7-C0343FC60228}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -37,6 +43,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
 		{C87B0E18-33A4-43FC-BCE7-C0343FC60228} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
+		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B73979E0-9FBB-4001-82CF-D56D3519E936}
