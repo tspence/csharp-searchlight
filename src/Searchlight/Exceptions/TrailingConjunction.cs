@@ -2,19 +2,16 @@
 namespace Searchlight
 {
     /// <summary>
-    /// User ended the filter with a conjunction that required additional elements after it
+    /// The filter ended with a conjunction but no elements after it.
+    ///
+    /// Example: `(name eq 'Alice') AND`
     /// </summary>
     public class TrailingConjunction : SearchlightException
     {
-        /// <summary>
-        /// Inform the user that a conjunction requires a following clause
-        /// </summary>
-        /// <param name="originalFilter"></param>
-        public TrailingConjunction(string originalFilter)
+        public string OriginalFilter { get; internal set; }
+        public string ErrorMessage
         {
-            OriginalFilter = originalFilter;
+            get => $"The query filter, {OriginalFilter}, ended with a conjunction but no elements after it.";
         }
-
-        public string OriginalFilter { get; set; }
     }
 }

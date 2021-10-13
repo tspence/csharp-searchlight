@@ -13,7 +13,8 @@ namespace Searchlight.Tests
     public class LinqExecutorTests
     {
         private DataSource src;
-
+        
+        [SearchlightModel(DefaultSort = nameof(name))]
         public class EmployeeObj
         {
             public string name { get; set; }
@@ -79,9 +80,9 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause) syntax.Filter[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
-            Assert.AreEqual(5, results.Length);
-            foreach (var e in results)
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.AreEqual(5, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);
                 Assert.IsTrue(e.paycheck <= 1000.0m);
@@ -114,9 +115,9 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause) cc.Children[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
-            Assert.AreEqual(4, results.Length);
-            foreach (var e in results)
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.AreEqual(4, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);
                 Assert.IsTrue(e.paycheck is 800.0m or 1200.0m or 10.0m or 578.00m);
@@ -137,9 +138,9 @@ namespace Searchlight.Tests
             Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
-            Assert.AreEqual(3, results.Length);
-            foreach (var e in results)
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.AreEqual(3, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);
                 Assert.IsTrue(e.id < 5);
@@ -161,9 +162,9 @@ namespace Searchlight.Tests
             Assert.AreEqual("A", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
-            Assert.AreEqual(1, results.Length);
-            foreach (var e in results)
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.AreEqual(1, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(e.name[0] == 'A');
             }
@@ -184,9 +185,9 @@ namespace Searchlight.Tests
             Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list).ToArray();
-            Assert.AreEqual(2, results.Length);
-            foreach (var e in results)
+            var results = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.AreEqual(2, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(e.name.EndsWith("s", StringComparison.OrdinalIgnoreCase));
             }
@@ -208,9 +209,9 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results.ToArray();
-            Assert.AreEqual(6, resultsArr.Length);
-            foreach (var e in resultsArr)
+            var resultsArr = results;
+            Assert.AreEqual(6, resultsArr.records.Length);
+            foreach (var e in resultsArr.records)
             {
                 Assert.IsTrue(e.name.Contains("s", StringComparison.OrdinalIgnoreCase));
             }
@@ -230,9 +231,9 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results.ToArray();
-            Assert.AreEqual(5, resultsArr.Length);
-            foreach (var e in resultsArr)
+            var resultsArr = results;
+            Assert.AreEqual(5, resultsArr.records.Length);
+            foreach (var e in resultsArr.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) > 0);
             }
@@ -252,9 +253,9 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results.ToArray();
-            Assert.AreEqual(5, resultsArr.Length);
-            foreach (var e in resultsArr)
+            var resultsArr = results;
+            Assert.AreEqual(5, resultsArr.records.Length);
+            foreach (var e in resultsArr.records)
             {
                 Assert.IsTrue(string.Compare(e.name.Substring(0, "bob rogers".Length), "bob rogers", StringComparison.CurrentCultureIgnoreCase) >= 0);
             }
@@ -274,9 +275,9 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results.ToArray();
-            Assert.AreEqual(1, resultsArr.Length);
-            foreach (var e in resultsArr)
+            var resultsArr = results;
+            Assert.AreEqual(1, resultsArr.records.Length);
+            foreach (var e in resultsArr.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) < 0);
             }
@@ -296,9 +297,9 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results.ToArray();
-            Assert.AreEqual(2, resultsArr.Length);
-            foreach (var e in resultsArr)
+            var resultsArr = results;
+            Assert.AreEqual(2, resultsArr.records.Length);
+            foreach (var e in resultsArr.records)
             {
                 Assert.IsTrue(string.Compare(e.name.Substring(0, "bob rogers".Length), "bob rogers", StringComparison.CurrentCultureIgnoreCase) <= 0);
             }
@@ -313,8 +314,8 @@ namespace Searchlight.Tests
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
 
-            Assert.AreEqual(list.Count - 1, result.Count());
-            Assert.IsFalse(result.Any(p => p.name == "Alice Smith"));
+            Assert.AreEqual(list.Count - 1, result.records.Length);
+            Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
         }
 
 
@@ -356,8 +357,8 @@ namespace Searchlight.Tests
             var result = syntax.QueryCollection<EmployeeObj>(list);
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.Any());
-            Assert.AreEqual(1, result.Count());
+            Assert.IsTrue(result.records.Any());
+            Assert.AreEqual(1, result.records.Length);
         }
 
 
@@ -371,8 +372,8 @@ namespace Searchlight.Tests
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count());
-            Assert.IsTrue(result.Any(p => p.name == "Roderick 'null' Sqlkeywordtest"));
+            Assert.AreEqual(1, result.records.Length);
+            Assert.IsTrue(result.records.Any(p => p.name == "Roderick 'null' Sqlkeywordtest"));
         }
 
 
@@ -385,10 +386,10 @@ namespace Searchlight.Tests
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
 
-            Assert.IsTrue(result.Any(p => p.name == "Alice Smith"));
-            Assert.IsTrue(result.Any(p => p.name == "Bob Rogers"));
+            Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
+            Assert.IsTrue(result.records.Any(p => p.name == "Bob Rogers"));
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, result.Count());
+            Assert.AreEqual(2, result.records.Length);
         }
 
 
@@ -402,10 +403,10 @@ namespace Searchlight.Tests
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
 
-            Assert.IsTrue(result.Any(p => p.id == 1));
-            Assert.IsTrue(result.Any(p => p.id == 2));
+            Assert.IsTrue(result.records.Any(p => p.id == 1));
+            Assert.IsTrue(result.records.Any(p => p.id == 2));
             Assert.IsNotNull(result);
-            Assert.AreEqual(2, result.Count());
+            Assert.AreEqual(2, result.records.Length);
         }
 
         [TestMethod]
@@ -418,8 +419,8 @@ namespace Searchlight.Tests
             var result = syntax.QueryCollection(list);
 
             Assert.IsNotNull(result);
-            Assert.IsTrue(result.Any());
-            Assert.IsTrue(result.ToList()[0].id == 7);
+            Assert.IsTrue(result.records.Any());
+            Assert.IsTrue(result.records[0].id == 7);
         }
         
         [TestMethod]
@@ -438,9 +439,9 @@ namespace Searchlight.Tests
 
             var result = syntax.QueryCollection<EmployeeObj>(list);
 
-            Assert.IsTrue(result.Any(p => p.name == "Alice Smith"));
+            Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.Count());
+            Assert.AreEqual(1, result.records.Length);
         }
       
         [TestMethod]
@@ -452,26 +453,26 @@ namespace Searchlight.Tests
 
             var result = syntax.QueryCollection(list);
             
-            Assert.IsTrue(result.Any());
-            Assert.IsTrue(result.Count() == 3);
+            Assert.IsTrue(result.records.Any());
+            Assert.IsTrue(result.records.Length == 3);
 
             syntax = src.Parse("hired < TOMORROW");
             result = syntax.QueryCollection(list);
             
-            Assert.IsTrue(result.Any());
-            Assert.IsTrue(result.Count() == 4);
+            Assert.IsTrue(result.records.Any());
+            Assert.IsTrue(result.records.Length == 4);
             
             syntax = src.Parse("hired < tomorrow");
             result = syntax.QueryCollection(list);
             
-            Assert.IsTrue(result.Any());
-            Assert.IsTrue(result.Count() == 4);
+            Assert.IsTrue(result.records.Any());
+            Assert.IsTrue(result.records.Length == 4);
             
             syntax = src.Parse("hired > YESTERDAY");
             result = syntax.QueryCollection(list);
             
-            Assert.IsTrue(result.Any());
-            Assert.IsTrue(result.Count() == 4);
+            Assert.IsTrue(result.records.Any());
+            Assert.IsTrue(result.records.Length == 4);
             
             Assert.ThrowsException<FieldTypeMismatch>(() => src.Parse("hired > yesteryear"));
         }
@@ -484,13 +485,13 @@ namespace Searchlight.Tests
             var syntax = src.Parse("hired > 2020-01-01");
             var result = syntax.QueryCollection(list);
             
-            Assert.IsTrue(result.Any());
-            Assert.IsTrue(result.Count() == list.Count);
+            Assert.IsTrue(result.records.Any());
+            Assert.IsTrue(result.records.Length == list.Count);
             
             syntax = src.Parse("hired < 1985-01-01");
             result = syntax.QueryCollection(list);
 
-            Assert.IsFalse(result.Any());
+            Assert.IsFalse(result.records.Any());
         }
 
         [TestMethod]
@@ -500,104 +501,104 @@ namespace Searchlight.Tests
             var list = GetTestList();
             var control = (from item in GetTestList() orderby item.id ascending select item).ToList();
             var syntax = src.Parse(null, null, "id ASC");
-            var result = syntax.QueryCollection(list).ToList();
+            var result = syntax.QueryCollection(list);
             
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].id, control[i].id);
+                Assert.AreEqual(result.records[i].id, control[i].id);
             }
             
             list = GetTestList();
             control = (from item in GetTestList() orderby item.id descending select item).ToList();
             syntax = src.Parse("", null, "id descending");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
 
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].id, control[i].id);
+                Assert.AreEqual(result.records[i].id, control[i].id);
             }
             
             // name test ascending and descending
             list = GetTestList();
             control = (from item in GetTestList() orderby item.name ascending select item).ToList();
             syntax = src.Parse("", null, "name ASC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
             
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].name, control[i].name);
+                Assert.AreEqual(result.records[i].name, control[i].name);
             }
             
             list = GetTestList();
             control = (from item in GetTestList() orderby item.name descending select item).ToList();
             syntax = src.Parse("", null, "name DESC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
             
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].name, control[i].name);
+                Assert.AreEqual(result.records[i].name, control[i].name);
             }
             
             // paycheck test ascending and descending
             list = GetTestList();
             control = (from item in GetTestList() orderby item.paycheck ascending select item).ToList();
             syntax = src.Parse("", null, "paycheck ASC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
 
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].paycheck, control[i].paycheck);
+                Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
             
             list = GetTestList();
             control = (from item in GetTestList() orderby item.paycheck descending select item).ToList();
             syntax = src.Parse("", null, "paycheck DESC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
             
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].paycheck, control[i].paycheck);
+                Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
             
             // onduty test ascending and descending
             list = GetTestList();
             control = (from item in GetTestList() orderby item.onduty ascending select item).ToList();
             syntax = src.Parse("", null, "onduty ASC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
             
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].onduty, control[i].onduty);
+                Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
             
             list = GetTestList();
             control = (from item in GetTestList() orderby item.onduty descending select item).ToList();
             syntax = src.Parse("", null, "onduty DESC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
             
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].onduty, control[i].onduty);
+                Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
             
             // hired test ascending and descending
             list = GetTestList();
             control = (from item in GetTestList() orderby item.hired ascending select item).ToList();
             syntax = src.Parse("", null, "hired ASC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
             
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].hired, control[i].hired);
+                Assert.AreEqual(result.records[i].hired, control[i].hired);
             }
             
             list = GetTestList();
             control = (from item in GetTestList() orderby item.hired descending select item).ToList();
             syntax = src.Parse("", null, "hired DESC");
-            result = syntax.QueryCollection(list).ToList();
+            result = syntax.QueryCollection(list);
             for (int i = 0; i < list.Count; i++)
             {
-                Assert.AreEqual(result[i].hired, control[i].hired);
+                Assert.AreEqual(result.records[i].hired, control[i].hired);
             }
             
             //TODO: add test that sorts multiple fields
@@ -611,10 +612,10 @@ namespace Searchlight.Tests
             syntax.PageNumber = 0; // default is 0
             syntax.PageSize = 0; // default is 0
             
-            var result = syntax.QueryCollection(list).ToList();
+            var result = syntax.QueryCollection(list);
             
             // return everything
-            Assert.AreEqual(list.Count, result.Count);
+            Assert.AreEqual(list.Count, result.records.Length);
         }
         
         [TestMethod]
@@ -625,10 +626,10 @@ namespace Searchlight.Tests
             syntax.PageNumber = 2;
             syntax.PageSize = 0; // default is 0
 
-            var result = syntax.QueryCollection(list).ToList();
+            var result = syntax.QueryCollection(list);
             
             // return everything
-            Assert.AreEqual(result.Count, list.Count);
+            Assert.AreEqual(result.records.Length, list.Count);
         }
 
         [TestMethod]
@@ -640,10 +641,10 @@ namespace Searchlight.Tests
             syntax.PageSize = 2;
             syntax.PageNumber = 0; // no page number defaults to 0
 
-            var result = syntax.QueryCollection(list).ToList();
+            var result = syntax.QueryCollection(list);
             
             // should take the first 2 elements
-            Assert.AreEqual(result.Count, 2);
+            Assert.AreEqual(result.records.Length, 2);
         }
 
         [TestMethod]
@@ -654,9 +655,9 @@ namespace Searchlight.Tests
             syntax.PageSize = 1;
             syntax.PageNumber = 2;
 
-            var result = syntax.QueryCollection(list).ToList();
+            var result = syntax.QueryCollection(list);
             
-            Assert.AreEqual(result.Count, 1);
+            Assert.AreEqual(result.records.Length, 1);
         }
     }
 }

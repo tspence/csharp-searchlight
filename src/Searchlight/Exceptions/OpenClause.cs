@@ -2,19 +2,17 @@
 namespace Searchlight
 {
     /// <summary>
-    /// Indicates the query was unbalanced - there were clauses that were opened but not closed
+    /// The query had a different number of open parenthesis and closing parenthesis.
+    /// 
+    /// Example: `(name eq Alice`
     /// </summary>
     public class OpenClause : SearchlightException
     {
-        /// <summary>
-        /// Throw this exception if the query had a mismatch in the number of open parenthesis vs close parenthesis
-        /// </summary>
-        /// <param name="originalFilter"></param>
-        public OpenClause(string originalFilter)
+        public string OriginalFilter { get; internal set; }
+        public string ErrorMessage
         {
-            OriginalFilter = originalFilter;
+            get =>
+                $"The query filter, {OriginalFilter}, had a different number of open parenthesis and closing parenthesis.";
         }
-
-        public string OriginalFilter { get; set; }
     }
 }

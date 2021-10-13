@@ -3,20 +3,22 @@
 namespace Searchlight
 {
     /// <summary>
-    /// Represents a failure in the SQL validation
+    /// The filter statement contained an unexpected token.  Examine the list of expected tokens
+    /// to see what Searchlight expects to find next.
+    ///
+    /// Example: `(name eq Alice) date eq '2021-09-29'`
+    /// 
+    /// In this query, Searchlight expects to see "AND" or "OR" after the close parenthesis.
     /// </summary>
     public class InvalidToken : SearchlightException
     {
-        public InvalidToken(string badToken, string[] expectedTokens, string originalFilter)
+        public string OriginalFilter { get; internal set; }
+        public string BadToken { get; internal set; }
+        public string[] ExpectedTokens { get; internal set; }
+        public string ErrorMessage
         {
-            OriginalFilter = originalFilter;
-            BadToken = badToken;
-            ExpectedTokens = expectedTokens;
+            get => $"The filter statement contained an unexpected token, {BadToken}. Searchlight expects to find one of these next: {ExpectedTokens}" +
+                    ". Example: `(name eq Alice) date eq '2021-09-29'` In this query, Searchlight expects to see \"AND\" or \"OR\" after the close parenthesis.";
         }
-
-        public string OriginalFilter { get; set; }
-
-        public string BadToken { get; set; }
-        public string[] ExpectedTokens { get; set; }
     }
 }

@@ -1,15 +1,15 @@
 ﻿namespace Searchlight
 {
+    /// <summary>
+    /// The Searchlight model had two different included data sets with the same name.  Searchlight
+    /// requires that all included data sets have unique names.
+    /// </summary>
     public class DuplicateInclude : SearchlightException
     {
-        /// <summary>
-        /// This is the table that had the conflicting include name
-        /// </summary>
-        public string Table { get; set; }
-
-        /// <summary>
-        /// This name appeared in the "Include" list more than once
-        /// </summary>
-        public string ConflictingIncludeName { get; set; }
+        public string Table { get; internal set; }
+        public string ConflictingIncludeName { get; internal set; }
+        public string ErrorMessage { 
+            get => $"The Searchlight model {Table} had two different included data sets with the name '{ConflictingIncludeName}'.";
+        }
     }
 }

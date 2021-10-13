@@ -1,3 +1,19 @@
+# 0.9.13
+September 29, 2021
+
+* The LINQ Executor now returns `FetchResult<T>` with pagination information.
+* Searchlight can now enforce a `MaximumPageSize` across all queries on the SearchlightEngine.  The goal is for implementors to decide how much data is too much
+and be able to exercise control over API calls.
+* `DefaultSort` is required for a searchlight model.  Omitting this value will throw an exception during construction of the SearchlightEngine.
+This is necessary to ensure consistency of pagination.  Records not sorted will not paginate correctly.
+* All Searchlight errors now include XMLDOCs explaining the problem.  A future improvement would be for errors to have a human-friendly string as well.
+
+# 0.9.12
+September 28, 2021
+
+* Fixed LINQ executor bug with handling of null pageNumber values in pagination
+* LINQ executor now works correctly with pagination and returns a FetchResult object with pagination information including total count
+
 # 0.9.11
 September 24, 2021
 

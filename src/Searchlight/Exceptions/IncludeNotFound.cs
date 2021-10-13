@@ -2,23 +2,18 @@
 namespace Searchlight
 {
     /// <summary>
-    /// Represents a failure in the SQL validation
+    /// The query specified an include command or flag that was not recognized.  See the list of known
+    /// includes for a full list of options.
     /// </summary>
     public class IncludeNotFound : SearchlightException
     {
-        /// <summary>
-        /// The requested list of includes
-        /// </summary>
-        public string OriginalInclude { get; set; }
-
-        /// <summary>
-        /// The include that was not found
-        /// </summary>
-        public string IncludeName { get; set; }
-
-        /// <summary>
-        /// The list of known includes for this table
-        /// </summary>
-        public string[] KnownIncludes { get; set; }
+        public string OriginalInclude { get; internal set; }
+        public string IncludeName { get; internal set; }
+        public string[] KnownIncludes { get; internal set; }
+        public string ErrorMessage
+        {
+            get => $"The query {OriginalInclude} specified an include command or flag that was not recognized. " +
+                   "See the list of known includes for a full list of options.";
+        }
     }
 }

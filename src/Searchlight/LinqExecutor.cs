@@ -17,13 +17,13 @@ namespace Searchlight
         /// <param name="collection">The collection of data elements to query</param>
         /// <typeparam name="T">Generic type of the model</typeparam>
         /// <returns></returns>
-        public static IEnumerable<T> QueryCollection<T>(this SyntaxTree tree, IEnumerable<T> collection)
+        public static FetchResult<T> QueryCollection<T>(this SyntaxTree tree, IEnumerable<T> collection)
         {
             // Goal of this function is to construct this LINQ expression:
             //   return (from obj in LIST where QUERY select obj)
             // Here's how we'll do it:
             var queryable = collection.AsQueryable<T>();
-
+            
             // If the user specified a filter 
             var select = Expression.Parameter(typeof(T), "obj");
             var expression = BuildExpression(select, tree.Filter, tree.Source);
@@ -45,24 +45,31 @@ namespace Searchlight
                     (from sort in tree.OrderBy select $"{sort.Column.FieldName} {sort.DirectionStr()}"));
                 queryable = queryable.OrderBy(sortExpression);
             }
+
+            // Compute the list once and keep track of full length
+            var filteredAndSorted = queryable.ToList();
+            var totalCount = filteredAndSorted.Count;
             
             // If the user requested pagination
-            switch ((tree.PageNumber, tree.PageSize))
+            var paginated = (tree.PageNumber, tree.PageSize) switch
             {
                 // case 1: user specified page number and page size
-                case (> 0, > 0):
-                    queryable = queryable.Skip((int) (tree.PageSize * tree.PageNumber)).Take((int) tree.PageSize);
-                    
-                    break;
-                
+                (> 0, > 0) => filteredAndSorted.Skip((int)(tree.PageSize * tree.PageNumber)).Take((int)tree.PageSize),
                 // case 2: user specified a page size but no page number
-                case (0, > 0):
-                    queryable = queryable.Take((int) tree.PageSize);
+                (0, > 0) => filteredAndSorted.Take((int)tree.PageSize),
+                _ => filteredAndSorted
+            };
 
-                    break;
-            }
+            // construct the return fetch result
+            var result = new FetchResult<T>
+            {
+                pageSize = tree.PageSize,
+                pageNumber = tree.PageNumber,
+                totalCount = totalCount,
+                records = paginated.ToArray()
+            };
 
-            return queryable;
+            return result;
         }
 
         /// <summary>
