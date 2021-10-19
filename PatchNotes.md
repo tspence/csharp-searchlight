@@ -1,3 +1,10 @@
+# 0.9.14
+October 11, 2021
+
+* Added friendly error message text for each Searchlight exception
+* Fixed bug where default sort could not contain direction
+* Refactoring work for the tokenizer and cleanup
+
 # 0.9.13
 September 29, 2021
 
