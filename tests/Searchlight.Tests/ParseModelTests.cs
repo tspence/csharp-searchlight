@@ -230,7 +230,9 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("BookCopy"));
             
             // This is the list of expected errors
-            Assert.AreEqual(4, engine.ModelErrors.Count);
+            // TODO: This was previously 4, now it's 5 after making changes to Mongo executor
+            // Changes made in https://github.com/tspence/csharp-searchlight/pull/83
+            Assert.AreEqual(5, engine.ModelErrors.Count);
             Assert.IsTrue(engine.ModelErrors.Any(err =>
             {
                 if (err is InvalidDefaultSort defSort)
