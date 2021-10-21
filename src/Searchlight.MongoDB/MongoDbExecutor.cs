@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Driver;
+using Searchlight;
 using Searchlight.Query;
 
 
@@ -23,7 +24,7 @@ namespace MongoPetSitters
             return results.ToEnumerable();
         }
 
-        private static FilterDefinition<T> BuildMongoFilter<T>(List<BaseClause> clauses)
+        public static FilterDefinition<T> BuildMongoFilter<T>(List<BaseClause> clauses)
         { 
             foreach (var clause in clauses)
             {
@@ -32,12 +33,27 @@ namespace MongoPetSitters
                     case CriteriaClause criteria:
                         switch (criteria.Operation)
                         {
-                            case Searchlight.OperationType.Equals:
+                            case OperationType.Equals:
                                 return Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value);
-
+                            case OperationType.GreaterThan:
+                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, criteria.Value);
+                            case OperationType.GreaterThanOrEqual:
+                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, criteria.Value);
+                            case OperationType.LessThan:
+                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, criteria.Value);
+                            case OperationType.LessThanOrEqual:
+                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, criteria.Value);
+                            case OperationType.Contains:
+                                return Builders<T>.Filter.Text(criteria.Column.FieldName, criteria.Value.ToString());
                             default:
                                 throw new NotImplementedException();
                         }
+                    case BetweenClause betweenClause:
+                        var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue);
+                        var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue);
+                        // & operator can be used between Mongo filters
+                        return lower & upper;
+
                     default:
                         throw new NotImplementedException();
                 }

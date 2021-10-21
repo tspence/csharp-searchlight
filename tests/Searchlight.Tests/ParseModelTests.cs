@@ -230,7 +230,7 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("BookCopy"));
             
             // This is the list of expected errors
-            Assert.AreEqual(4, engine.ModelErrors.Count);
+            Assert.AreEqual(5, engine.ModelErrors.Count);
             Assert.IsTrue(engine.ModelErrors.Any(err =>
             {
                 if (err is InvalidDefaultSort defSort)
