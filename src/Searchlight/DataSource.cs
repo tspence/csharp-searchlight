@@ -50,8 +50,9 @@ namespace Searchlight
 
         /// <summary>
         /// Some data sources can only handle a specified number of parameters.
+        /// If set at the data source level, this overrides the value set on the SearchlightEngine object.
         /// </summary>
-        public int MaximumParameters { get; set; }
+        public int? MaximumParameters { get; set; }
 
         private readonly List<string> _knownIncludes = new List<string>();
         private readonly Dictionary<string, object> _includeDict = new Dictionary<string, object>();
