@@ -55,5 +55,19 @@ namespace Searchlight.Tests
             engine.MaximumPageSize = 1000;
             Assert.ThrowsException<InvalidPageSize>(() => engine.Parse(mockFetchRequest));
         }
+
+        [TestMethod]
+        public void Test_DefaultPageSize()
+        {
+            var engine = new SearchlightEngine().AddClass(typeof(TestTableAliases));
+            engine.DefaultPageSize = 200;
+            var fetchRequest = new FetchRequest()
+            {
+                table = "TestTableAliases",
+                filter = "Name startswith a",
+            };
+            var syntax = engine.Parse(fetchRequest);
+            Assert.AreEqual(200, syntax.PageSize);
+        }
     }
 }
