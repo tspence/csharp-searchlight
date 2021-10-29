@@ -21,7 +21,7 @@ namespace Searchlight
         /// <summary>
         /// The maximum number of parameters that can be used when querying this model
         /// </summary>
-        public int MaximumParameters { get; set; }
+        public int? MaximumParameters { get; set; }
         
         /// <summary>
         /// The default sort criteria to use when none are specified

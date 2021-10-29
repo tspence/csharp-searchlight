@@ -21,9 +21,10 @@ namespace Searchlight
             sql.OrderByClause = RenderOrderByClause(query.OrderBy, sql);
 
             // Sanity tests
-            if (sql.Parameters.Count > query.Source.MaximumParameters && query.Source.MaximumParameters > 0)
+            var maxParams = query.Source.MaximumParameters ?? query.Source.Engine?.MaximumParameters ?? 0;
+            if (maxParams > 0 && sql.Parameters.Count > maxParams)
             {
-                throw new TooManyParameters() { MaximumParameterCount = query.Source.MaximumParameters, OriginalFilter = query.OriginalFilter };
+                throw new TooManyParameters() { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
             }
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";

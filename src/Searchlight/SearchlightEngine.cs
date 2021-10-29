@@ -20,6 +20,11 @@ namespace Searchlight
         /// Represents the maximum size of a single page
         /// </summary>
         public int? MaximumPageSize { get; set; }
+        
+        /// <summary>
+        /// Set the maximum complexity of Searchlight filters at the engine level
+        /// </summary>
+        public int? MaximumParameters { get; set; }
 
         /// <summary>
         /// Adds a new class to the engine
