@@ -17,6 +17,11 @@ namespace Searchlight
         public List<SearchlightException> ModelErrors { get; } = new List<SearchlightException>();
 
         /// <summary>
+        /// If the user does not specify a page size, use this value
+        /// </summary>
+        public int? DefaultPageSize { get; set; }
+        
+        /// <summary>
         /// Represents the maximum size of a single page
         /// </summary>
         public int? MaximumPageSize { get; set; }
@@ -55,12 +60,10 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             var source = FindTable(request.table);
+            request.pageSize ??= DefaultPageSize;
             if (MaximumPageSize != null)
             {
-                if (request.pageSize == null)
-                {
-                    request.pageSize = MaximumPageSize;
-                }
+                request.pageSize ??= MaximumPageSize;
                 if (request.pageSize > MaximumPageSize)
                 {
                     throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};
