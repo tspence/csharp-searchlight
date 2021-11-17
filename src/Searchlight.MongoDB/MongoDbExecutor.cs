@@ -61,6 +61,8 @@ namespace MongoPetSitters
                         {
                             case OperationType.Equals:
                                 return Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value);
+                            case  OperationType.NotEqual:
+                                return Builders<T>.Filter.Ne(criteria.Column.FieldName, criteria.Value);
                             case OperationType.GreaterThan:
                                 return Builders<T>.Filter.Gt(criteria.Column.FieldName, criteria.Value);
                             case OperationType.GreaterThanOrEqual:
@@ -70,10 +72,22 @@ namespace MongoPetSitters
                             case OperationType.LessThanOrEqual:
                                 return Builders<T>.Filter.Lte(criteria.Column.FieldName, criteria.Value);
                             case OperationType.Contains:
-                                return Builders<T>.Filter.Text(criteria.Column.FieldName, criteria.Value.ToString());
+                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                    new BsonRegularExpression("/" + criteria.Value + "/"));
+                            case OperationType.StartsWith:
+                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                    new BsonRegularExpression("/^" + criteria.Value + "/"));
+                            case OperationType.EndsWith:
+                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                    new BsonRegularExpression("/" + criteria.Value + "$/"));
                             default:
                                 throw new NotImplementedException();
                         }
+                    case InClause inClause:
+                        return Builders<T>.Filter.In(inClause.Column.FieldName, inClause.Values);
+                    
+                    case IsNullClause isNullClause:
+                        return Builders<T>.Filter.Eq(isNullClause.Column.FieldName, BsonNull.Value);
 
                     case BetweenClause betweenClause:
                         var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue);
