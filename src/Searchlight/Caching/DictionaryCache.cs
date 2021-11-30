@@ -12,12 +12,11 @@ namespace Searchlight.Caching
         public ITEM GetItem(KEY id)
         {
             var dict = Get();
-            ITEM obj = default(ITEM);
-            if (dict.TryGetValue(id, out obj))
+            if (dict.TryGetValue(id, out ITEM obj))
             {
                 return obj;
             }
-            return default(ITEM);
+            return default;
         }
 
         /// <summary>

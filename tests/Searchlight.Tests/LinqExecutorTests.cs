@@ -12,7 +12,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class LinqExecutorTests
     {
-        private DataSource src;
+        private readonly DataSource src;
         
         [SearchlightModel(DefaultSort = nameof(name))]
         public class EmployeeObj
@@ -24,37 +24,55 @@ namespace Searchlight.Tests
             public bool onduty { get; set; }
         }
 
-        public List<EmployeeObj> GetTestList()
+        public static List<EmployeeObj> GetTestList()
         {
-            List<EmployeeObj> list = new List<EmployeeObj>();
-            list.Add(new EmployeeObj()
-                {hired = DateTime.Today, id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m});
-            list.Add(new EmployeeObj()
+            List<EmployeeObj> list = new List<EmployeeObj>
             {
-                hired = DateTime.Today.AddMonths(-1), id = 2, name = "Bob Rogers", onduty = true, paycheck = 1000.00m
-            });
-            list.Add(new EmployeeObj()
-            {
-                hired = DateTime.Today.AddMonths(-6), id = 3, name = "Charlie Prentiss", onduty = false,
-                paycheck = 800.0m
-            });
-            list.Add(new EmployeeObj()
-            {
-                hired = DateTime.Today.AddMonths(-12), id = 4, name = "Danielle O'Shea", onduty = false,
-                paycheck = 1200.0m
-            });
-            list.Add(new EmployeeObj()
-            {
-                hired = DateTime.Today.AddMonths(1), id = 5, name = "Ernest Nofzinger", onduty = true,
-                paycheck = 1000.00m
-            });
-            list.Add(new EmployeeObj()
-                {hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m});
-            list.Add(new EmployeeObj()
-            {
-                hired = DateTime.Today.AddMonths(2), id = 7, name = "Roderick 'null' Sqlkeywordtest", onduty = false,
-                paycheck = 578.00m
-            });
+                new EmployeeObj()
+                { hired = DateTime.Today, id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
+                new EmployeeObj()
+                {
+                    hired = DateTime.Today.AddMonths(-1),
+                    id = 2,
+                    name = "Bob Rogers",
+                    onduty = true,
+                    paycheck = 1000.00m
+                },
+                new EmployeeObj()
+                {
+                    hired = DateTime.Today.AddMonths(-6),
+                    id = 3,
+                    name = "Charlie Prentiss",
+                    onduty = false,
+                    paycheck = 800.0m
+                },
+                new EmployeeObj()
+                {
+                    hired = DateTime.Today.AddMonths(-12),
+                    id = 4,
+                    name = "Danielle O'Shea",
+                    onduty = false,
+                    paycheck = 1200.0m
+                },
+                new EmployeeObj()
+                {
+                    hired = DateTime.Today.AddMonths(1),
+                    id = 5,
+                    name = "Ernest Nofzinger",
+                    onduty = true,
+                    paycheck = 1000.00m
+                },
+                new EmployeeObj()
+                { hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m },
+                new EmployeeObj()
+                {
+                    hired = DateTime.Today.AddMonths(2),
+                    id = 7,
+                    name = "Roderick 'null' Sqlkeywordtest",
+                    onduty = false,
+                    paycheck = 578.00m
+                }
+            };
             return list;
         }
 
@@ -70,7 +88,7 @@ namespace Searchlight.Tests
 
             // Construct a simple query and check that it comes out correct
             var syntax = src.Parse("id gt 1 and paycheck le 1000");
-            Assert.AreEqual(2, syntax.Filter.Count());
+            Assert.AreEqual(2, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -97,7 +115,7 @@ namespace Searchlight.Tests
 
             // Construct a simple query and check that it comes out correct
             var syntax = src.Parse("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
-            Assert.AreEqual(2, syntax.Filter.Count());
+            Assert.AreEqual(2, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -155,7 +173,7 @@ namespace Searchlight.Tests
 
             // Note that the "between" clause is inclusive
             var syntax = src.Parse("name startswith 'A'");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.StartsWith, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -178,7 +196,7 @@ namespace Searchlight.Tests
 
             // Note that the "between" clause is inclusive
             var syntax = src.Parse("name endswith 's'");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.EndsWith, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -201,7 +219,7 @@ namespace Searchlight.Tests
 
             // Note that the "between" clause is inclusive
             var syntax = src.Parse("name contains 's'");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.Contains, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -223,7 +241,7 @@ namespace Searchlight.Tests
             var list = GetTestList();
             
             var syntax = src.Parse("name gt 'b'");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -245,7 +263,7 @@ namespace Searchlight.Tests
             var list = GetTestList();
             
             var syntax = src.Parse("name ge 'bob rogers'");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -267,7 +285,7 @@ namespace Searchlight.Tests
             var list = GetTestList();
             
             var syntax = src.Parse("name lt 'b'");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThan, ((CriteriaClause) syntax.Filter[0]).Operation);
@@ -289,7 +307,7 @@ namespace Searchlight.Tests
             var list = GetTestList();
             
             var syntax = src.Parse("name le 'bob rogers'");
-            Assert.AreEqual(1, syntax.Filter.Count());
+            Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause) syntax.Filter[0]).Operation);

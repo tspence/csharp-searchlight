@@ -33,7 +33,7 @@ namespace Searchlight.Tests
             Assert.IsTrue(engine.MaximumPageSize == 50);
         }
 
-        private FetchRequest mockFetchRequest = new FetchRequest
+        private readonly FetchRequest mockFetchRequest = new FetchRequest
         {
             table = "tableau",
             include = "include me",
@@ -51,8 +51,10 @@ namespace Searchlight.Tests
         public void Test_ParsingRequestWithInvalidPageSize()
         {
             mockFetchRequest.pageSize = 2000;
-            var engine = new SearchlightEngine();
-            engine.MaximumPageSize = 1000;
+            var engine = new SearchlightEngine
+            {
+                MaximumPageSize = 1000
+            };
             Assert.ThrowsException<InvalidPageSize>(() => engine.Parse(mockFetchRequest));
         }
 

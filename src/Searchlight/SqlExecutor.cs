@@ -18,7 +18,7 @@ namespace Searchlight
         {
             var sql = new SqlQuery {Syntax = query};
             sql.WhereClause = RenderJoinedClauses(query.Filter, sql);
-            sql.OrderByClause = RenderOrderByClause(query.OrderBy, sql);
+            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
 
             // Sanity tests
             var maxParams = query.Source.MaximumParameters ?? query.Source.Engine?.MaximumParameters ?? 0;
@@ -71,7 +71,7 @@ namespace Searchlight
             return sql;
         }
 
-        public static string RenderOrderByClause(List<SortInfo> list, SqlQuery sql)
+        public static string RenderOrderByClause(List<SortInfo> list)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < list.Count; i++)
@@ -110,7 +110,7 @@ namespace Searchlight
                             sb.Append(" OR ");
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            throw new InvalidToken();
                     }
                 }
                 sb.Append(RenderClause(clause[i], sql));

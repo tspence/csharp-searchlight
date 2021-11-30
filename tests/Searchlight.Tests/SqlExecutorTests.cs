@@ -7,7 +7,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class SqlExecutorTests
     {
-        private DataSource _source;
+        private readonly DataSource _source;
 
         public SqlExecutorTests()
         {
@@ -62,19 +62,19 @@ namespace Searchlight.Tests
             var query = _source.Parse("b between 1 and 5");
             var sql = query.ToSqlServerCommand(false);
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
-            Assert.AreEqual(2, sql.Parameters.Count());
+            Assert.AreEqual(2, sql.Parameters.Count);
 
             // Second test, proper case
             query = _source.Parse("b Between 1 And 5");
             sql = query.ToSqlServerCommand(false);
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
-            Assert.AreEqual(2, sql.Parameters.Count());
+            Assert.AreEqual(2, sql.Parameters.Count);
 
             // Third test, uppercase
             query = _source.Parse("b BETWEEN 1 AND 5");
             sql = query.ToSqlServerCommand(false);
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
-            Assert.AreEqual(2, sql.Parameters.Count());
+            Assert.AreEqual(2, sql.Parameters.Count);
         }
 
         [TestMethod]
@@ -85,7 +85,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
             Assert.AreEqual(">", ex.BadToken);
-            Assert.AreEqual(2, ex.ExpectedTokens.Count());
+            Assert.AreEqual(2, ex.ExpectedTokens.Length);
             Assert.IsTrue(ex.ExpectedTokens.Contains(","));
             Assert.IsTrue(ex.ExpectedTokens.Contains(")"));
 
@@ -94,7 +94,7 @@ namespace Searchlight.Tests
             ex = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
             Assert.AreEqual("[1", ex.BadToken);
-            Assert.AreEqual(1, ex.ExpectedTokens.Count());
+            Assert.AreEqual(1, ex.ExpectedTokens.Length);
             Assert.IsTrue(ex.ExpectedTokens.Contains("("));
 
             // Error in "IS NULL" clause
@@ -102,7 +102,7 @@ namespace Searchlight.Tests
             ex = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
             Assert.AreEqual("complex", ex.BadToken);
-            Assert.AreEqual(1, ex.ExpectedTokens.Count());
+            Assert.AreEqual(1, ex.ExpectedTokens.Length);
             Assert.IsTrue(ex.ExpectedTokens.Contains("NULL"));
 
             // Error in "IS NULL" clause
@@ -110,7 +110,7 @@ namespace Searchlight.Tests
             ex = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
             Assert.AreEqual("COMPLEX", ex.BadToken);
-            Assert.AreEqual(1, ex.ExpectedTokens.Count());
+            Assert.AreEqual(1, ex.ExpectedTokens.Length);
             Assert.IsTrue(ex.ExpectedTokens.Contains("NULL"));
 
             // Error in conjunctions between clauses
@@ -133,7 +133,7 @@ namespace Searchlight.Tests
             var query = _source.Parse("a = 'booya' AND b != 1");
             var sql = query.ToSqlServerCommand(false);
             Assert.AreEqual("a = @p1 AND b <> @p2", sql.WhereClause.ToString());
-            Assert.AreEqual(2, sql.Parameters.Count());
+            Assert.AreEqual(2, sql.Parameters.Count);
             Assert.AreEqual("booya", sql.Parameters["@p1"]);
             Assert.AreEqual(1, sql.Parameters["@p2"]);
         }

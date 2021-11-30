@@ -31,23 +31,16 @@ namespace MongoPetSitters
                 switch (clause)
                 {
                     case CriteriaClause criteria:
-                        switch (criteria.Operation)
+                        return criteria.Operation switch
                         {
-                            case OperationType.Equals:
-                                return Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.GreaterThan:
-                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.GreaterThanOrEqual:
-                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.LessThan:
-                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.LessThanOrEqual:
-                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.Contains:
-                                return Builders<T>.Filter.Text(criteria.Column.FieldName, criteria.Value.ToString());
-                            default:
-                                throw new NotImplementedException();
-                        }
+                            OperationType.Equals => Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value),
+                            OperationType.GreaterThan => Builders<T>.Filter.Gt(criteria.Column.FieldName, criteria.Value),
+                            OperationType.GreaterThanOrEqual => Builders<T>.Filter.Gte(criteria.Column.FieldName, criteria.Value),
+                            OperationType.LessThan => Builders<T>.Filter.Lt(criteria.Column.FieldName, criteria.Value),
+                            OperationType.LessThanOrEqual => Builders<T>.Filter.Lte(criteria.Column.FieldName, criteria.Value),
+                            OperationType.Contains => Builders<T>.Filter.Text(criteria.Column.FieldName, criteria.Value.ToString()),
+                            _ => throw new NotImplementedException(),
+                        };
                     case BetweenClause betweenClause:
                         var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue);
                         var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue);

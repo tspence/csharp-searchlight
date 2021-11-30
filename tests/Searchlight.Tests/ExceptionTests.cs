@@ -6,7 +6,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class ExceptionTests
     {
-        public DataSource getSource()
+        public static DataSource getSource()
         {
             var src = new DataSource()
                .WithColumn("a", typeof(String))

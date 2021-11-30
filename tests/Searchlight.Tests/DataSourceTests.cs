@@ -7,7 +7,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class DataSourceTests
     {
-        private DataSource _source;
+        private readonly DataSource _source;
 
         public DataSourceTests()
         {
