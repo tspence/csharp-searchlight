@@ -57,7 +57,7 @@ namespace MongoPetSitters
                 switch (clause)
                 {
                     case CriteriaClause criteria:
-                        return criteria.Operation switch
+                        switch (criteria.Operation)
                         {
                             case OperationType.Equals:
                                 return Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value);
