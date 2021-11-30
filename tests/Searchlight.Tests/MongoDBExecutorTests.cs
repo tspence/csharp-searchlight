@@ -89,14 +89,10 @@ namespace Searchlight.Tests
             results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             // { $text : { "$search" : "name", "$language" : "New Order" } }
             filter = results.Render(documentSerializer, serializerRegistry);
-            var inner = filter.GetValue("$text").ToBsonDocument();
 
             // Assert
-            Assert.AreEqual("$text", filter.Names.FirstOrDefault());
-            Assert.AreEqual("$search", inner.Names.FirstOrDefault());
-            Assert.AreEqual("name", inner.GetValue("$search"));
-            Assert.AreEqual("$language", inner.Names.LastOrDefault());
-            Assert.AreEqual("New Order", inner.GetValue("$language"));
+            Assert.AreEqual("name", filter.Names.FirstOrDefault());
+            Assert.AreEqual(new BsonRegularExpression("/New Order/"), filter.GetValue("name"));
         }
 
         [TestMethod]
