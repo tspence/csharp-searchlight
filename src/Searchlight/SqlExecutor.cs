@@ -110,7 +110,7 @@ namespace Searchlight
                             sb.Append(" OR ");
                             break;
                         default:
-                            throw new InvalidToken();
+                            throw new NotImplementedException();
                     }
                 }
                 sb.Append(RenderClause(clause[i], sql));
