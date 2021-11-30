@@ -57,32 +57,22 @@ namespace MongoPetSitters
                 switch (clause)
                 {
                     case CriteriaClause criteria:
-                        switch (criteria.Operation)
+                        return criteria.Operation switch
                         {
-                            case OperationType.Equals:
-                                return Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value);
-                            case  OperationType.NotEqual:
-                                return Builders<T>.Filter.Ne(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.GreaterThan:
-                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.GreaterThanOrEqual:
-                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.LessThan:
-                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.LessThanOrEqual:
-                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, criteria.Value);
-                            case OperationType.Contains:
-                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression("/" + criteria.Value + "/"));
-                            case OperationType.StartsWith:
-                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression("/^" + criteria.Value + "/"));
-                            case OperationType.EndsWith:
-                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression("/" + criteria.Value + "$/"));
-                            default:
-                                throw new NotImplementedException();
-                        }
+                            OperationType.Equals => Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value),
+                            OperationType.NotEqual => Builders<T>.Filter.Ne(criteria.Column.FieldName, criteria.Value),
+                            OperationType.GreaterThan => Builders<T>.Filter.Gt(criteria.Column.FieldName, criteria.Value),
+                            OperationType.GreaterThanOrEqual => Builders<T>.Filter.Gte(criteria.Column.FieldName, criteria.Value),
+                            OperationType.LessThan => Builders<T>.Filter.Lt(criteria.Column.FieldName, criteria.Value),
+                            OperationType.LessThanOrEqual => Builders<T>.Filter.Lte(criteria.Column.FieldName, criteria.Value),
+                            OperationType.Contains => Builders<T>.Filter.Regex(criteria.Column.FieldName,
+new BsonRegularExpression("/" + criteria.Value + "/")),
+                            OperationType.StartsWith => Builders<T>.Filter.Regex(criteria.Column.FieldName,
+new BsonRegularExpression("/^" + criteria.Value + "/")),
+                            OperationType.EndsWith => Builders<T>.Filter.Regex(criteria.Column.FieldName,
+new BsonRegularExpression("/" + criteria.Value + "$/")),
+                            _ => throw new NotImplementedException(),
+                        };
                     case InClause inClause:
                         return Builders<T>.Filter.In(inClause.Column.FieldName, inClause.Values);
                     
@@ -97,15 +87,12 @@ namespace MongoPetSitters
 
                     case CompoundClause compoundClause:
                         var innerFilters = BuildMongoFilter<T>(compoundClause.Children);
-                        switch (compoundClause.Conjunction)
+                        return compoundClause.Conjunction switch
                         {
-                            case ConjunctionType.OR:
-                                return Builders<T>.Filter.Or(innerFilters);
-                            case ConjunctionType.AND:
-                                return Builders<T>.Filter.And(innerFilters);
-                        }
-                        throw new NotImplementedException();
-
+                            ConjunctionType.OR => Builders<T>.Filter.Or(innerFilters),
+                            ConjunctionType.AND => Builders<T>.Filter.And(innerFilters),
+                            _ => throw new NotImplementedException(),
+                        };
                     default:
                         throw new NotImplementedException();
                 }

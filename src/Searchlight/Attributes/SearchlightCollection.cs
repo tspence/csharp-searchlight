@@ -5,6 +5,7 @@ namespace Searchlight
     /// <summary>
     /// Apply this attribute to a field that represents an optional collection that can be fetched
     /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
     public class SearchlightCollection : Attribute
     {
         /// <summary>

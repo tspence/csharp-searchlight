@@ -6,19 +6,18 @@ namespace Searchlight.Caching
     {
         private ITEM _item;
         private DateTime _next_cache_time;
-        private readonly object _cache_lock = new object();
-        private int _num_times_fetched = 0;
+        private readonly object _cache_lock = new();
 
         /// <summary>
         /// Length of time to keep this cache before triggering a re-fetch
         /// </summary>
-        protected TimeSpan _cacheDuration = new TimeSpan(2, 0, 0);
+        protected TimeSpan _cacheDuration = new(2, 0, 0);
 
         #region Constructor
         public ObjectCache()
         {
             // Set defaults
-            _item = default(ITEM);
+            _item = default;
             _next_cache_time = DateTime.MinValue;
 
             // Hook this to the overall cache reset event
@@ -66,21 +65,9 @@ namespace Searchlight.Caching
         {
             try
             {
-                DateTime dt = DateTime.UtcNow;
-
                 // Reassign the object rather than modifying the previous cached list.
                 // This ensures that callers who have a reference to the previous object won't break when they are iterating over it.
                 _item = ReloadCache();
-
-                // Record how long we took
-                //Log.Information("Cached {0} in {1}", this.GetType().Name, DateTime.UtcNow - dt);
-
-                // Track how many times we've hit this object
-                _num_times_fetched++;
-
-                // Ensure that if the re-fetch statement crashes we recognize what happened
-                //} catch (Exception ex) {
-                //Log.Error("Exception while caching {1}: {2}", this.GetType().Name, ex.ToString());
             }
             finally
             {
@@ -118,7 +105,7 @@ namespace Searchlight.Caching
             // Ensure that no other object is in the midst of working on this while we reset it
             lock (_cache_lock)
             {
-                _item = default(ITEM);
+                _item = default;
             }
         }
 
