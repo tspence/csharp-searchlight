@@ -4,7 +4,5 @@ dotnet:
   - 6.0.101
 solution: Searchlight.sln
 script:
-  - dotnet build -f net5.0
-  - dotnet test -f net5.0
-  - dotnet build -f net6.0
-  - dotnet test -f net6.0
+  - dotnet build
+  - dotnet test
