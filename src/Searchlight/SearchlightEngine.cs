@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Searchlight.Query;
+using System.Text;
 using Searchlight.Exceptions;
+using Searchlight.Query;
 
 namespace Searchlight
 {
@@ -32,6 +33,35 @@ namespace Searchlight
         public int? MaximumParameters { get; set; }
 
         /// <summary>
+        /// SQL Server: Use a single compound query that returns multiple result sets to avoid excess roundtrips.
+        /// </summary>
+        public bool useResultSet { get; set; } = true;
+
+        /// <summary>
+        /// SQL Server: Set this flag to true to specify `WITH (NOLOCK)` for all non-temporary tables.
+        /// Can potentially improve performance when true.  If you use Read Uncommitted, this flag has no
+        /// effect.
+        /// </summary>
+        public bool useNoLock { get; set; }
+
+        /// <summary>
+        /// SQL Server: If true, all searchlight queries begin with `SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED`.
+        /// Can potentially improve performance when true.  Using this flag set to true can sometimes read
+        /// slightly inconsistent results.
+        ///
+        /// DEFAULT: True.
+        /// </summary>
+        public bool useReadUncommitted { get; set; } = true;
+
+        /// <summary>
+        /// SQL Server: If true, prefixes a query with `SET NOCOUNT ON`.  Can potentially improve performance 
+        /// when true.
+        ///
+        /// DEFAULT: True.
+        /// </summary>
+        public bool useNoCount { get; set; } = true;
+
+        /// <summary>
         /// Adds a new class to the engine
         /// </summary>
         /// <param name="type"></param>
@@ -48,6 +78,18 @@ namespace Searchlight
                     _dictionary.Add(alias, ds);
                 }
             }
+            return this;
+        }
+
+        /// <summary>
+        /// Add a hand-constructed data source
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public SearchlightEngine AddDataSource(DataSource source)
+        {
+            _dictionary.Add(source.TableName, source);
+            source.Engine = this;
             return this;
         }
 
@@ -106,6 +148,35 @@ namespace Searchlight
                 }
             }
             return this;
+        }
+        
+        /// <summary>
+        /// Produces the intro for a query, setting up any flags or options.
+        /// </summary>
+        /// <returns>The query</returns>
+        internal string DecorateIntro() 
+        {
+            var sb = new StringBuilder();
+            if (useNoCount) {
+                sb.Append("SET NOCOUNT ON;\n");
+            }
+            if (useReadUncommitted) {
+                sb.Append("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Produces a table name using all the provided options
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <returns></returns>
+        internal string DecorateTableName(string tableName) 
+        {
+            if (useNoLock) {
+                return $"{tableName} WITH (nolock)";
+            }
+            return tableName;
         }
     }
 }

@@ -280,7 +280,7 @@ namespace Searchlight
 
         public SyntaxTree Parse(FetchRequest request)
         {
-            SyntaxTree query = new SyntaxTree
+            var query = new SyntaxTree
             {
                 Source = this,
                 OriginalFilter = request.filter,
