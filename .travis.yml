@@ -5,3 +5,8 @@ solution: Searchlight.sln
 script:
   - dotnet build -f net5.0
   - dotnet test -f net5.0
+addons:
+  apt:
+    packages:
+      - aspnetcore-runtime-6.0
+      - aspnetcore-runtime-5.0
