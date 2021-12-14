@@ -8,6 +8,7 @@ namespace Searchlight.Tests
     public class SqlExecutorTests
     {
         private readonly DataSource _source;
+        private readonly SearchlightEngine _engine;
 
         public SqlExecutorTests()
         {
@@ -22,6 +23,9 @@ namespace Searchlight.Tests
             _source.MaximumParameters = 200;
             _source.DefaultSort = "a";
             _source.TableName = "MyTable";
+            _engine = new SearchlightEngine()
+                .AddDataSource(_source);
+            _engine.useResultSet = true;
         }
 
         [TestMethod]
@@ -32,7 +36,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<TooManyParameters>(() =>
             {
                 var query = _source.Parse(originalFilter);
-                query.ToSqlServerCommand(false);
+                query.ToSqlServerCommand();
             });
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
 
@@ -50,7 +54,7 @@ namespace Searchlight.Tests
             ex = Assert.ThrowsException<TooManyParameters>(() =>
             {
                 var query = _source.Parse(originalFilter);
-                query.ToSqlServerCommand(false);
+                query.ToSqlServerCommand();
             });
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
         }
@@ -60,19 +64,19 @@ namespace Searchlight.Tests
         {
             // First test, lowercase
             var query = _source.Parse("b between 1 and 5");
-            var sql = query.ToSqlServerCommand(false);
+            var sql = query.ToSqlServerCommand();
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count);
 
             // Second test, proper case
             query = _source.Parse("b Between 1 And 5");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count);
 
             // Third test, uppercase
             query = _source.Parse("b BETWEEN 1 AND 5");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count);
         }
@@ -131,7 +135,7 @@ namespace Searchlight.Tests
         public void FilterParseTest()
         {
             var query = _source.Parse("a = 'booya' AND b != 1");
-            var sql = query.ToSqlServerCommand(false);
+            var sql = query.ToSqlServerCommand();
             Assert.AreEqual("a = @p1 AND b <> @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count);
             Assert.AreEqual("booya", sql.Parameters["@p1"]);
@@ -142,22 +146,22 @@ namespace Searchlight.Tests
         public void NullInWhereClause()
         {
             var query = _source.Parse("a is null");
-            var sql = query.ToSqlServerCommand(false);
+            var sql = query.ToSqlServerCommand();
             Assert.AreEqual("a IS NULL", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("a is not null");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("a IS NOT NULL", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("(  a  is  not  null )  or   ( a  is  null  )  ");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("(a IS NOT NULL) OR (a IS NULL)", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
 
             query = _source.Parse("(((  a  is  not  null ))  or   ( a  is  null  ))  ");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("(((a IS NOT NULL)) OR (a IS NULL))", sql.WhereClause.ToString());
             Assert.AreEqual(0, sql.Parameters.Count);
         }
@@ -165,7 +169,7 @@ namespace Searchlight.Tests
         public string ParseWhereClause(string filter)
         {
             var query = _source.Parse(filter);
-            var sql = query.ToSqlServerCommand(false);
+            var sql = query.ToSqlServerCommand();
             return sql.WhereClause.ToString();
         }
 
@@ -208,40 +212,40 @@ namespace Searchlight.Tests
         {
             // Test the Int64
             var query = _source.Parse("collong eq 123456789123456");
-            var sql = query.ToSqlServerCommand(false);
+            var sql = query.ToSqlServerCommand();
             Assert.AreEqual("colLong = @p1", sql.WhereClause.ToString());
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
 
             // Test the guid
             query = _source.Parse(String.Format("colguid eq '{0}'", Guid.Empty.ToString()));
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("colGuid = @p1", sql.WhereClause.ToString());
             Assert.AreEqual(Guid.Empty, sql.Parameters["@p1"]);
 
             // Test the nullable guid
             query = _source.Parse(String.Format("colNullableGuid is null or colNullableGuid = '{0}'",
                 Guid.Empty.ToString()));
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("colNullableGuid IS NULL OR colNullableGuid = @p1", sql.WhereClause.ToString());
             Assert.AreEqual(Guid.Empty, sql.Parameters["@p1"]);
 
             // Test the ULONG and nullable ULONG
             query = _source.Parse("colULong > 12345 or colNullableULong = 6789456");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("colULong > @p1 OR colNullableULong = @p2", sql.WhereClause.ToString());
             Assert.AreEqual(12345UL, sql.Parameters["@p1"]);
             Assert.AreEqual(6789456UL, sql.Parameters["@p2"]);
 
             // Test the ULONG and nullable ULONG when compared to a boolean - necessary for redshift
             query = _source.Parse("colULong = true OR colULong = false");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("colULong = @p1 OR colULong = @p2", sql.WhereClause.ToString());
             Assert.AreEqual(1UL, sql.Parameters["@p1"]);
             Assert.AreEqual(0UL, sql.Parameters["@p2"]);
 
             // Nullable variant
             query = _source.Parse("colNullableULong = true OR colNullableULong = false");
-            sql = query.ToSqlServerCommand(false);
+            sql = query.ToSqlServerCommand();
             Assert.AreEqual("colNullableULong = @p1 OR colNullableULong = @p2", sql.WhereClause.ToString());
             Assert.AreEqual(1UL, sql.Parameters["@p1"]);
             Assert.AreEqual(0UL, sql.Parameters["@p2"]);
@@ -252,8 +256,10 @@ namespace Searchlight.Tests
         {
             // Basic query including where and order
             var query = _source.Parse("collong eq 123456789123456", null, "b ascending");
-            var sql = query.ToSqlServerCommand(false);
-            Assert.AreEqual("SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b ASC", sql.CommandText);
+            _engine.useResultSet = false;
+            var sql = query.ToSqlServerCommand();
+            Assert.AreEqual("SET NOCOUNT ON;\nSET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
+                            "SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b ASC", sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
         }
 
@@ -264,8 +270,10 @@ namespace Searchlight.Tests
             var fetch = new FetchRequest()
                 {filter = "collong eq 123456789123456", order = "b desc", pageNumber = 2, pageSize = 50};
             var query = _source.Parse(fetch);
-            var sql = query.ToSqlServerCommand(false);
+            _engine.useResultSet = false;
+            var sql = query.ToSqlServerCommand();
             Assert.AreEqual(
+                "SET NOCOUNT ON;\nSET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
                 "SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b DESC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY",
                 sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
@@ -278,8 +286,9 @@ namespace Searchlight.Tests
             var fetch = new FetchRequest()
                 {filter = "collong eq 123456789123456", order = "b desc", pageNumber = 2, pageSize = 50};
             var query = _source.Parse(fetch);
-            var sql = query.ToSqlServerCommand(true);
-            Assert.AreEqual("SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong = @p1;\n" +
+            var sql = query.ToSqlServerCommand();
+            Assert.AreEqual("SET NOCOUNT ON;\nSET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
+                            "SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong = @p1;\n" +
                             "SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY b DESC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\n",
                 sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
@@ -292,8 +301,9 @@ namespace Searchlight.Tests
             var fetch = new FetchRequest()
                 {filter = "collong eq 123456789123456", order = null, pageNumber = 2, pageSize = 50};
             var query = _source.Parse(fetch);
-            var sql = query.ToSqlServerCommand(true);
-            Assert.AreEqual("SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong = @p1;\n" +
+            var sql = query.ToSqlServerCommand();
+            Assert.AreEqual("SET NOCOUNT ON;\nSET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
+                            "SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong = @p1;\n" +
                             "SELECT * FROM MyTable WHERE colLong = @p1 ORDER BY a ASC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\n",
                 sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
@@ -306,8 +316,73 @@ namespace Searchlight.Tests
             var fetch = new FetchRequest()
                 {filter = "collong gt 123456789123456 AND collong lt 987654321 AND (a eq 'Alice' or a eq 'Bob' or a eq 'Charlie') AND b < 10", order = null, pageNumber = 2, pageSize = 50};
             var query = _source.Parse(fetch);
-            var sql = query.ToSqlServerCommand(true);
-            Assert.AreEqual("SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6;\n" +
+            var sql = query.ToSqlServerCommand();
+            Assert.AreEqual("SET NOCOUNT ON;\nSET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
+                            "SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6;\n" +
+                            "SELECT * FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6 ORDER BY a ASC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\n",
+                sql.CommandText);
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
+            Assert.AreEqual((long)987654321, sql.Parameters["@p2"]);
+            Assert.AreEqual("Alice", sql.Parameters["@p3"]);
+            Assert.AreEqual("Bob", sql.Parameters["@p4"]);
+            Assert.AreEqual("Charlie", sql.Parameters["@p5"]);
+            Assert.AreEqual(10, sql.Parameters["@p6"]);
+        }
+
+        [TestMethod]
+        public void TestNoIntro()
+        {
+            // Fetch request including pagination
+            var fetch = new FetchRequest()
+                {filter = "collong gt 123456789123456 AND collong lt 987654321 AND (a eq 'Alice' or a eq 'Bob' or a eq 'Charlie') AND b < 10", order = null, pageNumber = 2, pageSize = 50};
+            var query = _source.Parse(fetch);
+            _engine.useNoLock = true;
+            _engine.useReadUncommitted = false;
+            _engine.useNoCount = false;
+            var sql = query.ToSqlServerCommand();
+            Assert.AreEqual("SELECT COUNT(1) AS TotalRecords FROM MyTable WITH (nolock) WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6;\n" +
+                            "SELECT * FROM MyTable WITH (nolock) WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6 ORDER BY a ASC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\n",
+                sql.CommandText);
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
+            Assert.AreEqual((long)987654321, sql.Parameters["@p2"]);
+            Assert.AreEqual("Alice", sql.Parameters["@p3"]);
+            Assert.AreEqual("Bob", sql.Parameters["@p4"]);
+            Assert.AreEqual("Charlie", sql.Parameters["@p5"]);
+            Assert.AreEqual(10, sql.Parameters["@p6"]);
+        }
+
+        [TestMethod]
+        public void TestNocount()
+        {
+            // Fetch request including pagination
+            var fetch = new FetchRequest()
+                {filter = "collong gt 123456789123456 AND collong lt 987654321 AND (a eq 'Alice' or a eq 'Bob' or a eq 'Charlie') AND b < 10", order = null, pageNumber = 2, pageSize = 50};
+            var query = _source.Parse(fetch);
+            _engine.useNoCount = false;
+            var sql = query.ToSqlServerCommand();
+            Assert.AreEqual("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
+                            "SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6;\n" +
+                            "SELECT * FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6 ORDER BY a ASC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\n",
+                sql.CommandText);
+            Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);
+            Assert.AreEqual((long)987654321, sql.Parameters["@p2"]);
+            Assert.AreEqual("Alice", sql.Parameters["@p3"]);
+            Assert.AreEqual("Bob", sql.Parameters["@p4"]);
+            Assert.AreEqual("Charlie", sql.Parameters["@p5"]);
+            Assert.AreEqual(10, sql.Parameters["@p6"]);
+        }
+
+        [TestMethod]
+        public void TestReadUncommitted()
+        {
+            // Fetch request including pagination
+            var fetch = new FetchRequest()
+                {filter = "collong gt 123456789123456 AND collong lt 987654321 AND (a eq 'Alice' or a eq 'Bob' or a eq 'Charlie') AND b < 10", order = null, pageNumber = 2, pageSize = 50};
+            var query = _source.Parse(fetch);
+            _engine.useReadUncommitted = false;
+            var sql = query.ToSqlServerCommand();
+            Assert.AreEqual("SET NOCOUNT ON;\n" +
+                            "SELECT COUNT(1) AS TotalRecords FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6;\n" +
                             "SELECT * FROM MyTable WHERE colLong > @p1 AND colLong < @p2 AND (a = @p3 OR a = @p4 OR a = @p5) AND b < @p6 ORDER BY a ASC OFFSET 100 ROWS FETCH NEXT 50 ROWS ONLY;\n",
                 sql.CommandText);
             Assert.AreEqual(123456789123456, sql.Parameters["@p1"]);

@@ -1,3 +1,13 @@
+# 0.9.15
+December 14, 2021
+
+Changes to engine-level configuration values.
+
+* Maximum parameter count and maximum page size values can be configured at the engine level.
+* Added support for SQL Server performance tuning features: NOCOUNT, READ UNCOMMITTED, and WITH NOLOCK.
+* NOCOUNT and READ UNCOMMITTED are enabled by default.  Since Searchlight queries do not rely on "records affected", and since searchlight is a nondestructive query system, these options will reduce contention and enable higher performance queries.  If you require precision in your query results, you can disable READ UNCOMMITTED at the engine level.
+* Began work on Searchlight for MongoDB.  Expect more soon!
+
 # 0.9.14
 October 11, 2021
 
