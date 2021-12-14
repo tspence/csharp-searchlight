@@ -1,7 +1,6 @@
 language: csharp
 mono: none
-dotnet:
-  - 5.0.201
+dotnet: 6.0.121
 solution: Searchlight.sln
 script:
   - dotnet build -f net5.0
