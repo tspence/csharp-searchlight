@@ -1,6 +1,8 @@
 language: csharp
 mono: none
-dotnet: 6.0.1
+dotnet:
+  - 5.0.201
+  - 6.0.101
 solution: Searchlight.sln
 script:
   - dotnet restore
