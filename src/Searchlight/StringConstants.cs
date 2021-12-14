@@ -126,6 +126,7 @@ namespace Searchlight
         /// </summary>
         public static readonly Dictionary<string, Func<DateTime>> DEFINED_DATES = new Dictionary<string, Func<DateTime>>
         {
+            {"NOW", () => DateTime.UtcNow},
             {"TODAY", () => DateTime.Today},
             {"TOMORROW", () => DateTime.Today.AddDays(1)},
             {"YESTERDAY", () => DateTime.Today.AddDays(-1)}
