@@ -3,11 +3,8 @@ using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Searchlight.Exceptions;
 
 namespace Searchlight
@@ -135,7 +132,7 @@ namespace Searchlight
         private static bool CheckPresence(string sort, PropertyInfo[] props)
         {
             return (from prop in props
-                where String.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase)
+                where string.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase)
                 select prop).Any();
         }
 
@@ -156,7 +153,7 @@ namespace Searchlight
         /// <returns></returns>
         public ColumnInfo IdentifyColumn(string filterToken)
         {
-            if (String.IsNullOrWhiteSpace(filterToken)) return null;
+            if (string.IsNullOrWhiteSpace(filterToken)) return null;
             _fieldDict.TryGetValue(filterToken.ToUpper(), out ColumnInfo ci);
             return ci;
         }
@@ -291,6 +288,7 @@ namespace Searchlight
                 Source = this,
                 OriginalFilter = request.filter,
             };
+            
             var tuple = ParseIncludes(request.include);
             query.Includes = tuple.Item1;
             query.Flags = tuple.Item2;
@@ -300,7 +298,7 @@ namespace Searchlight
             {
                 query.PageNumber = request.pageNumber ?? 0;
                 query.PageSize = request.pageSize ?? 50;
-                if (query.PageSize <= 1)
+                if (query.PageSize <= 0)
                 {
                     throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString() };
                 }
@@ -363,13 +361,13 @@ namespace Searchlight
         public List<SortInfo> ParseOrderBy(string orderBy)
         {
             List<SortInfo> list = new List<SortInfo>();
-            if (String.IsNullOrWhiteSpace(orderBy))
+            if (string.IsNullOrWhiteSpace(orderBy))
             {
                 orderBy = DefaultSort;
             }
 
             // If no sort is specified
-            if (String.IsNullOrWhiteSpace(orderBy))
+            if (string.IsNullOrWhiteSpace(orderBy))
             {
                 return list;
             }
@@ -479,23 +477,23 @@ namespace Searchlight
 
                 // If not, we must have a conjunction
                 string upperToken = token.ToUpperInvariant();
-                if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out string conjunction))
+                if (!StringConstants.SAFE_CONJUNCTIONS.ContainsKey(upperToken))
                 {
-                    throw new InvalidToken() { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = filter};
+                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = filter};
                 }
 
                 // Store the value of the conjunction
-                if (String.Equals(StringConstants.AND, upperToken))
+                if (string.Equals(StringConstants.AND, upperToken))
                 {
                     clause.Conjunction = ConjunctionType.AND;
                 }
-                else if (String.Equals(StringConstants.OR, upperToken))
+                else if (string.Equals(StringConstants.OR, upperToken))
                 {
                     clause.Conjunction = ConjunctionType.OR;
                 }
                 else
                 {
-                    throw new InvalidToken() { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = filter };
+                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = filter };
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
@@ -508,7 +506,7 @@ namespace Searchlight
             // If we expected to end with a parenthesis, but didn't, throw an exception here
             if (expectCloseParenthesis)
             {
-                throw new OpenClause() { OriginalFilter = filter };
+                throw new OpenClause { OriginalFilter = filter };
             }
 
             // Here's your clause!
@@ -542,7 +540,7 @@ namespace Searchlight
             var columnInfo = IdentifyColumn(fieldToken);
             if (columnInfo == null)
             {
-                if (String.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
+                if (string.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
                 {
                     throw new EmptyClause() { OriginalFilter = filter};
                 }
@@ -602,7 +600,7 @@ namespace Searchlight
                             string commaOrParen = tokens.Dequeue();
                             if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen))
                             {
-                                throw new InvalidToken() { BadToken = commaOrParen, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
+                                throw new InvalidToken { BadToken = commaOrParen, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
                             }
 
                             if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
@@ -610,7 +608,7 @@ namespace Searchlight
                     }
                     else
                     {
-                        throw new EmptyClause() { OriginalFilter = filter };
+                        throw new EmptyClause { OriginalFilter = filter };
                     }
 
                     return i;
@@ -666,7 +664,7 @@ namespace Searchlight
         /// <param name="originalFilter"></param>
         private static void Expect(string expectedToken, string actual, string originalFilter)
         {
-            if (!String.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidToken() { BadToken = actual, ExpectedTokens = new[] { expectedToken }, OriginalFilter = originalFilter };
             }
@@ -734,7 +732,7 @@ namespace Searchlight
             }
             catch
             {
-                throw new FieldTypeMismatch() { 
+                throw new FieldTypeMismatch {
                     FieldName = column.FieldName, 
                     FieldType = fieldType.ToString(), 
                     FieldValue = valueToken, 
