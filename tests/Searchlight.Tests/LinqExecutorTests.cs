@@ -490,19 +490,19 @@ namespace Searchlight.Tests
             var syntax = src.Parse("hired < TODAY");
 
             var result = syntax.QueryCollection(list);
-            Assert.AreEqual(3, result.records.Length);
+            Assert.IsTrue(result.records.Length is 3 or 4);
 
             syntax = src.Parse("hired < TOMORROW");
             result = syntax.QueryCollection(list);
-            Assert.AreEqual(6, result.records.Length);
+            Assert.IsTrue(result.records.Length is 5 or 6);
             
             syntax = src.Parse("hired < tomorrow");
             result = syntax.QueryCollection(list);
-            Assert.AreEqual(6, result.records.Length);
+            Assert.IsTrue(result.records.Length is 5 or 6);
             
             syntax = src.Parse("hired > YESTERDAY");
             result = syntax.QueryCollection(list);
-            Assert.AreEqual(6, result.records.Length);
+            Assert.IsTrue(result.records.Length is 5 or 6);
 
             syntax = src.Parse("hired > NOW");
             result = syntax.QueryCollection(list);
