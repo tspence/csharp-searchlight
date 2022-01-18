@@ -75,7 +75,7 @@ namespace Searchlight.Tests
             // Attempt to query a field that does exist, but is not permitted to be queried
             originalFilter = "NotASearchlightField = 'Hello'";
             var clauses = source.ParseFilter(originalFilter);
-            Assert.AreEqual(1, clauses.Count());
+            Assert.AreEqual(1, clauses.Count);
             var cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
             Assert.AreEqual("NotASearchlightField", cc.Column.FieldName);
@@ -103,21 +103,21 @@ namespace Searchlight.Tests
 
             // Attempt to query a field using its old name
             var clauses = source.ParseFilter("desription contains 'Blockchain'");
-            Assert.AreEqual(1, clauses.Count());
+            Assert.AreEqual(1, clauses.Count);
             var cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
             Assert.AreEqual("Description", cc.Column.FieldName);
 
             // Attempt to query a field using its old name
             clauses = source.ParseFilter("DescriptionText contains 'Blockchain'");
-            Assert.AreEqual(1, clauses.Count());
+            Assert.AreEqual(1, clauses.Count);
             cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
             Assert.AreEqual("Description", cc.Column.FieldName);
 
             // Attempt to query a field using its old name
             clauses = source.ParseFilter("Description contains 'Blockchain'");
-            Assert.AreEqual(1, clauses.Count());
+            Assert.AreEqual(1, clauses.Count);
             cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
             Assert.AreEqual("Description", cc.Column.FieldName);

@@ -1,7 +1,12 @@
 language: csharp
 mono: none
-dotnet: 5.0.201
+dotnet: 6.0.101
 solution: Searchlight.sln
 script:
-  - dotnet restore
-  - dotnet test
+  - dotnet build -f net5.0
+  - dotnet test -f net5.0
+addons:
+  apt:
+    packages:
+      - aspnetcore-runtime-6.0
+      - aspnetcore-runtime-5.0

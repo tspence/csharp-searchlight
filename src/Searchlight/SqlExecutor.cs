@@ -13,12 +13,12 @@ namespace Searchlight
         /// Convert this syntax tree to a SQL Query Builder for this data source
         /// </summary>
         /// <param name="query">The query to convert to SQL text</param>
-        /// <param name="useMultiFetch">If true, will produce a multi result set query where the first result set is the total count of records for pagination purposes</param>
-        public static SqlQuery ToSqlServerCommand(this SyntaxTree query, bool useMultiFetch)
+        public static SqlQuery ToSqlServerCommand(this SyntaxTree query)
         {
+            var engine = query.Source.Engine ?? new SearchlightEngine();
             var sql = new SqlQuery {Syntax = query};
             sql.WhereClause = RenderJoinedClauses(query.Filter, sql);
-            sql.OrderByClause = RenderOrderByClause(query.OrderBy, sql);
+            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
 
             // Sanity tests
             var maxParams = query.Source.MaximumParameters ?? query.Source.Engine?.MaximumParameters ?? 0;
@@ -43,7 +43,7 @@ namespace Searchlight
             }
             
             // If the user wants multi-fetch to retrieve row count
-            if (useMultiFetch)
+            if (engine.useResultSet)
             {
                 // If we're doing multi-fetch, we have to retrieve sorted/paginated records into a temp table before
                 // joining with any child collections
@@ -52,7 +52,8 @@ namespace Searchlight
                     var commandClauses = sql.ResultSetClauses.Count > 0
                         ? String.Join("\n", sql.ResultSetClauses) + "\n"
                         : "";
-                    sql.CommandText = $"SELECT COUNT(1) AS TotalRecords FROM {query.Source.TableName}{where};\n" +
+                    sql.CommandText = $"{engine.DecorateIntro()}" +
+                                      $"SELECT COUNT(1) AS TotalRecords FROM {query.Source.TableName}{where};\n" +
                                       $"SELECT * INTO #temp FROM {query.Source.TableName}{where}{order}{offset};\n" +
                                       $"SELECT * FROM #temp{order};\n" +
                                       commandClauses +
@@ -60,18 +61,20 @@ namespace Searchlight
                 }
                 else
                 {
-                    sql.CommandText = $"SELECT COUNT(1) AS TotalRecords FROM {query.Source.TableName}{where};\n" +
-                                      $"SELECT * FROM {query.Source.TableName}{where}{order}{offset};\n";
+                    sql.CommandText = $"{engine.DecorateIntro()}" +
+                                      $"SELECT COUNT(1) AS TotalRecords FROM {engine.DecorateTableName(query.Source.TableName)}{where};\n" +
+                                      $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset};\n";
                 }
             }
             else
             {
-                sql.CommandText = $"SELECT * FROM {query.Source.TableName}{where}{order}{offset}";
+                sql.CommandText = $"{engine.DecorateIntro()}" +
+                                  $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
             }
             return sql;
         }
 
-        public static string RenderOrderByClause(List<SortInfo> list, SqlQuery sql)
+        public static string RenderOrderByClause(List<SortInfo> list)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < list.Count; i++)
@@ -110,7 +113,7 @@ namespace Searchlight
                             sb.Append(" OR ");
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            throw new NotImplementedException();
                     }
                 }
                 sb.Append(RenderClause(clause[i], sql));
@@ -179,6 +182,7 @@ namespace Searchlight
             }
         }
     }
+
 
     /*
     /// <summary>

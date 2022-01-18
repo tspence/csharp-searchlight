@@ -11,7 +11,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class MongoDBExecutorTests
     {
-        private DataSource src;
+        private readonly DataSource src;
 
         [SearchlightModel(DefaultSort = nameof(name))]
         private class EmployeeObj

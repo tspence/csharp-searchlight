@@ -6,6 +6,7 @@ namespace Searchlight
     /// <summary>
     /// Represents a field that is permitted to be used as a filter or sort-by column in the SafeParser
     /// </summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class SearchlightModel : Attribute
     {
         /// <summary>

@@ -6,7 +6,7 @@ namespace Searchlight.Tests
     [TestClass]
     public class ExceptionTests
     {
-        public DataSource getSource()
+        public static DataSource getSource()
         {
             var src = new DataSource()
                .WithColumn("a", typeof(String))
@@ -30,7 +30,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<EmptyClause>((Action)(() =>
             {
                 var query = src.Parse(originalFilter);
-                var sql = query.ToSqlServerCommand(false);
+                var sql = query.ToSqlServerCommand();
             }));
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
         }

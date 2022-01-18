@@ -82,8 +82,10 @@ namespace Searchlight.Tests
             protected override Dictionary<string, string> ReloadCache()
             {
                 ReloadCount++;
-                var dict = new Dictionary<string, string>();
-                dict["test"] = "TEST";
+                var dict = new Dictionary<string, string>
+                {
+                    ["test"] = "TEST"
+                };
                 return dict;
             }
         }

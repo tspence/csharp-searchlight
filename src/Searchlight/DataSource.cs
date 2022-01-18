@@ -118,7 +118,6 @@ namespace Searchlight
             var upperName = name.Trim().ToUpperInvariant();
             if (_includeDict.ContainsKey(upperName))
             {
-                var existing = _includeDict[upperName];
                 throw new DuplicateInclude
                 {
                     Table = this.TableName,
@@ -127,13 +126,6 @@ namespace Searchlight
             }
 
             _includeDict[upperName] = incl;
-        }
-
-        private static bool CheckPresence(string sort, PropertyInfo[] props)
-        {
-            return (from prop in props
-                where string.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase)
-                select prop).Any();
         }
 
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
@@ -168,10 +160,12 @@ namespace Searchlight
         /// <returns></returns>
         public static DataSource Create(SearchlightEngine engine, Type modelType, AttributeMode mode)
         {
-            var src = new DataSource();
-            src.Engine = engine;
-            src.Commands = new List<ICommand>();
-            src.Flags = modelType.GetCustomAttributes<SearchlightFlag>().ToList();
+            var src = new DataSource
+            {
+                Engine = engine,
+                Commands = new List<ICommand>(),
+                Flags = modelType.GetCustomAttributes<SearchlightFlag>().ToList()
+            };
             var modelAttribute = modelType.GetCustomAttribute<SearchlightModel>();
             src.ModelType = modelType;
             if (modelAttribute == null && mode == AttributeMode.Strict)
@@ -205,7 +199,7 @@ namespace Searchlight
                             // If this is a renaming column, add it appropriately
                             Type t = filter.FieldType ?? pi.PropertyType;
                             src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name,
-                                filter.Aliases ?? new string[] { }, t);
+                                filter.Aliases ?? Array.Empty<string>(), t);
                         }
 
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();
@@ -283,7 +277,7 @@ namespace Searchlight
 
         public SyntaxTree Parse(FetchRequest request)
         {
-            SyntaxTree query = new SyntaxTree
+            var query = new SyntaxTree
             {
                 Source = this,
                 OriginalFilter = request.filter,

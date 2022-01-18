@@ -23,7 +23,7 @@ namespace Searchlight.Nesting
         {
             _property = property;
             _fieldName = property.Name;
-            _aliases = coll.Aliases ?? new string[] { };
+            _aliases = coll.Aliases ?? Array.Empty<string>();
             _collection = coll;
             _parentTable = table;
         }
