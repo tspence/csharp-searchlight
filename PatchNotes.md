@@ -1,3 +1,8 @@
+# 0.9.17
+January 18, 2022
+
+Small fix to allow page size of one.
+
 # 0.9.16
 December 14, 2021
 
