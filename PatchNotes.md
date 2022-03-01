@@ -1,3 +1,8 @@
+# 0.9.18
+March 1, 2022
+
+Add support for the 'NOT IN' filter in SQL queries.
+
 # 0.9.17
 January 18, 2022
 

@@ -45,7 +45,7 @@ namespace Searchlight.Tests
             var syntax = _source.Parse(originalFilter);
             Assert.IsNotNull(syntax);
             _source.MaximumParameters = null;
-            
+
             // Verify that we can also set maximum parameters at the engine level
             _source.Engine = new SearchlightEngine
             {
@@ -176,8 +176,6 @@ namespace Searchlight.Tests
         [TestMethod]
         public void AllQueryExpressions()
         {
-            string s;
-
             // Try all basic query expression types - should succeed
             Assert.AreEqual("a = @p1", ParseWhereClause("a = 'test'"));
             Assert.AreEqual("a = @p1", ParseWhereClause("a eq 'test'"));
@@ -201,10 +199,11 @@ namespace Searchlight.Tests
             Assert.AreEqual("a LIKE @p1", ParseWhereClause("a contains 'test'"));
             Assert.AreEqual("a IS NULL", ParseWhereClause("a is null"));
             Assert.AreEqual("a IS NOT NULL", ParseWhereClause("a is not null"));
+            Assert.AreEqual("a NOT IN (@p1, @p2)", ParseWhereClause("a not in ('test', 'test2')"));
 
             // Now try some that fail
-            Assert.ThrowsException<InvalidToken>(() => s = ParseWhereClause("a REALLYSHOULDBE 'test'"));
-            Assert.ThrowsException<InvalidToken>(() => s = ParseWhereClause("a !<= 'test'"));
+            Assert.ThrowsException<InvalidToken>(() => ParseWhereClause("a REALLYSHOULDBE 'test'"));
+            Assert.ThrowsException<InvalidToken>(() => ParseWhereClause("a !<= 'test'"));
         }
 
         [TestMethod]

@@ -41,7 +41,7 @@ namespace Searchlight
             {
                 cmd.Apply(sql);
             }
-            
+
             // If the user wants multi-fetch to retrieve row count
             if (engine.useResultSet)
             {
@@ -120,7 +120,7 @@ namespace Searchlight
             }
             return sb.ToString();
         }
-        
+
         /// <summary>
         /// Convert a single clause object into SQL-formatted "WHERE" text
         /// </summary>
@@ -174,7 +174,7 @@ namespace Searchlight
                     }
                 case InClause ic:
                     var paramValues = from v in ic.Values select sql.AddParameter(v);
-                    return $"{ic.Column.OriginalName} IN ({String.Join(", ", paramValues)})";
+                    return $"{ic.Column.OriginalName} {(ic.Negated ? "NOT " : string.Empty)}IN ({String.Join(", ", paramValues)})";
                 case IsNullClause inc:
                     return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";
                 default:
@@ -211,14 +211,14 @@ namespace Searchlight
         /// <param name="defaultSortColumn"></param>
         /// <param name="tableAlias"></param>
         /// <param name="primaryKeyFunc"></param>
-        public DbHelper(DatabaseType databaseType, 
+        public DbHelper(DatabaseType databaseType,
             string sqlTemplate,
             string defaultSortColumn,
-            string tableAlias, 
+            string tableAlias,
             Func<ENTITY, KEY> primaryKeyFunc = null)
         {
             _parser = new SafeQueryParser(new EntityColumnDefinitions(typeof(ENTITY)),
-                new FullyQualifyColumnNames(tableAlias, databaseType), 
+                new FullyQualifyColumnNames(tableAlias, databaseType),
                 databaseType);
             _sqlTemplate = sqlTemplate;
             _defaultSortColumn = defaultSortColumn;
