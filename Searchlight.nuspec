@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.17</version>
+		<version>0.9.18</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -12,10 +12,10 @@
 		<description>Implements the Searchlight REST query language for CSharp.  The Searchlight language is database neutral and can support most database technologies.  Using Searchlight, you can provide a rich query language via your API, while still being completely safe from SQL injection attacks.  Searchlight enables you to use multiple database engines with the same functionality, and to transform queries using the in-memory abstract syntax tree prior to execution.</description>
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<releaseNotes>
-			# 0.9.17
-			January 18, 2022
-			
-			Small fix to allow page size of one.
+			# 0.9.18
+			March 1, 2022
+
+			Add support for the 'NOT IN' filter in SQL queries.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2022</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
