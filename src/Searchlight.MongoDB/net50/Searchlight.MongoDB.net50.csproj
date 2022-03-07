@@ -9,7 +9,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Searchlight\Searchlight.csproj" />
+    <Compile Include="..\MongoDbExecutor.cs">
+      <Link>MongoDbExecutor.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Searchlight\net50\Searchlight.net50.csproj" />
   </ItemGroup>
 
 </Project>

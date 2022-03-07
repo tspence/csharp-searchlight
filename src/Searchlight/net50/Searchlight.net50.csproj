@@ -1,0 +1,159 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net5.0;net6.0;netcoreapp3.1;netstandard2.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Exceptions\FilterException.cs" />
+    <Compile Include="..\Attributes\SearchlightCollection.cs">
+      <Link>Attributes\SearchlightCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\Attributes\SearchlightField.cs">
+      <Link>Attributes\SearchlightField.cs</Link>
+    </Compile>
+    <Compile Include="..\Attributes\SearchlightFlag.cs">
+      <Link>Attributes\SearchlightFlag.cs</Link>
+    </Compile>
+    <Compile Include="..\Attributes\SearchlightModel.cs">
+      <Link>Attributes\SearchlightModel.cs</Link>
+    </Compile>
+    <Compile Include="..\Caching\CacheHelper.cs">
+      <Link>Caching\CacheHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\Caching\DictionaryCache.cs">
+      <Link>Caching\DictionaryCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Caching\ItemCache.cs">
+      <Link>Caching\ItemCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Caching\ItemFetchCache.cs">
+      <Link>Caching\ItemFetchCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Caching\ListCache.cs">
+      <Link>Caching\ListCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Caching\ObjectCache.cs">
+      <Link>Caching\ObjectCache.cs</Link>
+    </Compile>
+    <Compile Include="..\DataSource.cs">
+      <Link>DataSource.cs</Link>
+    </Compile>
+    <Compile Include="..\Enums.cs">
+      <Link>Enums.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\DuplicateInclude.cs">
+      <Link>Exceptions\DuplicateInclude.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\DuplicateName.cs">
+      <Link>Exceptions\DuplicateName.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\EmptyClause.cs">
+      <Link>Exceptions\EmptyClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\FieldNotFound.cs">
+      <Link>Exceptions\FieldNotFound.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\FieldTypeMismatch.cs">
+      <Link>Exceptions\FieldTypeMismatch.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\IncludeNotFound.cs">
+      <Link>Exceptions\IncludeNotFound.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\InvalidCollection.cs">
+      <Link>Exceptions\InvalidCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\InvalidDefaultSort.cs">
+      <Link>Exceptions\InvalidDefaultSort.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\InvalidPageNumber.cs">
+      <Link>Exceptions\InvalidPageNumber.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\InvalidPageSize.cs">
+      <Link>Exceptions\InvalidPageSize.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\InvalidToken.cs">
+      <Link>Exceptions\InvalidToken.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\NonSearchlightModel.cs">
+      <Link>Exceptions\NonSearchlightModel.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\OpenClause.cs">
+      <Link>Exceptions\OpenClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\SearchlightException.cs">
+      <Link>Exceptions\SearchlightException.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\TooManyParameters.cs">
+      <Link>Exceptions\TooManyParameters.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\TrailingConjunction.cs">
+      <Link>Exceptions\TrailingConjunction.cs</Link>
+    </Compile>
+    <Compile Include="..\Exceptions\UnterminatedString.cs">
+      <Link>Exceptions\UnterminatedString.cs</Link>
+    </Compile>
+    <Compile Include="..\FetchRequest.cs">
+      <Link>FetchRequest.cs</Link>
+    </Compile>
+    <Compile Include="..\FetchResult.cs">
+      <Link>FetchResult.cs</Link>
+    </Compile>
+    <Compile Include="..\LinqExecutor.cs">
+      <Link>LinqExecutor.cs</Link>
+    </Compile>
+    <Compile Include="..\Nesting\CollectionCommand.cs">
+      <Link>Nesting\CollectionCommand.cs</Link>
+    </Compile>
+    <Compile Include="..\Nesting\ICommand.cs">
+      <Link>Nesting\ICommand.cs</Link>
+    </Compile>
+    <Compile Include="..\Parsing\ColumnInfo.cs">
+      <Link>Parsing\ColumnInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Parsing\Tokenizer.cs">
+      <Link>Parsing\Tokenizer.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\BaseClause.cs">
+      <Link>Query\BaseClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\BetweenClause.cs">
+      <Link>Query\BetweenClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\CompoundClause.cs">
+      <Link>Query\CompoundClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\CriteriaClause.cs">
+      <Link>Query\CriteriaClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\InClause.cs">
+      <Link>Query\InClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\IsNullClause.cs">
+      <Link>Query\IsNullClause.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\SortInfo.cs">
+      <Link>Query\SortInfo.cs</Link>
+    </Compile>
+    <Compile Include="..\Query\SyntaxTree.cs">
+      <Link>Query\SyntaxTree.cs</Link>
+    </Compile>
+    <Compile Include="..\SearchlightEngine.cs">
+      <Link>SearchlightEngine.cs</Link>
+    </Compile>
+    <Compile Include="..\SqlExecutor.cs">
+      <Link>SqlExecutor.cs</Link>
+    </Compile>
+    <Compile Include="..\SqlQuery.cs">
+      <Link>SqlQuery.cs</Link>
+    </Compile>
+    <Compile Include="..\StringConstants.cs">
+      <Link>StringConstants.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.14" />
+  </ItemGroup>
+
+</Project>

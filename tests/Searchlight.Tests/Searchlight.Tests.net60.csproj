@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Searchlight.MongoDB\Searchlight.MongoDB.csproj" />
-    <ProjectReference Include="..\..\src\Searchlight\Searchlight.csproj" />
+    <ProjectReference Include="..\..\src\Searchlight.MongoDB\net60\Searchlight.MongoDB.net60.csproj" />
+    <ProjectReference Include="..\..\src\Searchlight\net60\Searchlight.net60.csproj" />
   </ItemGroup>
 
 </Project>
