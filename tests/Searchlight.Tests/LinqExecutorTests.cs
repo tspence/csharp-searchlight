@@ -158,7 +158,8 @@ namespace Searchlight.Tests
             foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);
-                Assert.IsTrue(e.paycheck is 800.0m or 1200.0m or 10.0m or 578.00m or 123.00m or 987.00m);
+                Assert.IsTrue(e.paycheck == 800.0m || e.paycheck == 1200.0m || e.paycheck == 10.0m ||
+                              e.paycheck == 578.00m || e.paycheck == 123.00m || e.paycheck == 987.00m);
             }
         }
 
@@ -251,7 +252,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(8, resultsArr.records.Length);
             foreach (var e in resultsArr.records)
             {
-                Assert.IsTrue(e.name.Contains("s", StringComparison.OrdinalIgnoreCase));
+                Assert.IsTrue(e.name.IndexOf("s", StringComparison.OrdinalIgnoreCase) >= 0);
             }
         }
         
@@ -490,19 +491,19 @@ namespace Searchlight.Tests
             var syntax = src.Parse("hired < TODAY");
 
             var result = syntax.QueryCollection(list);
-            Assert.IsTrue(result.records.Length is 3 or 4);
+            Assert.IsTrue(result.records.Length == 3 || result.records.Length == 4);
 
             syntax = src.Parse("hired < TOMORROW");
             result = syntax.QueryCollection(list);
-            Assert.IsTrue(result.records.Length is 5 or 6);
+            Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
             
             syntax = src.Parse("hired < tomorrow");
             result = syntax.QueryCollection(list);
-            Assert.IsTrue(result.records.Length is 5 or 6);
+            Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
             
             syntax = src.Parse("hired > YESTERDAY");
             result = syntax.QueryCollection(list);
-            Assert.IsTrue(result.records.Length is 5 or 6);
+            Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
 
             syntax = src.Parse("hired > NOW");
             result = syntax.QueryCollection(list);

@@ -317,27 +317,32 @@ namespace Searchlight
             var flags = new List<SearchlightFlag>();
             if (!string.IsNullOrWhiteSpace(includes))
             {
-                foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var n in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    var upperName = name.Trim()?.ToUpperInvariant();
-                    if (_includeDict.TryGetValue(upperName, out var obj))
+                    var name = n.Trim();
+                    if (name != null)
                     {
-                        if (obj is ICommand command)
+                        var upperName = name.Trim()?.ToUpperInvariant();
+                        if (_includeDict.TryGetValue(upperName, out var obj))
                         {
-                            list.Add(command);
+                            if (obj is ICommand command)
+                            {
+                                list.Add(command);
+                            }
+                            else if (obj is SearchlightFlag flag)
+                            {
+                                flags.Add(flag);
+                            }
                         }
-                        else if (obj is SearchlightFlag flag)
+                        else
                         {
-                            flags.Add(flag);
+                            throw new IncludeNotFound()
+                            {
+                                OriginalInclude = includes,
+                                IncludeName = name,
+                                KnownIncludes = _knownIncludes.ToArray()
+                            };
                         }
-                    }
-                    else
-                    {
-                        throw new IncludeNotFound() { 
-                            OriginalInclude = includes, 
-                            IncludeName = name, 
-                            KnownIncludes = _knownIncludes.ToArray() 
-                        };
                     }
                 }
             }

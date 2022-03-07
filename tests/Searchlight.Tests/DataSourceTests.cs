@@ -108,7 +108,7 @@ namespace Searchlight.Tests
             // Silly example
             Assert.ThrowsException<FieldNotFound>(() =>
             {
-                var clauses = _source.ParseFilter("AND ( ) OR ");
+                var parsedClause = _source.ParseFilter("AND ( ) OR ");
             });
 
             // Realistic example of a forgetful customer
