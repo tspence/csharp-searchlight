@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Files", "Other Files"
 		PatchNotes.md = PatchNotes.md
 		README.md = README.md
 		Searchlight.nuspec = Searchlight.nuspec
+		.travis.yml = .travis.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Searchlight.MongoDB", "src\Searchlight.MongoDB\Searchlight.MongoDB.csproj", "{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}"
