@@ -212,7 +212,7 @@ namespace Searchlight
             }
             
             // default sort cannot be null and must be a valid column
-            if (src.DefaultSort is not null)
+            if (src.DefaultSort != null)
             {
                 try
                 {
@@ -317,9 +317,9 @@ namespace Searchlight
             var flags = new List<SearchlightFlag>();
             if (!string.IsNullOrWhiteSpace(includes))
             {
-                foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    var upperName = name.ToUpperInvariant();
+                    var upperName = name.Trim()?.ToUpperInvariant();
                     if (_includeDict.TryGetValue(upperName, out var obj))
                     {
                         if (obj is ICommand command)
@@ -667,7 +667,7 @@ namespace Searchlight
         private static object DefinedDateOperators(string valueToken)
         {
             StringConstants.DEFINED_DATES.TryGetValue(valueToken.ToUpper(), out var result);
-            return (result != null) ? result.Invoke() : valueToken;
+            return (result != null) ? (object)result.Invoke() : valueToken;
         }
 
         /// <summary>

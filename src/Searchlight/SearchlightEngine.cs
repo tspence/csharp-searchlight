@@ -102,10 +102,16 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             var source = FindTable(request.table);
-            request.pageSize ??= DefaultPageSize;
+            if (request.pageSize == null)
+            {
+                request.pageSize = DefaultPageSize;
+            }
             if (MaximumPageSize != null)
             {
-                request.pageSize ??= MaximumPageSize;
+                if (request.pageSize == null)
+                {
+                    request.pageSize = MaximumPageSize;
+                }
                 if (request.pageSize > MaximumPageSize)
                 {
                     throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};

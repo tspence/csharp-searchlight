@@ -14,12 +14,13 @@ namespace Searchlight.Caching
         /// <summary>
         /// Concurrent dictionary for fetching items
         /// </summary>
-        private readonly ConcurrentDictionary<KEY, ItemCache<ITEM>> _item_dict = new();
+        private readonly ConcurrentDictionary<KEY, ItemCache<ITEM>> _item_dict =
+            new ConcurrentDictionary<KEY, ItemCache<ITEM>>();
 
         /// <summary>
         /// Default time frame is that items expire after an hour
         /// </summary>
-        protected TimeSpan _cacheDuration = new(1, 0, 0);
+        protected TimeSpan _cacheDuration = new TimeSpan(1, 0, 0);
 
 
         #region Constructor
@@ -123,7 +124,7 @@ namespace Searchlight.Caching
         /// <param name="item_loaded_timestamp"></param>
         protected void Set(KEY key, ITEM item, DateTime item_loaded_timestamp)
         {
-            ItemCache<ITEM> cache = new()
+            var cache = new ItemCache<ITEM>()
             {
                 CachedObject = item,
                 CacheDate = item_loaded_timestamp

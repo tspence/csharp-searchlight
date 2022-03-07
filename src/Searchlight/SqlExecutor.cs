@@ -152,19 +152,19 @@ namespace Searchlight
                         case OperationType.NotEqual:
                             return $"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}";
                         case OperationType.Contains:
-                            if (cc.Value is not string)
+                            if (cc.Value?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
                             return $"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}";
                         case OperationType.StartsWith:
-                            if (cc.Value is not string)
+                            if (cc.Value?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
                             return $"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}";
                         case OperationType.EndsWith:
-                            if (cc.Value is not string)
+                            if (cc.Value?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }

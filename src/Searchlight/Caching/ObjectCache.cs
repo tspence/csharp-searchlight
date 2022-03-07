@@ -6,12 +6,12 @@ namespace Searchlight.Caching
     {
         private ITEM _item;
         private DateTime _next_cache_time;
-        private readonly object _cache_lock = new();
+        private readonly object _cache_lock = new object();
 
         /// <summary>
         /// Length of time to keep this cache before triggering a re-fetch
         /// </summary>
-        protected TimeSpan _cacheDuration = new(2, 0, 0);
+        protected TimeSpan _cacheDuration = new TimeSpan(2, 0, 0);
 
         #region Constructor
         public ObjectCache()
