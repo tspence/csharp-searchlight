@@ -42,9 +42,9 @@
 		<file src=".\LICENSE" target="docs/LICENSE"/>
 		<file src=".\README.md" target="docs/README.md"/>
 		<file src=".\PatchNotes.md" target="docs/PatchNotes.md"/>
-		<file src="src\Searchlight\bin\Debug\netcoreapp3.1\*" target="lib\netcoreapp3.1" />
-		<file src="src\Searchlight\bin\Debug\netstandard2.0\*" target="lib\netstandard20" />
-		<file src="src\Searchlight\bin\Debug\net5.0\*" target="lib\net5.0" />
-		<file src="src\Searchlight\bin\Debug\net6.0\*" target="lib\net6.0" />
+		<file src="src\Searchlight\netstandard20\bin\Debug\netstandard2.0\*" target="lib\netstandard20" />
+		<file src="src\Searchlight\netcoreapp31\bin\Debug\netcoreapp3.1\*" target="lib\netcoreapp3.1" />
+		<file src="src\Searchlight\net50\bin\Debug\net5.0\*" target="lib\net5.0" />
+		<file src="src\Searchlight\net60\bin\Debug\net6.0\*" target="lib\net6.0" />
 	</files>
 </package>

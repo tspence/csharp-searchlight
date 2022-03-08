@@ -6,5 +6,17 @@ jobs:
     - dotnet: 6.0.100
       mono: none
       script:
-        - dotnet build ./tests/Searchlight.Tests/Searchlight.Tests.csproj
-        - dotnet test ./tests/Searchlight.Tests/Searchlight.Tests.csproj
+        - dotnet build ./tests/Searchlight.Tests/net60/Searchlight.Tests.csproj
+        - dotnet test ./tests/Searchlight.Tests/net60/Searchlight.Tests.csproj
+    - dotnet: 5.0.201
+      mono: none
+      script:
+        - dotnet build ./tests/Searchlight.Tests/net50/Searchlight.Tests.csproj
+        - dotnet test ./tests/Searchlight.Tests/net50/Searchlight.Tests.csproj
+        - dotnet build ./tests/Searchlight.Tests/netcoreapp31/Searchlight.Tests.csproj
+        - dotnet test ./tests/Searchlight.Tests/netcoreapp31/Searchlight.Tests.csproj
+    - dotnet: 2.1.502
+      mono: none
+      script:
+        - dotnet build ./tests/Searchlight.Tests/netstandard20/Searchlight.Tests.csproj
+        - dotnet test ./tests/Searchlight.Tests/netstandard20/Searchlight.Tests.csproj
