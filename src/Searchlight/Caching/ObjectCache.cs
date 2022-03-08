@@ -17,7 +17,7 @@ namespace Searchlight.Caching
         public ObjectCache()
         {
             // Set defaults
-            _item = default;
+            _item = default(ITEM);
             _next_cache_time = DateTime.MinValue;
 
             // Hook this to the overall cache reset event
@@ -105,7 +105,7 @@ namespace Searchlight.Caching
             // Ensure that no other object is in the midst of working on this while we reset it
             lock (_cache_lock)
             {
-                _item = default;
+                _item = default(ITEM);
             }
         }
 

@@ -13,8 +13,6 @@ jobs:
       script:
         - dotnet build ./tests/Searchlight.Tests/net50/Searchlight.Tests.net50.csproj
         - dotnet test ./tests/Searchlight.Tests/net50/Searchlight.Tests.net50.csproj
-        - dotnet build ./tests/Searchlight.Tests/netcoreapp31/Searchlight.Tests.netcoreapp31.csproj
-        - dotnet test ./tests/Searchlight.Tests/netcoreapp31/Searchlight.Tests.netcoreapp31.csproj
     - dotnet: 2.1.502
       mono: none
       script:
