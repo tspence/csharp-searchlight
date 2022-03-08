@@ -6,18 +6,18 @@ namespace Searchlight.Caching
     {
         private ITEM _item;
         private DateTime _next_cache_time;
-        private readonly object _cache_lock = new();
+        private readonly object _cache_lock = new object();
 
         /// <summary>
         /// Length of time to keep this cache before triggering a re-fetch
         /// </summary>
-        protected TimeSpan _cacheDuration = new(2, 0, 0);
+        protected TimeSpan _cacheDuration = new TimeSpan(2, 0, 0);
 
         #region Constructor
         public ObjectCache()
         {
             // Set defaults
-            _item = default;
+            _item = default(ITEM);
             _next_cache_time = DateTime.MinValue;
 
             // Hook this to the overall cache reset event
@@ -105,7 +105,7 @@ namespace Searchlight.Caching
             // Ensure that no other object is in the midst of working on this while we reset it
             lock (_cache_lock)
             {
-                _item = default;
+                _item = default(ITEM);
             }
         }
 

@@ -212,7 +212,7 @@ namespace Searchlight
             }
             
             // default sort cannot be null and must be a valid column
-            if (src.DefaultSort is not null)
+            if (src.DefaultSort != null)
             {
                 try
                 {
@@ -317,27 +317,32 @@ namespace Searchlight
             var flags = new List<SearchlightFlag>();
             if (!string.IsNullOrWhiteSpace(includes))
             {
-                foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                foreach (var n in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    var upperName = name.ToUpperInvariant();
-                    if (_includeDict.TryGetValue(upperName, out var obj))
+                    var name = n.Trim();
+                    if (name != null)
                     {
-                        if (obj is ICommand command)
+                        var upperName = name.Trim()?.ToUpperInvariant();
+                        if (_includeDict.TryGetValue(upperName, out var obj))
                         {
-                            list.Add(command);
+                            if (obj is ICommand command)
+                            {
+                                list.Add(command);
+                            }
+                            else if (obj is SearchlightFlag flag)
+                            {
+                                flags.Add(flag);
+                            }
                         }
-                        else if (obj is SearchlightFlag flag)
+                        else
                         {
-                            flags.Add(flag);
+                            throw new IncludeNotFound()
+                            {
+                                OriginalInclude = includes,
+                                IncludeName = name,
+                                KnownIncludes = _knownIncludes.ToArray()
+                            };
                         }
-                    }
-                    else
-                    {
-                        throw new IncludeNotFound() { 
-                            OriginalInclude = includes, 
-                            IncludeName = name, 
-                            KnownIncludes = _knownIncludes.ToArray() 
-                        };
                     }
                 }
             }
@@ -667,7 +672,7 @@ namespace Searchlight
         private static object DefinedDateOperators(string valueToken)
         {
             StringConstants.DEFINED_DATES.TryGetValue(valueToken.ToUpper(), out var result);
-            return (result != null) ? result.Invoke() : valueToken;
+            return (result != null) ? (object)result.Invoke() : valueToken;
         }
 
         /// <summary>

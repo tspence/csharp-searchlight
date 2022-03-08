@@ -1,12 +1,20 @@
 language: csharp
-mono: none
-dotnet: 6.0.101
 solution: Searchlight.sln
-script:
-  - dotnet build -f net5.0
-  - dotnet test -f net5.0
-addons:
-  apt:
-    packages:
-      - aspnetcore-runtime-6.0
-      - aspnetcore-runtime-5.0
+
+jobs:
+  include:
+    - dotnet: 6.0.100
+      mono: none
+      script:
+        - dotnet build ./tests/Searchlight.Tests/net60/Searchlight.Tests.net60.csproj
+        - dotnet test ./tests/Searchlight.Tests/net60/Searchlight.Tests.net60.csproj
+    - dotnet: 5.0.201
+      mono: none
+      script:
+        - dotnet build ./tests/Searchlight.Tests/net50/Searchlight.Tests.net50.csproj
+        - dotnet test ./tests/Searchlight.Tests/net50/Searchlight.Tests.net50.csproj
+    - dotnet: 2.1.502
+      mono: none
+      script:
+        - dotnet build ./tests/Searchlight.Tests/netstandard20/Searchlight.Tests.netstandard20.csproj
+        - dotnet test ./tests/Searchlight.Tests/netstandard20/Searchlight.Tests.netstandard20.csproj

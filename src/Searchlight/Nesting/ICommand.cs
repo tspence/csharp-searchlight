@@ -1,4 +1,6 @@
-﻿namespace Searchlight.Nesting
+﻿using System.Collections.Generic;
+
+namespace Searchlight.Nesting
 {
     public interface ICommand
     {
@@ -6,18 +8,18 @@
         /// If there is an SQL component to this command, apply it here
         /// </summary>
         /// <param name="sql"></param>
-        public void Apply(SqlQuery sql);
+        void Apply(SqlQuery sql);
 
         /// <summary>
         /// The official name by which this command is known
         /// </summary>
         /// <returns></returns>
-        public string GetName();
+        string GetName();
 
         /// <summary>
         /// List all names by which this command is known
         /// </summary>
         /// <returns></returns>
-        public string[] GetAliases();
+        string[] GetAliases();
     }
 }

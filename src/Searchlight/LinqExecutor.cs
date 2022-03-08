@@ -51,14 +51,17 @@ namespace Searchlight
             var totalCount = filteredAndSorted.Count;
             
             // If the user requested pagination
-            var paginated = (tree.PageNumber, tree.PageSize) switch
+            IEnumerable<T> paginated = filteredAndSorted;
+            if (tree.PageNumber > 0 && tree.PageSize > 0)
             {
                 // case 1: user specified page number and page size
-                (> 0, > 0) => filteredAndSorted.Skip((int)(tree.PageSize * tree.PageNumber)).Take((int)tree.PageSize),
+                paginated = filteredAndSorted.Skip((int)(tree.PageSize * tree.PageNumber)).Take((int)tree.PageSize);
+            }
+            else if (tree.PageNumber == 0 && tree.PageSize > 0)
+            {
                 // case 2: user specified a page size but no page number
-                (0, > 0) => filteredAndSorted.Take((int)tree.PageSize),
-                _ => filteredAndSorted
-            };
+                paginated = filteredAndSorted.Take((int)tree.PageSize);
+            }
 
             // construct the return fetch result
             var result = new FetchResult<T>
