@@ -6,6 +6,9 @@ using Searchlight.Query;
 
 namespace Searchlight
 {
+    /// <summary>
+    /// Class for executing Searchlight queries against in-memory collections using LINQ
+    /// </summary>
     public static class LinqExecutor
     {
         /// <summary>
@@ -20,7 +23,7 @@ namespace Searchlight
             // Goal of this function is to construct this LINQ expression:
             //   return (from obj in LIST where QUERY select obj)
             // Here's how we'll do it:
-            var queryable = collection.AsQueryable<T>();
+            var queryable = collection.AsQueryable();
             
             // If the user specified a filter 
             var select = Expression.Parameter(typeof(T), "obj");
@@ -30,7 +33,7 @@ namespace Searchlight
                 var whereCallExpression = Expression.Call(
                     typeof(Queryable),
                     "Where",
-                    new Type[] { queryable.ElementType },
+                    new [] { queryable.ElementType },
                     queryable.Expression,
                     Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] { select }));
                 queryable = queryable.Provider.CreateQuery<T>(whereCallExpression);
@@ -71,7 +74,7 @@ namespace Searchlight
             return result;
         }
         
-        internal static IQueryable<T> InternalOrderBy<T>(IQueryable source, List<SortInfo> orderBy)
+        private static IQueryable<T> InternalOrderBy<T>(IQueryable source, List<SortInfo> orderBy)
         {
             var queryExpr = source.Expression;
             int count = 0;
@@ -165,7 +168,7 @@ namespace Searchlight
                             {
                                 return Expression.Call(null,
                                     typeof(string).GetMethod("Equals",
-                                        new Type[] { typeof(string), typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(string), typeof(StringComparison) }),
                                     field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase));
                             }
                             else
@@ -178,7 +181,7 @@ namespace Searchlight
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThan(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -195,7 +198,7 @@ namespace Searchlight
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThanOrEqual(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -212,7 +215,7 @@ namespace Searchlight
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThan(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -229,7 +232,7 @@ namespace Searchlight
                                 return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThanOrEqual(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -244,7 +247,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("StartsWith",
-                                        new Type[] { typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
@@ -254,7 +257,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("EndsWith",
-                                        new Type[] { typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
@@ -263,7 +266,7 @@ namespace Searchlight
                             return Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("Contains",
-                                        new Type[] { typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
@@ -297,7 +300,7 @@ namespace Searchlight
                     field = Expression.Convert(Expression.Property(@select, inClause.Column.FieldName), typeof(object));
                     value = Expression.Constant(inClause.Values, typeof(List<object>));
                     return Expression.Call(value,
-                        typeof(List<object>).GetMethod("Contains", new Type[] { typeof(object) }),
+                        typeof(List<object>).GetMethod("Contains", new [] { typeof(object) }),
                         field);
 
                 case IsNullClause isNullClause:

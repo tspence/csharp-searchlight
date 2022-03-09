@@ -7,6 +7,9 @@ using Searchlight.Query;
 
 namespace Searchlight
 {
+    /// <summary>
+    /// Extension class that supports Searchlight querying on an SQL database
+    /// </summary>
     public static class SqlExecutor
     {
         /// <summary>
@@ -74,7 +77,7 @@ namespace Searchlight
             return sql;
         }
 
-        public static string RenderOrderByClause(List<SortInfo> list)
+        internal static string RenderOrderByClause(List<SortInfo> list)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < list.Count; i++)

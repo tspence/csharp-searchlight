@@ -23,7 +23,9 @@ namespace Searchlight.Caching
         protected TimeSpan _cacheDuration = new TimeSpan(1, 0, 0);
 
 
-        #region Constructor
+        /// <summary>
+        /// Keeps track of items and fetches them if necessary
+        /// </summary>
         public ItemFetchCache()
         {
             // Set defaults
@@ -32,7 +34,6 @@ namespace Searchlight.Caching
             // Hook this to the overall cache reset event
             CacheHelper.ResetAllCachesEvent += this.ResetCacheHandler;
         }
-        #endregion
 
         #region Reset cache
         /// <summary>

@@ -2,6 +2,10 @@
 
 namespace Searchlight.Caching
 {
+    /// <summary>
+    /// Keeps track of a singleton and regenerates it on demand based on cache rules
+    /// </summary>
+    /// <typeparam name="ITEM"></typeparam>
     public class ItemCache<ITEM>
     {
         /// <summary>

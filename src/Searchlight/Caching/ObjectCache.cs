@@ -2,6 +2,10 @@
 
 namespace Searchlight.Caching
 {
+    /// <summary>
+    /// Keeps track of a single object
+    /// </summary>
+    /// <typeparam name="ITEM"></typeparam>
     public class ObjectCache<ITEM>
     {
         private ITEM _item;
@@ -13,7 +17,9 @@ namespace Searchlight.Caching
         /// </summary>
         protected TimeSpan _cacheDuration = new TimeSpan(2, 0, 0);
 
-        #region Constructor
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public ObjectCache()
         {
             // Set defaults
@@ -23,9 +29,7 @@ namespace Searchlight.Caching
             // Hook this to the overall cache reset event
             CacheHelper.ResetAllCachesEvent += this.ResetCacheHandler;
         }
-        #endregion
 
-        #region Internal functionality
         /// <summary>
         /// Test the cache and ensure that data is cached
         /// </summary>
@@ -84,9 +88,7 @@ namespace Searchlight.Caching
         {
             this.ResetCache();
         }
-        #endregion
 
-        #region Functions to override
         /// <summary>
         /// Internal implementation of the function to load the cache from the source
         /// </summary>
@@ -94,9 +96,7 @@ namespace Searchlight.Caching
         {
             throw new NotImplementedException();
         }
-        #endregion
 
-        #region Public Interfaces
         /// <summary>
         /// Flush this cache item and reload on the next call
         /// </summary>
@@ -118,6 +118,5 @@ namespace Searchlight.Caching
             EnsureCache();
             return _item;
         }
-        #endregion
     }
 }

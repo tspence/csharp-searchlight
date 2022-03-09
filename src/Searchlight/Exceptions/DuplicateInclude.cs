@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿#pragma warning disable CS1591
+namespace Searchlight
 {
     /// <summary>
     /// The Searchlight model had two different included data sets with the same name.  Searchlight

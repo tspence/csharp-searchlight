@@ -2,6 +2,12 @@
 
 namespace Searchlight.Caching
 {
+    /// <summary>
+    /// Represents a cache using a dictionary with defined keys.  This is similar to an IDictionary, but
+    /// it can potentially trigger a cache-fetch.
+    /// </summary>
+    /// <typeparam name="KEY"></typeparam>
+    /// <typeparam name="ITEM"></typeparam>
     public class DictionaryCache<KEY, ITEM> : ObjectCache<Dictionary<KEY, ITEM>>
     {
         /// <summary>
