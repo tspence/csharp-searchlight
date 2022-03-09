@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿#pragma warning disable CS1591
+namespace Searchlight
 {
     /// <summary>
     /// This query specified a model that is not present in the Searchlight engine.

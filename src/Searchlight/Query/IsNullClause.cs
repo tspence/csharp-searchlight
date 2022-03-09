@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Searchlight.Query
 {
+    /// <summary>
+    /// A query criteria in the form "X is null" or "X is not null"
+    /// </summary>
     public class IsNullClause : BaseClause
     {
         /// <summary>

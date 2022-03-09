@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Searchlight.Query
 {
+    /// <summary>
+    /// A query criteria of the form "X between low and high"
+    /// </summary>
     public class BetweenClause : BaseClause
     {
         /// <summary>

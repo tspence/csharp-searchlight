@@ -128,11 +128,19 @@ namespace Searchlight
             _includeDict[upperName] = incl;
         }
 
+        /// <summary>
+        /// Gets the list of columns for this data source
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
         {
             return _columns;
         }
 
+        /// <summary>
+        /// Gets the list of column names for this data source
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<string> ColumnNames()
         {
             return _fieldDict.Keys;
@@ -275,6 +283,13 @@ namespace Searchlight
             return Parse(fetch);
         }
 
+        /// <summary>
+        /// Parse a fetch request object into a syntax tree
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidPageSize"></exception>
+        /// <exception cref="InvalidPageNumber"></exception>
         public SyntaxTree Parse(FetchRequest request)
         {
             var query = new SyntaxTree

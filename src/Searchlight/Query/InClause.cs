@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Searchlight.Query
 {
+    /// <summary>
+    /// A query criteria in the form of "X in (A, B, C)"
+    /// </summary>
     public class InClause : BaseClause
     {
         /// <summary>

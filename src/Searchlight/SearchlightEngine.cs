@@ -8,6 +8,9 @@ using Searchlight.Query;
 
 namespace Searchlight
 {
+    /// <summary>
+    /// A root of compiled data sources
+    /// </summary>
     public class SearchlightEngine
     {
         private readonly Dictionary<string, DataSource> _dictionary = new Dictionary<string, DataSource>();

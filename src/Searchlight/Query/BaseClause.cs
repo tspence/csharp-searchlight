@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Searchlight.Query
 {
+    /// <summary>
+    /// The root node of the Searchlight abstract syntax tree
+    /// </summary>
     public class BaseClause
     {
         /// <summary>

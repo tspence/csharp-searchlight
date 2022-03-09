@@ -9,6 +9,9 @@ using Searchlight.Query;
 
 namespace MongoPetSitters
 {
+    /// <summary>
+    /// Static extension class that converts Searchlight syntax trees into MongoDB queries
+    /// </summary>
     public static class MongoDbExecutor
     {
         /// <summary>
@@ -50,6 +53,13 @@ namespace MongoPetSitters
             return Builders<T>.Sort.Combine(list);
         }
 
+        /// <summary>
+        /// Construct a MongoDB filter on a set of clause objects
+        /// </summary>
+        /// <param name="clauses"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
         public static FilterDefinition<T> BuildMongoFilter<T>(List<BaseClause> clauses)
         {
             foreach (var clause in clauses)
@@ -82,7 +92,7 @@ namespace MongoPetSitters
                                     new BsonRegularExpression("/" + criteria.Value + "$/"));
                             default:
                                 throw new NotImplementedException();
-                        };
+                        }
                     case InClause inClause:
                         return Builders<T>.Filter.In(inClause.Column.FieldName, inClause.Values);
                     

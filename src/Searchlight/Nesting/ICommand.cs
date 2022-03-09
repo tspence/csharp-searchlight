@@ -2,6 +2,9 @@
 
 namespace Searchlight.Nesting
 {
+    /// <summary>
+    /// An extension to the searchlight "include" system that allows you to fetch optional elements
+    /// </summary>
     public interface ICommand
     {
         /// <summary>
