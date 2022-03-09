@@ -77,7 +77,7 @@ namespace Searchlight
             int count = 0;
             ParameterExpression[] parameterExpressions =
             {
-                Expression.Parameter(source.ElementType, "param0")
+                Expression.Parameter(source.ElementType, "Param_0")
             };
             foreach (var sort in orderBy)
             {
