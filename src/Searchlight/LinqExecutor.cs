@@ -1,10 +1,8 @@
-﻿using Searchlight.Parsing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using Searchlight.Query;
-using System.Linq.Dynamic.Core;
 
 namespace Searchlight
 {
@@ -41,9 +39,7 @@ namespace Searchlight
             // If the user specified a sorting clause
             if (tree.OrderBy.Any())
             {
-                var sortExpression = string.Join(", ",
-                    (from sort in tree.OrderBy select $"{sort.Column.FieldName} {sort.DirectionStr()}"));
-                queryable = queryable.OrderBy(sortExpression);
+                queryable = InternalOrderBy<T>(queryable, tree.OrderBy);
             }
 
             // Compute the list once and keep track of full length
@@ -73,6 +69,32 @@ namespace Searchlight
             };
 
             return result;
+        }
+        
+        internal static IQueryable<T> InternalOrderBy<T>(IQueryable source, List<SortInfo> orderBy)
+        {
+            var queryExpr = source.Expression;
+            ParameterExpression[] parameterExpressions =
+            {
+                Expression.Parameter(source.ElementType, "generic_name")
+            };
+            int count = 0;
+            foreach (var sort in orderBy)
+            {
+                var methodName = count == 0 ? "OrderBy" : "ThenBy";
+                if (sort.Direction == SortDirection.Descending)
+                {
+                    methodName += "Descending";
+                }
+                var quote = Expression.Quote(Expression.Lambda(queryExpr, parameterExpressions));
+                queryExpr = Expression.Call(
+                    typeof(Queryable), methodName,
+                    new[] { source.ElementType, queryExpr.Type },
+                    queryExpr, quote);
+                count++;
+            }
+
+            return source.Provider.CreateQuery<T>(queryExpr);
         }
 
         /// <summary>
@@ -131,7 +153,7 @@ namespace Searchlight
             {
                 case CriteriaClause criteria:
                     // Obtain a parameter from this object
-                    field = Expression.Property(@select, criteria.Column.FieldName);
+                    field = Expression.Property(select, criteria.Column.FieldName);
                     value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
                     switch (criteria.Operation)
                     {
