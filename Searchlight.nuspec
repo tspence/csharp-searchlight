@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.18</version>
+		<version>0.9.19</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -19,23 +19,16 @@
 			March 7, 2022
 
 			Added support for NetCoreApp 3.1 and NetStandard 2.0 frameworks.
+			Removed dependency on System.Dynamic.Linq.Core.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2022</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
 		<repository type="git" url="https://github.com/tspence/csharp-searchlight" />
 		<dependencies>
-			<group targetFramework=".NETStandard2.0">
-				<dependency id="System.Linq.Dynamic.Core" version="1.2.14" />
-			</group>
-			<group targetFramework="netcoreapp3.1">
-				<dependency id="System.Linq.Dynamic.Core" version="1.2.14" />
-			</group>
-			<group targetFramework="net5.0">
-				<dependency id="System.Linq.Dynamic.Core" version="1.2.14" />
-			</group>
-			<group targetFramework="net6.0">
-				<dependency id="System.Linq.Dynamic.Core" version="1.2.14" />
-			</group>
+			<group targetFramework=".NETStandard2.0"/>
+			<group targetFramework="netcoreapp3.1"/>
+			<group targetFramework="net5.0"/>
+			<group targetFramework="net6.0"/>
 		</dependencies>
 	</metadata>
 	<files>
