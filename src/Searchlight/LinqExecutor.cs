@@ -91,7 +91,7 @@ namespace Searchlight
                 queryExpr = Expression.Call(
                     typeof(Queryable), 
                     methodName,
-                    new[] { source.ElementType, typeof(T) },
+                    new[] { source.ElementType, sort.Column.FieldType },
                     queryExpr, 
                     quote);
                 count++;
