@@ -74,11 +74,11 @@ namespace Searchlight
         internal static IQueryable<T> InternalOrderBy<T>(IQueryable source, List<SortInfo> orderBy)
         {
             var queryExpr = source.Expression;
+            int count = 0;
             ParameterExpression[] parameterExpressions =
             {
-                Expression.Parameter(source.ElementType, "generic_name")
+                Expression.Parameter(source.ElementType, "generic_name_for_variable")
             };
-            int count = 0;
             foreach (var sort in orderBy)
             {
                 var methodName = count == 0 ? "OrderBy" : "ThenBy";
@@ -86,10 +86,11 @@ namespace Searchlight
                 {
                     methodName += "Descending";
                 }
-                var quote = Expression.Quote(Expression.Lambda(queryExpr, parameterExpressions));
+                var field = Expression.PropertyOrField(Expression.Parameter(typeof(T), "arg"), sort.Column.FieldName);
+                var quote = Expression.Quote(Expression.Lambda(field, parameterExpressions));
                 queryExpr = Expression.Call(
                     typeof(Queryable), methodName,
-                    new[] { source.ElementType, queryExpr.Type },
+                    new[] { source.ElementType, typeof(T) },
                     queryExpr, quote);
                 count++;
             }
