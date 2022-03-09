@@ -86,7 +86,7 @@ namespace Searchlight
                 {
                     methodName += "Descending";
                 }
-                var field = Expression.Property(queryExpr, sort.Column.FieldName);
+                var field = Expression.Property(Expression.Parameter(typeof(T)), sort.Column.FieldName);
                 var quote = Expression.Quote(Expression.Lambda(field, parameterExpressions));
                 queryExpr = Expression.Call(
                     typeof(Queryable), 
