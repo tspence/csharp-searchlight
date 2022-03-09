@@ -77,7 +77,7 @@ namespace Searchlight
             int count = 0;
             ParameterExpression[] parameterExpressions =
             {
-                Expression.Parameter(source.ElementType, "generic_name_for_variable")
+                Expression.Parameter(source.ElementType, "param0")
             };
             foreach (var sort in orderBy)
             {
@@ -86,12 +86,14 @@ namespace Searchlight
                 {
                     methodName += "Descending";
                 }
-                var field = Expression.PropertyOrField(Expression.Parameter(typeof(T), "arg"), sort.Column.FieldName);
+                var field = Expression.Property(queryExpr, sort.Column.FieldName);
                 var quote = Expression.Quote(Expression.Lambda(field, parameterExpressions));
                 queryExpr = Expression.Call(
-                    typeof(Queryable), methodName,
+                    typeof(Queryable), 
+                    methodName,
                     new[] { source.ElementType, typeof(T) },
-                    queryExpr, quote);
+                    queryExpr, 
+                    quote);
                 count++;
             }
 
