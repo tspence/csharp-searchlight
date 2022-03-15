@@ -1,34 +1,29 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Reflection;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using perftest;
 using Searchlight;
 
-public class Program
+[SimpleJob(RuntimeMoniker.Net472, baseline: true)]
+[SimpleJob(RuntimeMoniker.NetCoreApp30)]
+[SimpleJob(RuntimeMoniker.CoreRt30)]
+[RPlotExporter]
+public class SearchlightParsingTest
 {
-    private const int ITERATIONS = 10_000;
-    
-    public static void Main()
+    private SearchlightEngine _engine;
+    [GlobalSetup]
+    public void SetupEngine()
     {
-        var engine = new SearchlightEngine()
+        _engine = new SearchlightEngine()
             .AddClass(typeof(Employee))
             .AddClass(typeof(Company))
             .AddClass(typeof(Paystub));
-        
-        var sw = new Stopwatch();
-        sw.Start();
-        long parsings = 0;
-
-        for (var i = 0; i < ITERATIONS; i++)
-        {
-            parsings += RunSimpleSearchlightSuite(engine);
-        }
-
-        var totalTime = sw.Elapsed;
-        var timePerParse = totalTime / parsings;
-        Console.WriteLine($"Completed {parsings} searchlight Parses in {totalTime} (or {timePerParse} each)");
     }
 
-    private static int RunSimpleSearchlightSuite(SearchlightEngine engine)
+    [Benchmark]
+    public int RunSimpleSearchlightSuite()
     {
         int totalCount = 0;
         foreach (var filter in new string[]
@@ -44,7 +39,7 @@ public class Program
                          "Name asc, HireDate desc",
                      })
             {
-                var syntaxTree = engine.Parse(new FetchRequest()
+                var syntaxTree = _engine.Parse(new FetchRequest()
                     { table = "Employee", filter = filter, order = order });
                 if (syntaxTree == null)
                 {
