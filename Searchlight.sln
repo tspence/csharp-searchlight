@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Files", "Other Files"
 		README.md = README.md
 		Searchlight.nuspec = Searchlight.nuspec
 		.travis.yml = .travis.yml
+		icons8-searchlight-90.png = icons8-searchlight-90.png
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net50", "net50", "{796B1681-73F8-47B4-933C-408B7637B0EE}"
