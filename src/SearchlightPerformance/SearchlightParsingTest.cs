@@ -6,10 +6,6 @@ using BenchmarkDotNet.Jobs;
 using perftest;
 using Searchlight;
 
-[SimpleJob(RuntimeMoniker.Net472, baseline: true)]
-[SimpleJob(RuntimeMoniker.NetCoreApp30)]
-[SimpleJob(RuntimeMoniker.CoreRt30)]
-[RPlotExporter]
 public class SearchlightParsingTest
 {
     private SearchlightEngine _engine;
