@@ -1,3 +1,17 @@
+# 0.9.20
+March 15, 2022
+
+* Performance testing shows that a batch of six Parse calls takes about 24 microseconds
+* Based on performance testing, there's no reason to build libraries for any version other than NetStandard20
+* Added aliases for `gte` and `lte` criteria
+* Added icon thanks to https://icons8.com/icons/set/searchlight# 0.9.19
+
+# 0.9.19
+March 7, 2022
+
+Added support for NetCoreApp 3.1 and NetStandard 2.0 frameworks.
+Removed dependency on System.Dynamic.Linq.Core.
+
 # 0.9.18
 March 1, 2022
 

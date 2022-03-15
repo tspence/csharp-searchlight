@@ -374,7 +374,7 @@ namespace Searchlight
         /// <returns></returns>
         public List<SortInfo> ParseOrderBy(string orderBy)
         {
-            List<SortInfo> list = new List<SortInfo>();
+            var list = new List<SortInfo>();
             if (string.IsNullOrWhiteSpace(orderBy))
             {
                 orderBy = DefaultSort;

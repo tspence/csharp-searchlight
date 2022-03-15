@@ -10,6 +10,9 @@ A lightweight, secure query language for searching through databases and in-memo
 Searchlight is a simple and safe query language for API design.  [Designed with security in mind](https://tedspence.com/protecting-apis-with-layered-security-8c989fb5a19f), 
 it works well with REST, provides complex features, and is easier to learn than GraphQL.  
 
+* **Fast**
+Searchlight uses precalculated search tables for performance of roughly 24 microseconds per six calls to Parse, or about 4
+microseconds per FetchRequest object parsed.
 * **Safe from SQL injection** 
 As a compiled language, the Searchlight query language is safe from SQL injection attacks.  Malformed queries generate clear
 error messages within Searchlight, and if you choose to use Searchlight on top of an SQL database, all queries executed on 

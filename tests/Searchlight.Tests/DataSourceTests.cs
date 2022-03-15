@@ -127,5 +127,21 @@ namespace Searchlight.Tests
             Assert.IsTrue(cc.Children[1] is CriteriaClause);
             Assert.AreEqual(cc.Children[1].Conjunction, ConjunctionType.NONE);
         }
+
+        [TestMethod]
+        public void ParseGteLte()
+        {
+            var clauses = _source.ParseFilter("(a gte 'test' OR b lte 1)");
+            Assert.IsTrue(clauses[0] is CompoundClause);
+            Assert.AreEqual(clauses.Count, 1);
+            var cc = clauses[0] as CompoundClause;
+            Assert.AreEqual(cc.Children.Count, 2);
+            Assert.IsTrue(cc.Children[0] is CriteriaClause);
+            Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause)cc.Children[0]).Operation);
+            Assert.AreEqual(cc.Children[0].Conjunction, ConjunctionType.OR);
+            Assert.IsTrue(cc.Children[1] is CriteriaClause);
+            Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause)cc.Children[1]).Operation);
+            Assert.AreEqual(cc.Children[1].Conjunction, ConjunctionType.NONE);
+        }
     }
 }
