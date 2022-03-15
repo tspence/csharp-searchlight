@@ -140,7 +140,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause)cc.Children[0]).Operation);
             Assert.AreEqual(cc.Children[0].Conjunction, ConjunctionType.OR);
             Assert.IsTrue(cc.Children[1] is CriteriaClause);
-            Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause)cc.Children[0]).Operation);
+            Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause)cc.Children[1]).Operation);
             Assert.AreEqual(cc.Children[1].Conjunction, ConjunctionType.NONE);
         }
     }
