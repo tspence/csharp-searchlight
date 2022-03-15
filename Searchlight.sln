@@ -45,6 +45,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight.Tests.netcoreap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight.Tests.netstandard20", "tests\Searchlight.Tests\netstandard20\Searchlight.Tests.netstandard20.csproj", "{DCFB2207-859B-4A8C-8B5B-4180AE7ED697}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "performance", "performance", "{B82A1F8F-20CD-4B7A-A516-30AD31DA2614}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "perftest", "src\perftest\perftest.csproj", "{64285A31-2226-4BF5-A587-0A4E9A90B9C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +103,10 @@ Global
 		{DCFB2207-859B-4A8C-8B5B-4180AE7ED697}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DCFB2207-859B-4A8C-8B5B-4180AE7ED697}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DCFB2207-859B-4A8C-8B5B-4180AE7ED697}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -120,6 +128,8 @@ Global
 		{030602EE-280F-45CA-9C93-F936AE1EB733} = {9EF63F4D-5F60-4E4F-83EF-D35E52A06AF9}
 		{8E168AC9-BEE5-4644-B7C6-225EFC2E77BB} = {2235516A-8B9A-4C73-8586-D7E8F4951841}
 		{DCFB2207-859B-4A8C-8B5B-4180AE7ED697} = {2F9E2927-E5E9-4757-829D-A349CCF67FF7}
+		{B82A1F8F-20CD-4B7A-A516-30AD31DA2614} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7} = {B82A1F8F-20CD-4B7A-A516-30AD31DA2614}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B73979E0-9FBB-4001-82CF-D56D3519E936}

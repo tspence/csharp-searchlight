@@ -31,9 +31,11 @@ namespace Searchlight
             { "EQ", OperationType.Equals },
             { "GT", OperationType.GreaterThan  },
             { "GE", OperationType.GreaterThanOrEqual },
+            { "GTE", OperationType.GreaterThanOrEqual },
             { "NE", OperationType.NotEqual },
             { "LT", OperationType.LessThan },
             { "LE", OperationType.LessThanOrEqual },
+            { "LTE", OperationType.LessThanOrEqual },
 
             // Slightly less common query expressions
             { "BETWEEN",        OperationType.Between     },

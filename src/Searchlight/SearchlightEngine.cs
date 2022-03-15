@@ -130,7 +130,7 @@ namespace Searchlight
         /// <returns></returns>
         public DataSource FindTable(string name)
         {
-            if (String.IsNullOrWhiteSpace(name)) return null;
+            if (string.IsNullOrWhiteSpace(name)) return null;
             return _dictionary.TryGetValue(name, out var source) ? source : null;
         }
 
