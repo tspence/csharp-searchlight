@@ -3,16 +3,6 @@ solution: Searchlight.sln
 
 jobs:
   include:
-    - dotnet: 6.0.100
-      mono: none
-      script:
-        - dotnet build ./tests/Searchlight.Tests/net60/Searchlight.Tests.net60.csproj
-        - dotnet test ./tests/Searchlight.Tests/net60/Searchlight.Tests.net60.csproj
-    - dotnet: 5.0.201
-      mono: none
-      script:
-        - dotnet build ./tests/Searchlight.Tests/net50/Searchlight.Tests.net50.csproj
-        - dotnet test ./tests/Searchlight.Tests/net50/Searchlight.Tests.net50.csproj
     - dotnet: 2.1.502
       mono: none
       script:
