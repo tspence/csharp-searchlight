@@ -275,10 +275,10 @@ namespace Searchlight.Tests
             syntax = _src.Parse("name not contains 's'");
             results = syntax.QueryCollection<EmployeeObj>(list);
             resultsArr = results;
-            Assert.AreEqual(8, resultsArr.records.Length);
+            Assert.AreEqual(1, resultsArr.records.Length);
             foreach (var e in resultsArr.records)
             {
-                Assert.IsTrue(e != null && !e.name.Contains('s', StringComparison.OrdinalIgnoreCase));
+                Assert.IsTrue(e != null && (e.name == null || !e.name.Contains('s', StringComparison.OrdinalIgnoreCase)));
             }
         }
         
