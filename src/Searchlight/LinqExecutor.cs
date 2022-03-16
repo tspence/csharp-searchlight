@@ -112,7 +112,7 @@ namespace Searchlight
         /// <returns></returns>
         private static Expression BuildExpression(ParameterExpression select, List<BaseClause> query, DataSource src)
         {
-            ConjunctionType ct = ConjunctionType.NONE;
+            var ct = ConjunctionType.NONE;
             Expression result = null;
             foreach (var clause in query)
             {
@@ -154,6 +154,7 @@ namespace Searchlight
         {
             Expression field;
             Expression value;
+            Expression result;
 
             switch (clause)
             {
@@ -166,19 +167,20 @@ namespace Searchlight
                         case OperationType.Equals:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.Call(null,
+                                result = Expression.Call(null,
                                     typeof(string).GetMethod("Equals",
                                         new [] { typeof(string), typeof(string), typeof(StringComparison) }),
                                     field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase));
                             }
                             else
                             {
-                                return Expression.Equal(field, value);
+                                result = Expression.Equal(field, value);
                             }
+                            break;
                         case OperationType.GreaterThan:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThan(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
                                                 new []
@@ -190,12 +192,13 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.GreaterThan(field, value);
+                                result = Expression.GreaterThan(field, value);
                             }
+                            break;
                         case OperationType.GreaterThanOrEqual:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThanOrEqual(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
                                                 new []
@@ -207,12 +210,13 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.GreaterThanOrEqual(field, value);
+                                result = Expression.GreaterThanOrEqual(field, value);
                             }
+                            break;
                         case OperationType.LessThan:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThan(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
                                                 new []
@@ -224,12 +228,13 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.LessThan(field, value);
+                                result = Expression.LessThan(field, value);
                             }
+                            break;
                         case OperationType.LessThanOrEqual:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThanOrEqual(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
                                                 new []
@@ -241,10 +246,11 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.LessThanOrEqual(field, value);
+                                result = Expression.LessThanOrEqual(field, value);
                             }
+                            break;
                         case OperationType.StartsWith:
-                            return Expression.TryCatch(
+                            result = Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("StartsWith",
                                         new [] { typeof(string), typeof(StringComparison) }),
@@ -252,9 +258,10 @@ namespace Searchlight
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
+                            break;
 
                         case OperationType.EndsWith:
-                            return Expression.TryCatch(
+                            result = Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("EndsWith",
                                         new [] { typeof(string), typeof(StringComparison) }),
@@ -262,8 +269,9 @@ namespace Searchlight
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
+                            break;
                         case OperationType.Contains:
-                            return Expression.TryCatch(
+                            result = Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("Contains",
                                         new [] { typeof(string), typeof(StringComparison) }),
@@ -271,8 +279,10 @@ namespace Searchlight
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
+                            break;
                         case OperationType.NotEqual:
-                            return Expression.NotEqual(field, value);
+                            result = Expression.NotEqual(field, value);
+                            break;
                         case OperationType.In:
                         case OperationType.IsNull:
                         case OperationType.Between:
@@ -282,6 +292,7 @@ namespace Searchlight
                         default:
                             throw new NotImplementedException();
                     }
+                    break;
 
                 case BetweenClause betweenClause:
                     field = Expression.Property(@select, betweenClause.Column.FieldName);
@@ -291,25 +302,32 @@ namespace Searchlight
                         Expression.Constant(betweenClause.UpperValue, betweenClause.Column.FieldType);
                     Expression lower = Expression.GreaterThanOrEqual(field, lowerValue);
                     Expression upper = Expression.LessThanOrEqual(field, upperValue);
-                    return Expression.And(lower, upper);
+                    result = Expression.And(lower, upper);
+                    break;
 
                 case CompoundClause compoundClause:
-                    return BuildExpression(select, compoundClause.Children, src);
+                    result = BuildExpression(select, compoundClause.Children, src);
+                    break;
 
                 case InClause inClause:
                     field = Expression.Convert(Expression.Property(@select, inClause.Column.FieldName), typeof(object));
                     value = Expression.Constant(inClause.Values, typeof(List<object>));
-                    return Expression.Call(value,
+                    result = Expression.Call(value,
                         typeof(List<object>).GetMethod("Contains", new [] { typeof(object) }),
                         field);
+                    break;
 
                 case IsNullClause isNullClause:
                     field = Expression.Property(@select, isNullClause.Column.FieldName);
-                    return Expression.Equal(field, Expression.Constant(null));
+                    result = Expression.Equal(field, Expression.Constant(null));
+                    break;
 
                 default:
                     throw new NotImplementedException();
             }
+
+            // Negate the final expression if specified
+            return clause.Negated ? Expression.Not(result) : result;
         }
     }
 }
