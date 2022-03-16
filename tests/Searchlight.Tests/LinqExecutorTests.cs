@@ -490,6 +490,13 @@ namespace Searchlight.Tests
             Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.records.Length);
+            
+            // Try the inverse
+            syntax = _src.Parse("name not eq 'ALICE SMITH'");
+            result = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(list.Count - 1, result.records.Length);
         }
       
         [TestMethod]
@@ -498,7 +505,6 @@ namespace Searchlight.Tests
             var list = GetTestList();
             
             var syntax = _src.Parse("hired < TODAY");
-
             var result = syntax.QueryCollection(list);
             Assert.IsTrue(result.records.Length == 3 || result.records.Length == 4);
 
@@ -532,13 +538,21 @@ namespace Searchlight.Tests
             
             var syntax = _src.Parse("hired > 2020-01-01");
             var result = syntax.QueryCollection(list);
-            
             Assert.IsTrue(result.records.Any());
             Assert.IsTrue(result.records.Length == list.Count);
             
             syntax = _src.Parse("hired < 1985-01-01");
             result = syntax.QueryCollection(list);
+            Assert.IsFalse(result.records.Any());
 
+            // Now try the opposite
+            syntax = _src.Parse("hired not < 1985-01-01");
+            result = syntax.QueryCollection(list);
+            Assert.IsTrue(result.records.Any());
+            Assert.IsTrue(result.records.Length == list.Count);
+
+            syntax = _src.Parse("hired not > 2020-01-01");
+            result = syntax.QueryCollection(list);
             Assert.IsFalse(result.records.Any());
         }
 
@@ -561,7 +575,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "id descending");
             result = syntax.QueryCollection(list);
 
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].id, control[i].id);
             }
@@ -572,7 +586,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "name ASC");
             result = syntax.QueryCollection(list);
             
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].name, control[i].name);
             }
@@ -614,7 +628,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "onduty ASC");
             result = syntax.QueryCollection(list);
             
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
@@ -624,7 +638,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "onduty DESC");
             result = syntax.QueryCollection(list);
             
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
@@ -635,7 +649,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "hired ASC");
             result = syntax.QueryCollection(list);
             
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].hired, control[i].hired);
             }
@@ -644,7 +658,7 @@ namespace Searchlight.Tests
             control = (from item in GetTestList() orderby item.hired descending select item).ToList();
             syntax = _src.Parse("", null, "hired DESC");
             result = syntax.QueryCollection(list);
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].hired, control[i].hired);
             }
