@@ -77,10 +77,10 @@ namespace Searchlight
             return sql;
         }
 
-        internal static string RenderOrderByClause(List<SortInfo> list)
+        private static string RenderOrderByClause(List<SortInfo> list)
         {
             var sb = new StringBuilder();
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 if (i > 0)
                 {
@@ -100,7 +100,7 @@ namespace Searchlight
         /// <param name="clause"></param>
         /// <param name="sql"></param>
         /// <returns></returns>
-        public static string RenderJoinedClauses(List<BaseClause> clause, SqlQuery sql)
+        private static string RenderJoinedClauses(List<BaseClause> clause, SqlQuery sql)
         {
             var sb = new StringBuilder();
             for (var i = 0; i < clause.Count; i++)
@@ -115,6 +115,7 @@ namespace Searchlight
                         case ConjunctionType.OR:
                             sb.Append(" OR ");
                             break;
+                        case ConjunctionType.NONE:
                         default:
                             throw new NotImplementedException();
                     }
@@ -131,12 +132,12 @@ namespace Searchlight
         /// <param name="sql"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static string RenderClause(BaseClause clause, SqlQuery sql)
+        private static string RenderClause(BaseClause clause, SqlQuery sql)
         {
             switch (clause)
             {
                 case BetweenClause bc:
-                    return $"{bc.Column.OriginalName} BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}";
+                    return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}";
                 case CompoundClause compoundClause:
                     return $"({RenderJoinedClauses(compoundClause.Children, sql)})";
                 case CriteriaClause cc:
@@ -159,19 +160,23 @@ namespace Searchlight
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value + "%")}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + cc.Value + "%")}";
                         case OperationType.StartsWith:
                             if (cc.Value?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} LIKE {sql.AddParameter(cc.Value + "%")}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter(cc.Value + "%")}";
                         case OperationType.EndsWith:
                             if (cc.Value?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} LIKE {sql.AddParameter("%" + cc.Value)}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + cc.Value)}";
+                        case OperationType.Unknown:
+                        case OperationType.Between:
+                        case OperationType.In:
+                        case OperationType.IsNull:
                         default:
                             throw new Exception("Incorrect clause type");
                     }
@@ -188,11 +193,8 @@ namespace Searchlight
 
 
     /*
-    /// <summary>
-    /// Database helper
-    /// </summary>
-    /// <typeparam name="KEY"></typeparam>
-    /// <typeparam name="ENTITY"></typeparam>
+     Old code to someday resurface 
+
     public class DbHelper<KEY, ENTITY>
     {
         private SafeQueryParser _parser;

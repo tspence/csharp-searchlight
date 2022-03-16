@@ -79,6 +79,12 @@ namespace Searchlight.Tests
             sql = query.ToSqlServerCommand();
             Assert.AreEqual("b BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
             Assert.AreEqual(2, sql.Parameters.Count);
+            
+            // Fourth test, inverse
+            query = _source.Parse("b not BETWEEN 1 AND 5");
+            sql = query.ToSqlServerCommand();
+            Assert.AreEqual("b NOT BETWEEN @p1 AND @p2", sql.WhereClause.ToString());
+            Assert.AreEqual(2, sql.Parameters.Count);
         }
 
         [TestMethod]
@@ -197,6 +203,9 @@ namespace Searchlight.Tests
             Assert.AreEqual("a LIKE @p1", ParseWhereClause("a startswith 'test%'"));
             Assert.AreEqual("a LIKE @p1", ParseWhereClause("a endswith 'test'"));
             Assert.AreEqual("a LIKE @p1", ParseWhereClause("a contains 'test'"));
+            Assert.AreEqual("a NOT LIKE @p1", ParseWhereClause("a not startswith 'test%'"));
+            Assert.AreEqual("a NOT LIKE @p1", ParseWhereClause("a not endswith 'test'"));
+            Assert.AreEqual("a NOT LIKE @p1", ParseWhereClause("a not contains 'test'"));
             Assert.AreEqual("a IS NULL", ParseWhereClause("a is null"));
             Assert.AreEqual("a IS NOT NULL", ParseWhereClause("a is not null"));
             Assert.AreEqual("a NOT IN (@p1, @p2)", ParseWhereClause("a not in ('test', 'test2')"));
