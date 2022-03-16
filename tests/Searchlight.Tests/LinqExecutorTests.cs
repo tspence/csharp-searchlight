@@ -261,14 +261,24 @@ namespace Searchlight.Tests
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.Contains, ((CriteriaClause) syntax.Filter[0]).Operation);
             Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value);
-
+            
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
             var resultsArr = results;
             Assert.AreEqual(8, resultsArr.records.Length);
             foreach (var e in resultsArr.records)
             {
-                Assert.IsTrue(e.name.IndexOf("s", StringComparison.OrdinalIgnoreCase) >= 0);
+                Assert.IsTrue(e != null && e.name.Contains('s', StringComparison.OrdinalIgnoreCase));
+            }
+            
+            // Now test the opposite
+            syntax = _src.Parse("name not contains 's'");
+            results = syntax.QueryCollection<EmployeeObj>(list);
+            resultsArr = results;
+            Assert.AreEqual(8, resultsArr.records.Length);
+            foreach (var e in resultsArr.records)
+            {
+                Assert.IsTrue(e != null && !e.name.Contains('s', StringComparison.OrdinalIgnoreCase));
             }
         }
         
