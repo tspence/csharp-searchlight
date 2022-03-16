@@ -171,11 +171,12 @@ namespace Searchlight.Tests
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("id between 2 and 4");
             Assert.AreEqual(1, syntax.Filter.Count);
+            Assert.AreEqual(false, syntax.Filter[0].Negated);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((BetweenClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue);
             Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue);
-
+            
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection<EmployeeObj>(list);
             Assert.AreEqual(3, results.records.Length);
@@ -183,6 +184,21 @@ namespace Searchlight.Tests
             {
                 Assert.IsTrue(e.id > 1);
                 Assert.IsTrue(e.id < 5);
+            }
+
+            // Test the opposite
+            syntax = _src.Parse("id not between 2 and 4");
+            Assert.AreEqual(1, syntax.Filter.Count);
+            Assert.AreEqual(true, syntax.Filter[0].Negated);
+            Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
+            Assert.AreEqual("id", ((BetweenClause) syntax.Filter[0]).Column.FieldName);
+            Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue);
+            Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue);
+            results = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.AreEqual(6, results.records.Length);
+            foreach (var e in results.records)
+            {
+                Assert.IsTrue(e.id <= 1 || e.id >= 5);
             }
         }
 
@@ -392,12 +408,17 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             var syntax = _src.Parse("Name is NULL");
-
             var result = syntax.QueryCollection<EmployeeObj>(list);
-
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
             Assert.AreEqual(1, result.records.Length);
+            
+            // Test the opposite
+            syntax = _src.Parse("Name is not NULL");
+            result = syntax.QueryCollection<EmployeeObj>(list);
+            Assert.IsNotNull(result);
+            Assert.IsTrue(result.records.Any());
+            Assert.AreEqual(8, result.records.Length);
         }
 
 
