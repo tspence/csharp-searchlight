@@ -1,11 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight;
-using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Searchlight.Exceptions;
+
+// This file has lots of intentional misspellings
+// ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
+
+// Highlighting allocations on this file is annoying 
+// ReSharper disable HeapView.DelegateAllocation
 
 namespace Searchlight.Tests
 {
@@ -16,6 +20,7 @@ namespace Searchlight.Tests
         private static List<EmployeeObj> _list;
         
         [SearchlightModel(DefaultSort = nameof(name))]
+        // ReSharper disable once MemberCanBePrivate.Global
         public class EmployeeObj
         {
             public string name { get; set; }
@@ -25,75 +30,71 @@ namespace Searchlight.Tests
             public bool onduty { get; set; }
         }
 
-        public static List<EmployeeObj> GetTestList()
+        private static List<EmployeeObj> GetTestList()
         {
-            if (_list == null)
+            return _list ??= new List<EmployeeObj>
             {
-                _list = new List<EmployeeObj>
+                new()
+                    { hired = DateTime.Today, id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
+                new()
                 {
-                    new EmployeeObj()
-                        { hired = DateTime.Today, id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
-                    new EmployeeObj()
-                    {
-                        hired = DateTime.Today.AddMonths(-1),
-                        id = 2,
-                        name = "Bob Rogers",
-                        onduty = true,
-                        paycheck = 1000.00m
-                    },
-                    new EmployeeObj()
-                    {
-                        hired = DateTime.Today.AddMonths(-6),
-                        id = 3,
-                        name = "Charlie Prentiss",
-                        onduty = false,
-                        paycheck = 800.0m
-                    },
-                    new EmployeeObj()
-                    {
-                        hired = DateTime.Today.AddMonths(-12),
-                        id = 4,
-                        name = "Danielle O'Shea",
-                        onduty = false,
-                        paycheck = 1200.0m
-                    },
-                    new EmployeeObj()
-                    {
-                        hired = DateTime.Today.AddMonths(1),
-                        id = 5,
-                        name = "Ernest Nofzinger",
-                        onduty = true,
-                        paycheck = 1000.00m
-                    },
-                    new EmployeeObj()
-                        { hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m },
-                    new EmployeeObj()
-                    {
-                        hired = DateTime.Today.AddMonths(2),
-                        id = 7,
-                        name = "Roderick 'null' Sqlkeywordtest",
-                        onduty = false,
-                        paycheck = 578.00m
-                    },
-                    new EmployeeObj()
-                    {
-                        hired = DateTime.UtcNow.AddHours(-1),
-                        id = 8,
-                        name = "Joe 'Fresh Hire' McGillicuddy",
-                        onduty = false,
-                        paycheck = 123.00m,
-                    },
-                    new EmployeeObj()
-                    {
-                        hired = DateTime.UtcNow.AddHours(1),
-                        id = 8,
-                        name = "Carol 'Starting Soon!' Yamashita",
-                        onduty = false,
-                        paycheck = 987.00m,
-                    }
-                };
-            }
-            return _list;
+                    hired = DateTime.Today.AddMonths(-1),
+                    id = 2,
+                    name = "Bob Rogers",
+                    onduty = true,
+                    paycheck = 1000.00m
+                },
+                new()
+                {
+                    hired = DateTime.Today.AddMonths(-6),
+                    id = 3,
+                    name = "Charlie Prentiss",
+                    onduty = false,
+                    paycheck = 800.0m
+                },
+                new()
+                {
+                    hired = DateTime.Today.AddMonths(-12),
+                    id = 4,
+                    name = "Danielle O'Shea",
+                    onduty = false,
+                    paycheck = 1200.0m
+                },
+                new()
+                {
+                    hired = DateTime.Today.AddMonths(1),
+                    id = 5,
+                    name = "Ernest Nofzinger",
+                    onduty = true,
+                    paycheck = 1000.00m
+                },
+                new()
+                    { hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m },
+                new()
+                {
+                    hired = DateTime.Today.AddMonths(2),
+                    id = 7,
+                    name = "Roderick 'null' Sqlkeywordtest",
+                    onduty = false,
+                    paycheck = 578.00m
+                },
+                new()
+                {
+                    hired = DateTime.UtcNow.AddHours(-1),
+                    id = 8,
+                    name = "Joe 'Fresh Hire' McGillicuddy",
+                    onduty = false,
+                    paycheck = 123.00m,
+                },
+                new()
+                {
+                    hired = DateTime.UtcNow.AddHours(1),
+                    id = 8,
+                    name = "Carol 'Starting Soon!' Yamashita",
+                    onduty = false,
+                    paycheck = 987.00m,
+                }
+            };
         }
 
         public LinqExecutorTests()
@@ -118,7 +119,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause) syntax.Filter[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var results = syntax.QueryCollection(list);
             Assert.AreEqual(7, results.records.Length);
             foreach (var e in results.records)
             {
@@ -153,13 +154,12 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause) cc.Children[1]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var results = syntax.QueryCollection(list);
             Assert.AreEqual(6, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);
-                Assert.IsTrue(e.paycheck == 800.0m || e.paycheck == 1200.0m || e.paycheck == 10.0m ||
-                              e.paycheck == 578.00m || e.paycheck == 123.00m || e.paycheck == 987.00m);
+                Assert.IsTrue(e.paycheck is 800.0m or 1200.0m or 10.0m or 578.00m or 123.00m or 987.00m);
             }
         }
 
@@ -178,7 +178,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue);
             
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var results = syntax.QueryCollection(list);
             Assert.AreEqual(3, results.records.Length);
             foreach (var e in results.records)
             {
@@ -194,11 +194,11 @@ namespace Searchlight.Tests
             Assert.AreEqual("id", ((BetweenClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue);
             Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue);
-            results = syntax.QueryCollection<EmployeeObj>(list);
+            results = syntax.QueryCollection(list);
             Assert.AreEqual(6, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(e.id <= 1 || e.id >= 5);
+                Assert.IsTrue(e.id is <= 1 or >= 5);
             }
         }
 
@@ -217,7 +217,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("A", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var results = syntax.QueryCollection(list);
             Assert.AreEqual(1, results.records.Length);
             foreach (var e in results.records)
             {
@@ -240,7 +240,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
+            var results = syntax.QueryCollection(list);
             Assert.AreEqual(2, results.records.Length);
             foreach (var e in results.records)
             {
@@ -263,20 +263,18 @@ namespace Searchlight.Tests
             Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value);
             
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results;
-            Assert.AreEqual(8, resultsArr.records.Length);
-            foreach (var e in resultsArr.records)
+            var results = syntax.QueryCollection(list);
+            Assert.AreEqual(8, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(e != null && e.name.Contains('s', StringComparison.OrdinalIgnoreCase));
             }
             
             // Now test the opposite
             syntax = _src.Parse("name not contains 's'");
-            results = syntax.QueryCollection<EmployeeObj>(list);
-            resultsArr = results;
-            Assert.AreEqual(1, resultsArr.records.Length);
-            foreach (var e in resultsArr.records)
+            results = syntax.QueryCollection(list);
+            Assert.AreEqual(1, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(e != null && (e.name == null || !e.name.Contains('s', StringComparison.OrdinalIgnoreCase)));
             }
@@ -295,10 +293,9 @@ namespace Searchlight.Tests
             Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results;
-            Assert.AreEqual(7, resultsArr.records.Length);
-            foreach (var e in resultsArr.records)
+            var results = syntax.QueryCollection(list);
+            Assert.AreEqual(7, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) > 0);
             }
@@ -317,12 +314,11 @@ namespace Searchlight.Tests
             Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results;
-            Assert.AreEqual(7, resultsArr.records.Length);
-            foreach (var e in resultsArr.records)
+            var results = syntax.QueryCollection(list);
+            Assert.AreEqual(7, results.records.Length);
+            foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name.Substring(0, "bob rogers".Length), "bob rogers", StringComparison.CurrentCultureIgnoreCase) >= 0);
+                Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers", StringComparison.CurrentCultureIgnoreCase) >= 0);
             }
         }
         
@@ -339,10 +335,9 @@ namespace Searchlight.Tests
             Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results;
-            Assert.AreEqual(1, resultsArr.records.Length);
-            foreach (var e in resultsArr.records)
+            var results = syntax.QueryCollection(list);
+            Assert.AreEqual(1, results.records.Length);
+            foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) < 0);
             }
@@ -361,12 +356,11 @@ namespace Searchlight.Tests
             Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value);
 
             // Execute the query and ensure that each result matches
-            var results = syntax.QueryCollection<EmployeeObj>(list);
-            var resultsArr = results;
-            Assert.AreEqual(2, resultsArr.records.Length);
-            foreach (var e in resultsArr.records)
+            var results = syntax.QueryCollection(list);
+            Assert.AreEqual(2, results.records.Length);
+            foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name.Substring(0, "bob rogers".Length), "bob rogers", StringComparison.CurrentCultureIgnoreCase) <= 0);
+                Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers", StringComparison.CurrentCultureIgnoreCase) <= 0);
             }
         }
 
@@ -377,7 +371,7 @@ namespace Searchlight.Tests
 
             var syntax = _src.Parse("Name != 'Alice Smith'");
 
-            var result = syntax.QueryCollection<EmployeeObj>(list);
+            var result = syntax.QueryCollection(list);
 
             Assert.AreEqual(list.Count - 1, result.records.Length);
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
@@ -387,28 +381,10 @@ namespace Searchlight.Tests
         [TestMethod]
         public void BooleanContains()
         {
-            var list = GetTestList();
-
-            // Note that the "between" clause is inclusive
-            Assert.ThrowsException<FieldTypeMismatch>(() =>
-            {
-                var syntax = _src.Parse("onduty contains 's'");
-            });
-            Assert.ThrowsException<FieldTypeMismatch>(() =>
-                {
-                    var syntax = _src.Parse("onduty contains True");
-                }
-            );
-            Assert.ThrowsException<FieldTypeMismatch>(() =>
-                {
-                    var syntax = _src.Parse("onduty startswith True");
-                }
-            );
-            Assert.ThrowsException<FieldTypeMismatch>(() =>
-                {
-                    var syntax = _src.Parse("onduty endswith True");
-                }
-            );
+            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty contains 's'"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty contains True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty startswith True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty endswith True"); });
         }
 
 
@@ -418,14 +394,14 @@ namespace Searchlight.Tests
             var list = GetTestList();
 
             var syntax = _src.Parse("Name is NULL");
-            var result = syntax.QueryCollection<EmployeeObj>(list);
+            var result = syntax.QueryCollection(list);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
             Assert.AreEqual(1, result.records.Length);
             
             // Test the opposite
             syntax = _src.Parse("Name is not NULL");
-            result = syntax.QueryCollection<EmployeeObj>(list);
+            result = syntax.QueryCollection(list);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
             Assert.AreEqual(8, result.records.Length);
@@ -436,11 +412,11 @@ namespace Searchlight.Tests
         public void ContainsNull()
         {
             var list = GetTestList();
-            // Searchlight interprets the un-apostrophed word "null" here to be the string value "null"
+            // Searchlight interprets the word "null" without apostrophes here to be the string value "null"
             // instead of a null.
             var syntax = _src.Parse("Name contains null");
 
-            var result = syntax.QueryCollection<EmployeeObj>(list);
+            var result = syntax.QueryCollection(list);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.records.Length);
             Assert.IsTrue(result.records.Any(p => p.name == "Roderick 'null' Sqlkeywordtest"));
@@ -454,7 +430,7 @@ namespace Searchlight.Tests
 
             var syntax = _src.Parse("name in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
 
-            var result = syntax.QueryCollection<EmployeeObj>(list);
+            var result = syntax.QueryCollection(list);
 
             Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsTrue(result.records.Any(p => p.name == "Bob Rogers"));
@@ -463,7 +439,7 @@ namespace Searchlight.Tests
         
             // Now run the opposite query
             syntax = _src.Parse("name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')"); 
-            result = syntax.QueryCollection<EmployeeObj>(list);
+            result = syntax.QueryCollection(list);
 
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsFalse(result.records.Any(p => p.name == "Bob Rogers"));
@@ -473,14 +449,14 @@ namespace Searchlight.Tests
 
 
         [TestMethod]
-        public void InQueryInts()
+        public void InQueryInt()
         {
             var list = GetTestList();
             // getting not implemented error on this line
             // make sure using right formatting, if so then in operator needs adjustment
             var syntax = _src.Parse("id in (1,2,57)");
 
-            var result = syntax.QueryCollection<EmployeeObj>(list);
+            var result = syntax.QueryCollection(list);
 
             Assert.IsTrue(result.records.Any(p => p.id == 1));
             Assert.IsTrue(result.records.Any(p => p.id == 2));
@@ -516,7 +492,7 @@ namespace Searchlight.Tests
 
             var syntax = _src.Parse("name eq 'ALICE SMITH'");
 
-            var result = syntax.QueryCollection<EmployeeObj>(list);
+            var result = syntax.QueryCollection(list);
 
             Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
@@ -524,7 +500,7 @@ namespace Searchlight.Tests
             
             // Try the inverse
             syntax = _src.Parse("name not eq 'ALICE SMITH'");
-            result = syntax.QueryCollection<EmployeeObj>(list);
+            result = syntax.QueryCollection(list);
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
             Assert.AreEqual(list.Count - 1, result.records.Length);
@@ -693,15 +669,13 @@ namespace Searchlight.Tests
             {
                 Assert.AreEqual(result.records[i].hired, control[i].hired);
             }
-            
-            //TODO: add test that sorts multiple fields
         }
 
         [TestMethod]
         public void DefaultReturn()
         {
             var list = GetTestList();
-            var syntax = _src.Parse("", null, null);
+            var syntax = _src.Parse("");
             syntax.PageNumber = 0; // default is 0
             syntax.PageSize = 0; // default is 0
             
@@ -715,7 +689,7 @@ namespace Searchlight.Tests
         public void PageNumberNoPageSize()
         {
             var list = GetTestList();
-            var syntax = _src.Parse("", null, null);
+            var syntax = _src.Parse("");
             syntax.PageNumber = 2;
             syntax.PageSize = 0; // default is 0
 
@@ -729,7 +703,7 @@ namespace Searchlight.Tests
         public void PageSizeNoPageNumber()
         {
             var list = GetTestList();
-            var syntax = _src.Parse("", null, null);
+            var syntax = _src.Parse("");
             
             syntax.PageSize = 2;
             syntax.PageNumber = 0; // no page number defaults to 0
@@ -744,7 +718,7 @@ namespace Searchlight.Tests
         public void PageSizeAndPageNumber()
         {
             var list = GetTestList();
-            var syntax = _src.Parse("", null, null);
+            var syntax = _src.Parse("");
             syntax.PageSize = 1;
             syntax.PageNumber = 2;
 
