@@ -1,3 +1,4 @@
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight;
 using Searchlight.Query;
@@ -384,6 +385,36 @@ namespace Searchlight.Tests
             Assert.AreEqual(1, syntax.OrderBy.Count);
             Assert.AreEqual("Name", syntax.OrderBy[0].Column.FieldName);
             Assert.AreEqual(SortDirection.Ascending, syntax.OrderBy[0].Direction);
+        }
+
+        [SearchlightModel(DefaultSort = "name")]
+        public class TestWithDateField
+        {
+            [SearchlightField]
+            public string Name { get; set; }
+
+            [SearchlightField]
+            public DateTime Date { get; set; }
+        }
+
+        [TestMethod]
+        public void QueryComputedCriteria()
+        {
+            var source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
+            var syntax = source.Parse("hired > TODAY - 30");
+            Assert.AreEqual(1, syntax.Filter.Count);
+
+            source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
+            syntax = source.Parse("hired > NOW + 1");
+            Assert.AreEqual(1, syntax.Filter.Count);
+
+            source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
+            syntax = source.Parse("hired > TOMORROW + 0");
+            Assert.AreEqual(1, syntax.Filter.Count);
+            
+            source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
+            syntax = source.Parse("hired > YESTERDAY - 0");
+            Assert.AreEqual(1, syntax.Filter.Count);
         }
     }
 }
