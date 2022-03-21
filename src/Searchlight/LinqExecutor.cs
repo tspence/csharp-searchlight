@@ -77,7 +77,7 @@ namespace Searchlight
         private static IQueryable<T> InternalOrderBy<T>(IQueryable source, List<SortInfo> orderBy)
         {
             var queryExpr = source.Expression;
-            int count = 0;
+            var count = 0;
             ParameterExpression[] parameterExpressions =
             {
                 Expression.Parameter(source.ElementType, "Param_0")
@@ -117,19 +117,13 @@ namespace Searchlight
             foreach (var clause in query)
             {
                 var clauseExpression = BuildOneExpression(select, clause, src);
-
-                // First clause starts a run
                 if (result == null)
                 {
                     result = clauseExpression;
-
-                    // If the previous clause specified 'and'
                 }
                 else if (ct == ConjunctionType.AND)
                 {
                     result = Expression.And(result, clauseExpression);
-
-                    // If the previous clause specified 'or'
                 }
                 else if (ct == ConjunctionType.OR)
                 {
@@ -138,8 +132,6 @@ namespace Searchlight
 
                 ct = clause.Conjunction;
             }
-
-            // Here's your expression
             return result;
         }
 

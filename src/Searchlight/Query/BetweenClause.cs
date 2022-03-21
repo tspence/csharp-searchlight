@@ -25,5 +25,13 @@ namespace Searchlight.Query
         /// Upper value in the between test
         /// </summary>
         public object UpperValue { get; set; }
+        
+        /// <summary>
+        /// Render this criteria in a readable string
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Column.FieldName} between {LowerValue} and {UpperValue}";
+        }
     }
 }

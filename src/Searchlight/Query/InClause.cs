@@ -20,5 +20,13 @@ namespace Searchlight.Query
         /// The list of values to test against
         /// </summary>
         public List<object> Values { get; set; }
+        
+        /// <summary>
+        /// Render this criteria in a readable string
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Column.FieldName} in ({string.Join(", ", Values)})";
+        }
     }
 }

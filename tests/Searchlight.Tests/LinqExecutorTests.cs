@@ -7,6 +7,8 @@ using System.Linq;
 // This file has lots of intentional misspellings
 // ReSharper disable StringLiteralTypo
 // ReSharper disable CommentTypo
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable IdentifierTypo
 
 // Highlighting allocations on this file is annoying 
 // ReSharper disable HeapView.DelegateAllocation
@@ -17,10 +19,8 @@ namespace Searchlight.Tests
     public class LinqExecutorTests
     {
         private readonly DataSource _src;
-        private static List<EmployeeObj> _list;
         
         [SearchlightModel(DefaultSort = nameof(name))]
-        // ReSharper disable once MemberCanBePrivate.Global
         public class EmployeeObj
         {
             public string name { get; set; }
@@ -30,9 +30,64 @@ namespace Searchlight.Tests
             public bool onduty { get; set; }
         }
 
+        public class CompatibleEmployeeObj
+        {
+            public string name { get; set; }
+            public int? id { get; set; }
+            public string hired { get; set; }
+            public string paycheck { get; set; }
+            public bool? onduty { get; set; }
+        }
+
+        public class IncompatibleEmployeeObj
+        {
+            public string FullName { get; set; }
+            public int Identifier { get; set; }
+        }
+
+        private static List<IncompatibleEmployeeObj> GetIncompatibleList()
+        {
+            return new List<IncompatibleEmployeeObj>()
+            {
+                new IncompatibleEmployeeObj()
+                {
+                    FullName = "Irving Incompatible",
+                    Identifier = 1,
+                },
+                new IncompatibleEmployeeObj()
+                {
+                    FullName = "Noreen Negative",
+                    Identifier = -1,
+                }
+            };
+        }
+
+        private static List<CompatibleEmployeeObj> GetCompatibleList()
+        {
+            return new List<CompatibleEmployeeObj>()
+            {
+                new CompatibleEmployeeObj()
+                {
+                    name = "Charlie Compatible",
+                    id = 57,
+                    hired = "true",
+                    paycheck = "$1000.00",
+                    onduty = false
+                },
+                new CompatibleEmployeeObj()
+                {
+                    name = "Nelly Null",
+                    id = null,
+                    hired = null,
+                    paycheck = null,
+                    onduty = null
+                },
+            };
+        }
+
         private static List<EmployeeObj> GetTestList()
         {
-            return _list ??= new List<EmployeeObj>
+            return new List<EmployeeObj>
             {
                 new()
                     { hired = DateTime.Today, id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
@@ -568,17 +623,16 @@ namespace Searchlight.Tests
         {
             // id test ascending and descending
             var list = GetTestList();
-            var control = (from item in GetTestList() orderby item.id ascending select item).ToList();
+            var control = (from item in list orderby item.id ascending select item).ToList();
             var syntax = _src.Parse(null, null, "id ASC");
             var result = syntax.QueryCollection(list);
             
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].id, control[i].id);
             }
             
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.id descending select item).ToList();
+            control = (from item in list orderby item.id descending select item).ToList();
             syntax = _src.Parse("", null, "id descending");
             result = syntax.QueryCollection(list);
 
@@ -588,8 +642,7 @@ namespace Searchlight.Tests
             }
             
             // name test ascending and descending
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.name ascending select item).ToList();
+            control = (from item in list orderby item.name ascending select item).ToList();
             syntax = _src.Parse("", null, "name ASC");
             result = syntax.QueryCollection(list);
             
@@ -598,8 +651,7 @@ namespace Searchlight.Tests
                 Assert.AreEqual(result.records[i].name, control[i].name);
             }
             
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.name descending select item).ToList();
+            control = (from item in list orderby item.name descending select item).ToList();
             syntax = _src.Parse("", null, "name DESC");
             result = syntax.QueryCollection(list);
             
@@ -609,8 +661,7 @@ namespace Searchlight.Tests
             }
             
             // paycheck test ascending and descending
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.paycheck ascending select item).ToList();
+            control = (from item in list orderby item.paycheck ascending select item).ToList();
             syntax = _src.Parse("", null, "paycheck ASC");
             result = syntax.QueryCollection(list);
 
@@ -619,8 +670,7 @@ namespace Searchlight.Tests
                 Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
             
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.paycheck descending select item).ToList();
+            control = (from item in list orderby item.paycheck descending select item).ToList();
             syntax = _src.Parse("", null, "paycheck DESC");
             result = syntax.QueryCollection(list);
             
@@ -630,8 +680,7 @@ namespace Searchlight.Tests
             }
             
             // onduty test ascending and descending
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.onduty ascending select item).ToList();
+            control = (from item in list orderby item.onduty ascending select item).ToList();
             syntax = _src.Parse("", null, "onduty ASC");
             result = syntax.QueryCollection(list);
             
@@ -640,8 +689,7 @@ namespace Searchlight.Tests
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
             
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.onduty descending select item).ToList();
+            control = (from item in list orderby item.onduty descending select item).ToList();
             syntax = _src.Parse("", null, "onduty DESC");
             result = syntax.QueryCollection(list);
             
@@ -651,8 +699,7 @@ namespace Searchlight.Tests
             }
             
             // hired test ascending and descending
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.hired ascending select item).ToList();
+            control = (from item in list orderby item.hired ascending select item).ToList();
             syntax = _src.Parse("", null, "hired ASC");
             result = syntax.QueryCollection(list);
             
@@ -661,8 +708,7 @@ namespace Searchlight.Tests
                 Assert.AreEqual(result.records[i].hired, control[i].hired);
             }
             
-            list = GetTestList();
-            control = (from item in GetTestList() orderby item.hired descending select item).ToList();
+            control = (from item in list orderby item.hired descending select item).ToList();
             syntax = _src.Parse("", null, "hired DESC");
             result = syntax.QueryCollection(list);
             for (var i = 0; i < list.Count; i++)
@@ -725,6 +771,36 @@ namespace Searchlight.Tests
             var result = syntax.QueryCollection(list);
             
             Assert.AreEqual(result.records.Length, 1);
+        }
+
+        [TestMethod]
+        public void QueryCompatibleCollection()
+        {
+            var list = GetCompatibleList();
+            var syntax = _src.Parse("name startswith c and id = 57 and hired > 2020-02-01 and onduty = false");
+            syntax.PageSize = 1;
+            syntax.PageNumber = 2;
+
+            var result = syntax.QueryCollection(list);
+            
+            Assert.AreEqual(result.records.Length, 1);
+            Assert.AreEqual("Charlie Compatible", result.records[0].name);
+            Assert.AreEqual(57, result.records[0].id);
+            Assert.AreEqual("true", result.records[0].hired);
+            Assert.AreEqual("$1000.00", result.records[0].paycheck);
+            Assert.AreEqual(false, result.records[0].onduty);
+        }
+
+        [TestMethod]
+        public void QueryIncompatibleCollection()
+        {
+            var list = GetIncompatibleList();
+            var syntax = _src.Parse("name startswith a");
+            syntax.PageSize = 1;
+            syntax.PageNumber = 2;
+
+            var ex = Assert.ThrowsException<FieldNotFound>(() => { _ = syntax.QueryCollection(list); });
+            Assert.AreEqual("name", ex.FieldName);
         }
     }
 }
