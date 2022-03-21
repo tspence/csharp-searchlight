@@ -15,5 +15,13 @@ namespace Searchlight.Query
         /// The field being tested
         /// </summary>
         public ColumnInfo Column { get; set; }
+        
+        /// <summary>
+        /// Render this criteria in a readable string
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Column.FieldName} is {(this.Negated ? "not" : "")} null";
+        }
     }
 }

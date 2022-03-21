@@ -25,5 +25,13 @@ namespace Searchlight.Query
         /// Value to test against
         /// </summary>
         public object Value { get; set; }
+
+        /// <summary>
+        /// Render this criteria in a readable string
+        /// </summary>
+        public override string ToString()
+        {
+            return $"{Column.FieldName} {Operation} {Value}";
+        }
     }
 }

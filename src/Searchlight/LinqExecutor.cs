@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Searchlight.Parsing;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -27,7 +28,7 @@ namespace Searchlight
             
             // If the user specified a filter 
             var select = Expression.Parameter(typeof(T), "obj");
-            var expression = BuildExpression(select, tree.Filter, tree.Source);
+            var expression = BuildExpression<T>(select, tree.Filter, tree.Source);
             if (expression != null)
             {
                 var whereCallExpression = Expression.Call(
@@ -42,7 +43,7 @@ namespace Searchlight
             // If the user specified a sorting clause
             if (tree.OrderBy.Any())
             {
-                queryable = InternalOrderBy<T>(queryable, tree.OrderBy);
+                queryable = InternalOrderBy<T>(queryable, tree.Source, tree.OrderBy);
             }
 
             // Compute the list once and keep track of full length
@@ -74,16 +75,17 @@ namespace Searchlight
             return result;
         }
         
-        private static IQueryable<T> InternalOrderBy<T>(IQueryable source, List<SortInfo> orderBy)
+        private static IQueryable<T> InternalOrderBy<T>(IQueryable source, DataSource src, List<SortInfo> orderBy)
         {
             var queryExpr = source.Expression;
-            int count = 0;
+            var count = 0;
             ParameterExpression[] parameterExpressions =
             {
                 Expression.Parameter(source.ElementType, "Param_0")
             };
             foreach (var sort in orderBy)
             {
+                AssertClassHasProperty(typeof(T), src, sort.Column);
                 var methodName = count == 0 ? "OrderBy" : "ThenBy";
                 if (sort.Direction == SortDirection.Descending)
                 {
@@ -110,26 +112,20 @@ namespace Searchlight
         /// <param name="query"></param>
         /// <param name="src"></param>
         /// <returns></returns>
-        private static Expression BuildExpression(ParameterExpression select, List<BaseClause> query, DataSource src)
+        private static Expression BuildExpression<T>(ParameterExpression select, List<BaseClause> query, DataSource src)
         {
             var ct = ConjunctionType.NONE;
             Expression result = null;
             foreach (var clause in query)
             {
-                var clauseExpression = BuildOneExpression(select, clause, src);
-
-                // First clause starts a run
+                var clauseExpression = BuildOneExpression<T>(select, clause, src);
                 if (result == null)
                 {
                     result = clauseExpression;
-
-                    // If the previous clause specified 'and'
                 }
                 else if (ct == ConjunctionType.AND)
                 {
                     result = Expression.And(result, clauseExpression);
-
-                    // If the previous clause specified 'or'
                 }
                 else if (ct == ConjunctionType.OR)
                 {
@@ -138,8 +134,6 @@ namespace Searchlight
 
                 ct = clause.Conjunction;
             }
-
-            // Here's your expression
             return result;
         }
 
@@ -150,18 +144,23 @@ namespace Searchlight
         /// <param name="clause"></param>
         /// <param name="src"></param>
         /// <returns></returns>
-        private static Expression BuildOneExpression(ParameterExpression select, BaseClause clause, DataSource src)
+        private static Expression BuildOneExpression<T>(ParameterExpression select, BaseClause clause, DataSource src)
         {
             Expression field;
             Expression value;
             Expression result;
 
+            var t = typeof(T);
+
             switch (clause)
             {
                 case CriteriaClause criteria:
-                    // Obtain a parameter from this object
+                    AssertClassHasProperty(t, src, criteria.Column);
+                    
+                    // Set up LINQ expressions for this object
+                    var valueType = criteria.Column.FieldType;
                     field = Expression.Property(select, criteria.Column.FieldName);
-                    value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
+                    value = Expression.Constant(criteria.Value, valueType);
                     switch (criteria.Operation)
                     {
                         case OperationType.Equals:
@@ -306,7 +305,7 @@ namespace Searchlight
                     break;
 
                 case CompoundClause compoundClause:
-                    result = BuildExpression(select, compoundClause.Children, src);
+                    result = BuildExpression<T>(select, compoundClause.Children, src);
                     break;
 
                 case InClause inClause:
@@ -328,6 +327,42 @@ namespace Searchlight
 
             // Negate the final expression if specified
             return clause.Negated ? Expression.Not(result) : result;
+        }
+
+        /// <summary>
+        /// Test this class to make sure it has the specified type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="source"></param>
+        /// <param name="column"></param>
+        /// <exception cref="FieldTypeMismatch"></exception>
+        /// <exception cref="FieldNotFound"></exception>
+        private static void AssertClassHasProperty(Type type, DataSource source, ColumnInfo column)
+        {
+            // If the types match, we've already verified it during engine definition
+            if (source.ModelType == type) return;
+            
+            // If the types don't match, we need to verify at runtime or throw a clear exception
+            var propInfo = type.GetProperty(column.FieldName);
+            if (propInfo != null)
+            {
+                if (propInfo.PropertyType != column.FieldType)
+                {
+                    throw new FieldTypeMismatch()
+                    {
+                        FieldName = $"{column.FieldName} on type {type.Name}",
+                        FieldType = propInfo.PropertyType.ToString(),
+                    };
+                }
+            }
+            else
+            {
+                throw new FieldNotFound()
+                {
+                    FieldName = column.FieldName,
+                    KnownFields = (from p in type.GetProperties() select p.Name).ToArray()
+                };
+            }
         }
     }
 }
