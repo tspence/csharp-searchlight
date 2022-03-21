@@ -18,5 +18,24 @@
         {
             return Value;
         }
+
+        /// <summary>
+        /// Construct a constant value
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static ConstantValue From(object value)
+        {
+            return new ConstantValue() { Value = value };
+        }
+
+        /// <summary>
+        /// Custom string value
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return $"{Value}";
+        }
     }
 }

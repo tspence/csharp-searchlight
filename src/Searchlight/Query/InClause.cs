@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Searchlight.Expressions;
 
 namespace Searchlight.Query
 {
@@ -19,7 +20,7 @@ namespace Searchlight.Query
         /// <summary>
         /// The list of values to test against
         /// </summary>
-        public List<object> Values { get; set; }
+        public List<IExpressionValue> Values { get; set; }
         
         /// <summary>
         /// Render this criteria in a readable string
