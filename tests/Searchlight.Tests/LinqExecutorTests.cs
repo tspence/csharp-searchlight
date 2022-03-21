@@ -3,6 +3,7 @@ using Searchlight.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.VisualBasic.FileIO;
 
 // This file has lots of intentional misspellings
 // ReSharper disable StringLiteralTypo
@@ -36,7 +37,7 @@ namespace Searchlight.Tests
             public int? id { get; set; }
             public string hired { get; set; }
             public string paycheck { get; set; }
-            public bool? onduty { get; set; }
+            public bool onduty { get; set; }
         }
 
         public class IncompatibleEmployeeObj
@@ -80,7 +81,7 @@ namespace Searchlight.Tests
                     id = null,
                     hired = null,
                     paycheck = null,
-                    onduty = null
+                    onduty = false
                 },
             };
         }
@@ -773,22 +774,31 @@ namespace Searchlight.Tests
             Assert.AreEqual(result.records.Length, 1);
         }
 
+        /// <summary>
+        /// Searchlight can work using LINQ when the class types match up 
+        /// </summary>
         [TestMethod]
-        public void QueryCompatibleCollection()
+        public void QueryPartiallyCompatibleCollection()
         {
             var list = GetCompatibleList();
-            var syntax = _src.Parse("name startswith c and id = 57 and hired > 2020-02-01 and onduty = false");
-            syntax.PageSize = 1;
-            syntax.PageNumber = 2;
 
+            // Try a few queries and sorts that _can_ work on a compatible type
+            var syntax = _src.Parse("name startswith c");
             var result = syntax.QueryCollection(list);
-            
-            Assert.AreEqual(result.records.Length, 1);
             Assert.AreEqual("Charlie Compatible", result.records[0].name);
-            Assert.AreEqual(57, result.records[0].id);
-            Assert.AreEqual("true", result.records[0].hired);
-            Assert.AreEqual("$1000.00", result.records[0].paycheck);
-            Assert.AreEqual(false, result.records[0].onduty);
+            
+            syntax = _src.Parse("name startswith c", null, "onduty asc");
+            result = syntax.QueryCollection(list);
+            Assert.AreEqual("Charlie Compatible", result.records[0].name);
+
+            // Now try a query and a sort that won't work
+            syntax = _src.Parse("name startswith c and id = 57 and hired > 2020-02-01 and onduty = false");
+            var ex = Assert.ThrowsException<FieldTypeMismatch>(() => { _ = syntax.QueryCollection(list); });
+            Assert.AreEqual("id on type CompatibleEmployeeObj", ex.FieldName);
+
+            syntax = _src.Parse("name startswith c", null, "id asc");
+            ex = Assert.ThrowsException<FieldTypeMismatch>(() => { _ = syntax.QueryCollection(list); });
+            Assert.AreEqual("id on type CompatibleEmployeeObj", ex.FieldName);
         }
 
         [TestMethod]
