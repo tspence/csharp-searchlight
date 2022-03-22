@@ -408,19 +408,38 @@ namespace Searchlight.Tests
             Assert.IsNotNull(cc);
             var ic = cc.Value as ComputedDateValue;
             Assert.IsNotNull(ic);
-            Assert.AreEqual("TODAY", cc.Value);
+            Assert.AreEqual("TODAY", ic.Root);
+            Assert.AreEqual(-30, ic.Offset);
 
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
             syntax = source.Parse("hired > NOW + 1");
             Assert.AreEqual(1, syntax.Filter.Count);
+            cc = syntax.Filter[0] as CriteriaClause;
+            Assert.IsNotNull(cc);
+            ic = cc.Value as ComputedDateValue;
+            Assert.IsNotNull(ic);
+            Assert.AreEqual("NOW", ic.Root);
+            Assert.AreEqual(1, ic.Offset);
 
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
             syntax = source.Parse("hired > TOMORROW + 0");
             Assert.AreEqual(1, syntax.Filter.Count);
+            cc = syntax.Filter[0] as CriteriaClause;
+            Assert.IsNotNull(cc);
+            ic = cc.Value as ComputedDateValue;
+            Assert.IsNotNull(ic);
+            Assert.AreEqual("TOMORROW", ic.Root);
+            Assert.AreEqual(0, ic.Offset);
             
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
             syntax = source.Parse("hired > YESTERDAY - 0");
             Assert.AreEqual(1, syntax.Filter.Count);
+            cc = syntax.Filter[0] as CriteriaClause;
+            Assert.IsNotNull(cc);
+            ic = cc.Value as ComputedDateValue;
+            Assert.IsNotNull(ic);
+            Assert.AreEqual("YESTERDAY", ic.Root);
+            Assert.AreEqual(0, ic.Offset);
         }
     }
 }
