@@ -137,42 +137,43 @@ namespace Searchlight
             switch (clause)
             {
                 case BetweenClause bc:
-                    return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue)} AND {sql.AddParameter(bc.UpperValue)}";
+                    return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue())} AND {sql.AddParameter(bc.UpperValue.GetValue())}";
                 case CompoundClause compoundClause:
                     return $"({RenderJoinedClauses(compoundClause.Children, sql)})";
                 case CriteriaClause cc:
+                    var rawValue = cc.Value.GetValue();
                     switch (cc.Operation)
                     {
                         case OperationType.Equals:
-                            return $"{cc.Column.OriginalName} = {sql.AddParameter(cc.Value)}";
+                            return $"{cc.Column.OriginalName} = {sql.AddParameter(rawValue)}";
                         case OperationType.GreaterThan:
-                            return $"{cc.Column.OriginalName} > {sql.AddParameter(cc.Value)}";
+                            return $"{cc.Column.OriginalName} > {sql.AddParameter(rawValue)}";
                         case OperationType.GreaterThanOrEqual:
-                            return $"{cc.Column.OriginalName} >= {sql.AddParameter(cc.Value)}";
+                            return $"{cc.Column.OriginalName} >= {sql.AddParameter(rawValue)}";
                         case OperationType.LessThan:
-                            return $"{cc.Column.OriginalName} < {sql.AddParameter(cc.Value)}";
+                            return $"{cc.Column.OriginalName} < {sql.AddParameter(rawValue)}";
                         case OperationType.LessThanOrEqual:
-                            return $"{cc.Column.OriginalName} <= {sql.AddParameter(cc.Value)}";
+                            return $"{cc.Column.OriginalName} <= {sql.AddParameter(rawValue)}";
                         case OperationType.NotEqual:
-                            return $"{cc.Column.OriginalName} <> {sql.AddParameter(cc.Value)}";
+                            return $"{cc.Column.OriginalName} <> {sql.AddParameter(rawValue)}";
                         case OperationType.Contains:
-                            if (cc.Value?.GetType() != typeof(string))
+                            if (rawValue?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + cc.Value + "%")}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue + "%")}";
                         case OperationType.StartsWith:
-                            if (cc.Value?.GetType() != typeof(string))
+                            if (rawValue?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter(cc.Value + "%")}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter(rawValue + "%")}";
                         case OperationType.EndsWith:
-                            if (cc.Value?.GetType() != typeof(string))
+                            if (rawValue?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + cc.Value)}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue)}";
                         case OperationType.Unknown:
                         case OperationType.Between:
                         case OperationType.In:
@@ -181,7 +182,7 @@ namespace Searchlight
                             throw new Exception("Incorrect clause type");
                     }
                 case InClause ic:
-                    var paramValues = from v in ic.Values select sql.AddParameter(v);
+                    var paramValues = from v in ic.Values select sql.AddParameter(v.GetValue());
                     return $"{ic.Column.OriginalName} {(ic.Negated ? "NOT " : string.Empty)}IN ({String.Join(", ", paramValues)})";
                 case IsNullClause inc:
                     return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";

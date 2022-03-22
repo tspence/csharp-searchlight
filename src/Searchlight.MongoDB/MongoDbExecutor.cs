@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -67,41 +68,43 @@ namespace MongoPetSitters
                 switch (clause)
                 {
                     case CriteriaClause criteria:
+                        var rawValue = criteria.Value.GetValue();
                         switch (criteria.Operation)
                         {
                             case OperationType.Equals:
-                                return Builders<T>.Filter.Eq(criteria.Column.FieldName, criteria.Value);
+                                return Builders<T>.Filter.Eq(criteria.Column.FieldName, rawValue);
                             case OperationType.NotEqual:
-                                return Builders<T>.Filter.Ne(criteria.Column.FieldName, criteria.Value);
+                                return Builders<T>.Filter.Ne(criteria.Column.FieldName, rawValue);
                             case OperationType.GreaterThan:
-                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, criteria.Value);
+                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, rawValue);
                             case OperationType.GreaterThanOrEqual:
-                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, criteria.Value);
+                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, rawValue);
                             case OperationType.LessThan:
-                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, criteria.Value);
+                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, rawValue);
                             case OperationType.LessThanOrEqual:
-                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, criteria.Value);
+                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
                             case OperationType.Contains:
                                 return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression("/" + criteria.Value + "/"));
+                                    new BsonRegularExpression($"/{rawValue}/"));
                             case OperationType.StartsWith:
                                 return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression("/^" + criteria.Value + "/"));
+                                    new BsonRegularExpression($"/^{rawValue}/"));
                             case OperationType.EndsWith:
                                 return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression("/" + criteria.Value + "$/"));
+                                    new BsonRegularExpression($"/{rawValue}$/"));
                             default:
                                 throw new NotImplementedException();
                         }
                     case InClause inClause:
-                        return Builders<T>.Filter.In(inClause.Column.FieldName, inClause.Values);
+                        var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
+                        return Builders<T>.Filter.In(inClause.Column.FieldName, valueArray);
                     
                     case IsNullClause isNullClause:
                         return Builders<T>.Filter.Eq(isNullClause.Column.FieldName, BsonNull.Value);
 
                     case BetweenClause betweenClause:
-                        var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue);
-                        var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue);
+                        var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue.GetValue());
+                        var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue.GetValue());
                         // & operator can be used between Mongo filters
                         return lower & upper;
 

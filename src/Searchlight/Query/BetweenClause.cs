@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Searchlight.Expressions;
 
 namespace Searchlight.Query
 {
@@ -19,12 +20,12 @@ namespace Searchlight.Query
         /// <summary>
         /// Lower value in the between test
         /// </summary>
-        public object LowerValue { get; set; }
+        public IExpressionValue LowerValue { get; set; }
 
         /// <summary>
         /// Upper value in the between test
         /// </summary>
-        public object UpperValue { get; set; }
+        public IExpressionValue UpperValue { get; set; }
         
         /// <summary>
         /// Render this criteria in a readable string

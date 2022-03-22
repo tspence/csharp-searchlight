@@ -157,10 +157,13 @@ namespace Searchlight
                 case CriteriaClause criteria:
                     AssertClassHasProperty(t, src, criteria.Column);
                     
+                    // Fetch value from the criteria
+                    var rawValue = criteria.Value.GetValue();
+                    
                     // Set up LINQ expressions for this object
                     var valueType = criteria.Column.FieldType;
                     field = Expression.Property(select, criteria.Column.FieldName);
-                    value = Expression.Constant(criteria.Value, valueType);
+                    value = Expression.Constant(rawValue, valueType);
                     switch (criteria.Operation)
                     {
                         case OperationType.Equals:
@@ -296,9 +299,9 @@ namespace Searchlight
                 case BetweenClause betweenClause:
                     field = Expression.Property(@select, betweenClause.Column.FieldName);
                     Expression lowerValue =
-                        Expression.Constant(betweenClause.LowerValue, betweenClause.Column.FieldType);
+                        Expression.Constant(betweenClause.LowerValue.GetValue(), betweenClause.Column.FieldType);
                     Expression upperValue =
-                        Expression.Constant(betweenClause.UpperValue, betweenClause.Column.FieldType);
+                        Expression.Constant(betweenClause.UpperValue.GetValue(), betweenClause.Column.FieldType);
                     Expression lower = Expression.GreaterThanOrEqual(field, lowerValue);
                     Expression upper = Expression.LessThanOrEqual(field, upperValue);
                     result = Expression.And(lower, upper);
@@ -310,7 +313,8 @@ namespace Searchlight
 
                 case InClause inClause:
                     field = Expression.Convert(Expression.Property(@select, inClause.Column.FieldName), typeof(object));
-                    value = Expression.Constant(inClause.Values, typeof(List<object>));
+                    var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
+                    value = Expression.Constant(valueArray, typeof(List<object>));
                     result = Expression.Call(value,
                         typeof(List<object>).GetMethod("Contains", new [] { typeof(object) }),
                         field);

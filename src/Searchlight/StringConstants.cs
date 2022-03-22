@@ -125,6 +125,16 @@ namespace Searchlight
         public static readonly string COMMA = ",";
 
         /// <summary>
+        /// Used for date math
+        /// </summary>
+        public static readonly string ADD = "+";
+
+        /// <summary>
+        /// Used for date math
+        /// </summary>
+        public static readonly string SUBTRACT = "-";
+
+        /// <summary>
         /// Used as shorthand for typing today's date
         /// </summary>
         public static readonly Dictionary<string, Func<DateTime>> DEFINED_DATES = new Dictionary<string, Func<DateTime>>
