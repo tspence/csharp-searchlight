@@ -26,6 +26,10 @@ namespace Searchlight.Expressions
             return StringConstants.DEFINED_DATES[Root]().AddDays(Offset);
         }
 
+        /// <summary>
+        /// String overrides look nice in a debugger
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             if (Offset == 0)

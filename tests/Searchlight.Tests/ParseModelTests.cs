@@ -4,6 +4,7 @@ using Searchlight;
 using Searchlight.Query;
 using System.Linq;
 using Searchlight.Exceptions;
+using Searchlight.Expressions;
 
 namespace Searchlight.Tests
 {
@@ -301,7 +302,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, firstClause.Conjunction);
             Assert.AreEqual("Name", firstClause.Column.FieldName);
             Assert.AreEqual(OperationType.Equals, firstClause.Operation);
-            Assert.AreEqual("Test", firstClause.Value);
+            Assert.AreEqual("Test", firstClause.Value.GetValue());
         }
 
         [TestMethod]
@@ -328,13 +329,13 @@ namespace Searchlight.Tests
             Assert.AreEqual(1, firstClause.Children.Count);
             Assert.AreEqual("Name", firstCriteria.Column.FieldName);
             Assert.AreEqual(OperationType.Equals, firstCriteria.Operation);
-            Assert.AreEqual("Test", firstCriteria.Value);
+            Assert.AreEqual("Test", firstCriteria.Value.GetValue());
 
             var secondClause = query.Filter[1] as CriteriaClause;
             Assert.IsNotNull(secondClause);
             Assert.AreEqual("Description", secondClause.Column.FieldName);
             Assert.AreEqual(OperationType.NotEqual, secondClause.Operation);
-            Assert.AreEqual("Whatever", secondClause.Value);
+            Assert.AreEqual("Whatever", secondClause.Value.GetValue());
         }
         
         [SearchlightModel(DefaultSort = "Name DESC")]
@@ -394,7 +395,7 @@ namespace Searchlight.Tests
             public string Name { get; set; }
 
             [SearchlightField]
-            public DateTime Date { get; set; }
+            public DateTime Hired { get; set; }
         }
 
         [TestMethod]
@@ -403,6 +404,11 @@ namespace Searchlight.Tests
             var source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
             var syntax = source.Parse("hired > TODAY - 30");
             Assert.AreEqual(1, syntax.Filter.Count);
+            var cc = syntax.Filter[0] as CriteriaClause;
+            Assert.IsNotNull(cc);
+            var ic = cc.Value as ComputedDateValue;
+            Assert.IsNotNull(ic);
+            Assert.AreEqual("TODAY", cc.Value);
 
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
             syntax = source.Parse("hired > NOW + 1");

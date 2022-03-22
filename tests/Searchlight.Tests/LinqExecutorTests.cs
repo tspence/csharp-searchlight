@@ -169,10 +169,10 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual(1, ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual(1, ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
             Assert.AreEqual("paycheck", ((CriteriaClause) syntax.Filter[1]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause) syntax.Filter[1]).Operation);
-            Assert.AreEqual(1000.0m, ((CriteriaClause) syntax.Filter[1]).Value);
+            Assert.AreEqual(1000.0m, ((CriteriaClause) syntax.Filter[1]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -196,7 +196,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual(1, ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual(1, ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
 
             // Did we get a nested clause?
             var cc = syntax.Filter[1] as CompoundClause;
@@ -204,10 +204,10 @@ namespace Searchlight.Tests
             Assert.AreEqual(2, cc.Children.Count);
             Assert.AreEqual("paycheck", ((CriteriaClause) cc.Children[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThan, ((CriteriaClause) cc.Children[0]).Operation);
-            Assert.AreEqual(1000.0m, ((CriteriaClause) cc.Children[0]).Value);
+            Assert.AreEqual(1000.0m, ((CriteriaClause) cc.Children[0]).Value.GetValue());
             Assert.AreEqual("paycheck", ((CriteriaClause) cc.Children[1]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) cc.Children[1]).Operation);
-            Assert.AreEqual(1000.0m, ((CriteriaClause) cc.Children[1]).Value);
+            Assert.AreEqual(1000.0m, ((CriteriaClause) cc.Children[1]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -230,8 +230,8 @@ namespace Searchlight.Tests
             Assert.AreEqual(false, syntax.Filter[0].Negated);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((BetweenClause) syntax.Filter[0]).Column.FieldName);
-            Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue);
-            Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue);
+            Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue.GetValue());
+            Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue.GetValue());
             
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -248,8 +248,8 @@ namespace Searchlight.Tests
             Assert.AreEqual(true, syntax.Filter[0].Negated);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((BetweenClause) syntax.Filter[0]).Column.FieldName);
-            Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue);
-            Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue);
+            Assert.AreEqual(2, ((BetweenClause) syntax.Filter[0]).LowerValue.GetValue());
+            Assert.AreEqual(4, ((BetweenClause) syntax.Filter[0]).UpperValue.GetValue());
             results = syntax.QueryCollection(list);
             Assert.AreEqual(6, results.records.Length);
             foreach (var e in results.records)
@@ -270,7 +270,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.StartsWith, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual("A", ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual("A", ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -293,7 +293,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.EndsWith, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -316,7 +316,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.Contains, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual("s", ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
             
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -346,7 +346,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -367,7 +367,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -388,7 +388,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThan, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual("b", ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);
@@ -409,7 +409,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause) syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause) syntax.Filter[0]).Operation);
-            Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value);
+            Assert.AreEqual("bob rogers", ((CriteriaClause) syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = syntax.QueryCollection(list);

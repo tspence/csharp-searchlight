@@ -646,12 +646,13 @@ namespace Searchlight
 
                 // Safe syntax for all other recognized expressions is "column op param"
                 default:
-                    CriteriaClause c = new CriteriaClause
+                    var valueToken = tokens.Dequeue();
+                    var c = new CriteriaClause
                     {
                         Negated = negated,
                         Operation = op,
                         Column = columnInfo,
-                        Value = ParseParameter(columnInfo, tokens.Dequeue(), filter, tokens)
+                        Value = ParseParameter(columnInfo, valueToken, filter, tokens)
                     };
 
                     if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
@@ -662,7 +663,7 @@ namespace Searchlight
                             throw new FieldTypeMismatch() { 
                                 FieldName = c.Column.FieldName, 
                                 FieldType = c.Column.FieldType.ToString(), 
-                                FieldValue = Convert.ToString(c.Value), 
+                                FieldValue = valueToken, 
                                 OriginalFilter = filter
                             };
                         }
@@ -732,13 +733,13 @@ namespace Searchlight
                         {
                             Root = tokenUpper,
                         };
-                        var nextToken = tokens.Peek();
+                        var nextToken = tokens.Count > 0 ? tokens.Peek() : null;
                         if (nextToken == StringConstants.ADD || nextToken == StringConstants.SUBTRACT)
                         {
                             // Retrieve the direction and offset
                             var direction = tokens.Dequeue();
                             var offset = tokens.Dequeue();
-                            var ok = int.TryParse(offset, out int offsetValue);
+                            var ok = int.TryParse(offset, out var offsetValue);
                             if (!ok)
                             {
                                 throw new InvalidToken()
@@ -759,6 +760,9 @@ namespace Searchlight
                         return computedValue;
                     }
                 }
+
+                // All other types use a basic type changer
+                return ConstantValue.From(Convert.ChangeType(valueToken, fieldType));
             }
             catch
             {
@@ -769,9 +773,6 @@ namespace Searchlight
                     OriginalFilter = originalFilter
                 };
             }
-
-            // All other types use a basic type changer
-            return ConstantValue.From(Convert.ChangeType(valueToken, fieldType));
         }
     }
 }
