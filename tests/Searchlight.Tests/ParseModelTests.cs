@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight;
 using Searchlight.Query;
 using System.Linq;
+using System.Threading.Tasks;
 using Searchlight.Exceptions;
 using Searchlight.Expressions;
 
@@ -399,7 +400,7 @@ namespace Searchlight.Tests
         }
 
         [TestMethod]
-        public void QueryComputedCriteria()
+        public async Task QueryComputedCriteria()
         {
             var source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
             var syntax = source.Parse("hired > TODAY - 30");
@@ -420,6 +421,15 @@ namespace Searchlight.Tests
             Assert.IsNotNull(ic);
             Assert.AreEqual("NOW", ic.Root);
             Assert.AreEqual(1, ic.Offset);
+            
+            // Verify that the computed value actually moves in time
+            var firstValue = (DateTime)ic.GetValue();
+            var daysDiff = firstValue - DateTime.UtcNow;
+            Assert.AreEqual(1, Math.Round(daysDiff.TotalDays)); // In testing this was often 0.999 etc
+            await Task.Delay(1);
+            var secondValue = (DateTime)ic.GetValue();
+            var timeSpan = secondValue - firstValue;
+            Assert.IsTrue(timeSpan.TotalMilliseconds >= 1);
 
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
             syntax = source.Parse("hired > TOMORROW + 0");
