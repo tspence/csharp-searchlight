@@ -10,7 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Files", "Other Files"
 		PatchNotes.md = PatchNotes.md
 		README.md = README.md
 		Searchlight.nuspec = Searchlight.nuspec
-		.travis.yml = .travis.yml
 		icons8-searchlight-90.png = icons8-searchlight-90.png
 	EndProjectSection
 EndProject

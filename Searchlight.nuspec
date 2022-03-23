@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.20</version>
+		<version>0.9.21</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -16,13 +16,10 @@
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<icon>docs/icons8-searchlight-90.png</icon>
 		<releaseNotes>
-			# 0.9.20
+			# 0.9.21
 			March 15, 2022
 
-			* Performance testing shows that a batch of six Parse calls takes about 24 microseconds
-			* Based on performance testing, there's no reason to build libraries for any version other than NetStandard20
-			* Added aliases for `gte` and `lte` criteria
-			* Added icon thanks to https://icons8.com/icons/set/searchlight
+			* Support for date math in searchlight queries, such as `dateDue between NOW and NOW + 7`
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2022</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>

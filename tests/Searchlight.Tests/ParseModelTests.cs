@@ -450,6 +450,20 @@ namespace Searchlight.Tests
             Assert.IsNotNull(ic);
             Assert.AreEqual("YESTERDAY", ic.Root);
             Assert.AreEqual(0, ic.Offset);
+            
+            source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
+            syntax = source.Parse("hired BETWEEN YESTERDAY - 14 AND YESTERDAY - 7");
+            Assert.AreEqual(1, syntax.Filter.Count);
+            var bc = syntax.Filter[0] as BetweenClause;
+            Assert.IsNotNull(bc);
+            ic = bc.LowerValue as ComputedDateValue;
+            Assert.IsNotNull(ic);
+            Assert.AreEqual("YESTERDAY", ic.Root);
+            Assert.AreEqual(-14, ic.Offset);
+            ic = bc.UpperValue as ComputedDateValue;
+            Assert.IsNotNull(ic);
+            Assert.AreEqual("YESTERDAY", ic.Root);
+            Assert.AreEqual(-7, ic.Offset);
         }
     }
 }
