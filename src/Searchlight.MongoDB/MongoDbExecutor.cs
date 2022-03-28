@@ -25,20 +25,24 @@ namespace MongoPetSitters
         public static async Task<FetchResult<T>> QueryMongo<T>(this SyntaxTree tree, IMongoCollection<T> collection)
         {
             var filter = BuildMongoFilter<T>(tree.Filter);
+            var sort = BuildMongoSort<T>(tree.OrderBy);
 
             // Sorting and pagination
             var results = await collection.FindAsync(filter, new FindOptions<T, T>
             {
-                Sort = BuildMongoSort<T>(tree.OrderBy),
+                Sort = sort,
                 Skip = (tree.PageNumber != null && tree.PageSize != null) ? (tree.PageNumber * tree.PageSize) : null,
                 Limit = tree.PageSize,
             });
+            
+            // Produce results
+            var records = (await results.ToListAsync()).ToArray();
             return new FetchResult<T>()
             {
                 totalCount = null,
                 pageSize = tree.PageSize,
                 pageNumber = tree.PageNumber,
-                records = (await results.ToListAsync()).ToArray()
+                records = records,
             };
         }
 
@@ -69,67 +73,95 @@ namespace MongoPetSitters
         /// <exception cref="NotImplementedException"></exception>
         public static FilterDefinition<T> BuildMongoFilter<T>(List<BaseClause> clauses)
         {
+            FilterDefinition<T> filter = null;
+            var nextConjunction = ConjunctionType.NONE;
             foreach (var clause in clauses)
             {
-                switch (clause)
+                var nextFilter = BuildOneFilter<T>(clause);
+                if (filter == null)
                 {
-                    case CriteriaClause criteria:
-                        var rawValue = criteria.Value.GetValue();
-                        switch (criteria.Operation)
-                        {
-                            case OperationType.Equals:
-                                return Builders<T>.Filter.Eq(criteria.Column.FieldName, rawValue);
-                            case OperationType.NotEqual:
-                                return Builders<T>.Filter.Ne(criteria.Column.FieldName, rawValue);
-                            case OperationType.GreaterThan:
-                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, rawValue);
-                            case OperationType.GreaterThanOrEqual:
-                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, rawValue);
-                            case OperationType.LessThan:
-                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, rawValue);
-                            case OperationType.LessThanOrEqual:
-                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
-                            case OperationType.Contains:
-                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression($"/{rawValue}/"));
-                            case OperationType.StartsWith:
-                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression($"/^{rawValue}/"));
-                            case OperationType.EndsWith:
-                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression($"/{rawValue}$/"));
-                            default:
-                                throw new NotImplementedException();
-                        }
-                    case InClause inClause:
-                        var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
-                        return Builders<T>.Filter.In(inClause.Column.FieldName, valueArray);
-                    
-                    case IsNullClause isNullClause:
-                        return Builders<T>.Filter.Eq(isNullClause.Column.FieldName, BsonNull.Value);
-
-                    case BetweenClause betweenClause:
-                        var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue.GetValue());
-                        var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue.GetValue());
-                        // & operator can be used between Mongo filters
-                        return lower & upper;
-
-                    case CompoundClause compoundClause:
-                        var innerFilters = BuildMongoFilter<T>(compoundClause.Children);
-                        switch (compoundClause.Conjunction)
-                        {
-                            case ConjunctionType.OR:
-                                return Builders<T>.Filter.Or(innerFilters);
-                            case ConjunctionType.AND:
-                                return Builders<T>.Filter.And(innerFilters);
-                            default:
-                                throw new NotImplementedException();
-                        }
-                    default:
-                        throw new NotImplementedException();
+                    filter = nextFilter;
                 }
+                else
+                {
+                    switch (nextConjunction)
+                    {
+                        case ConjunctionType.OR:
+                            filter = Builders<T>.Filter.Or(filter, nextFilter);
+                            break;
+                        case ConjunctionType.AND:
+                            filter = Builders<T>.Filter.And(filter, nextFilter);
+                            break;
+                        case ConjunctionType.NONE:
+                            throw new Exception("Invalid conjunction");
+                    }
+                }
+
+                nextConjunction = clause.Conjunction;
             }
-            throw new NotImplementedException();
+
+            return filter;
+        }
+
+        private static FilterDefinition<T> BuildOneFilter<T>(BaseClause clause)
+        {
+            switch (clause)
+            {
+                case CriteriaClause criteria:
+                    var rawValue = criteria.Value.GetValue();
+                    switch (criteria.Operation)
+                    {
+                        case OperationType.Equals:
+                            return Builders<T>.Filter.Eq(criteria.Column.FieldName, rawValue);
+                        case OperationType.NotEqual:
+                            return Builders<T>.Filter.Ne(criteria.Column.FieldName, rawValue);
+                        case OperationType.GreaterThan:
+                            return Builders<T>.Filter.Gt(criteria.Column.FieldName, rawValue);
+                        case OperationType.GreaterThanOrEqual:
+                            return Builders<T>.Filter.Gte(criteria.Column.FieldName, rawValue);
+                        case OperationType.LessThan:
+                            return Builders<T>.Filter.Lt(criteria.Column.FieldName, rawValue);
+                        case OperationType.LessThanOrEqual:
+                            return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
+                        case OperationType.Contains:
+                            return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                new BsonRegularExpression($"/{rawValue}/"));
+                        case OperationType.StartsWith:
+                            return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                new BsonRegularExpression($"/^{rawValue}/"));
+                        case OperationType.EndsWith:
+                            return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                new BsonRegularExpression($"/{rawValue}$/"));
+                        default:
+                            throw new NotImplementedException();
+                    }
+                case InClause inClause:
+                    var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
+                    return Builders<T>.Filter.In(inClause.Column.FieldName, valueArray);
+
+                case IsNullClause isNullClause:
+                    return Builders<T>.Filter.Eq(isNullClause.Column.FieldName, BsonNull.Value);
+
+                case BetweenClause betweenClause:
+                    var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue.GetValue());
+                    var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue.GetValue());
+                    // & operator can be used between Mongo filters
+                    return lower & upper;
+
+                case CompoundClause compoundClause:
+                    var innerFilters = BuildMongoFilter<T>(compoundClause.Children);
+                    switch (compoundClause.Conjunction)
+                    {
+                        case ConjunctionType.OR:
+                            return Builders<T>.Filter.Or(innerFilters);
+                        case ConjunctionType.AND:
+                            return Builders<T>.Filter.And(innerFilters);
+                        default:
+                            throw new NotImplementedException();
+                    }
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }
