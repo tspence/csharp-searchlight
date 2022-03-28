@@ -152,13 +152,13 @@ namespace MongoPetSitters
                             return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
                         case OperationType.Contains:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"/{rawValue}/", "i"));
+                                new BsonRegularExpression((string)rawValue, "i"));
                         case OperationType.StartsWith:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"/^{rawValue}/", "i"));
+                                new BsonRegularExpression((string)rawValue, "i"));
                         case OperationType.EndsWith:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"/{rawValue}$/", "i"));
+                                new BsonRegularExpression((string)rawValue, "i"));
                         default:
                             throw new NotImplementedException();
                     }
