@@ -22,7 +22,7 @@ namespace MongoPetSitters
         /// <param name="collection">The collection of data elements to query</param>
         /// <typeparam name="T">Generic type of the model</typeparam>
         /// <returns></returns>
-        public static async Task<IEnumerable<T>> QueryMongo<T>(this SyntaxTree tree, IMongoCollection<T> collection)
+        public static async Task<FetchResult<T>> QueryMongo<T>(this SyntaxTree tree, IMongoCollection<T> collection)
         {
             var filter = BuildMongoFilter<T>(tree.Filter);
 
@@ -33,7 +33,13 @@ namespace MongoPetSitters
                 Skip = (tree.PageNumber != null && tree.PageSize != null) ? (tree.PageNumber * tree.PageSize) : null,
                 Limit = tree.PageSize,
             });
-            return results.ToEnumerable();
+            return new FetchResult<T>()
+            {
+                totalCount = null,
+                pageSize = tree.PageSize,
+                pageNumber = tree.PageNumber,
+                records = (await results.ToListAsync()).ToArray()
+            };
         }
 
         private static SortDefinition<T> BuildMongoSort<T>(List<SortInfo> orderBy)

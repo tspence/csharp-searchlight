@@ -21,138 +21,6 @@ namespace Searchlight.Tests
     {
         private readonly DataSource _src;
         
-        [SearchlightModel(DefaultSort = nameof(name))]
-        public class EmployeeObj
-        {
-            public string name { get; set; }
-            public int id { get; set; }
-            public DateTime hired { get; set; }
-            public decimal paycheck { get; set; }
-            public bool onduty { get; set; }
-        }
-
-        public class CompatibleEmployeeObj
-        {
-            public string name { get; set; }
-            public int? id { get; set; }
-            public string hired { get; set; }
-            public string paycheck { get; set; }
-            public bool onduty { get; set; }
-        }
-
-        public class IncompatibleEmployeeObj
-        {
-            public string FullName { get; set; }
-            public int Identifier { get; set; }
-        }
-
-        private static List<IncompatibleEmployeeObj> GetIncompatibleList()
-        {
-            return new List<IncompatibleEmployeeObj>()
-            {
-                new IncompatibleEmployeeObj()
-                {
-                    FullName = "Irving Incompatible",
-                    Identifier = 1,
-                },
-                new IncompatibleEmployeeObj()
-                {
-                    FullName = "Noreen Negative",
-                    Identifier = -1,
-                }
-            };
-        }
-
-        private static List<CompatibleEmployeeObj> GetCompatibleList()
-        {
-            return new List<CompatibleEmployeeObj>()
-            {
-                new CompatibleEmployeeObj()
-                {
-                    name = "Charlie Compatible",
-                    id = 57,
-                    hired = "true",
-                    paycheck = "$1000.00",
-                    onduty = false
-                },
-                new CompatibleEmployeeObj()
-                {
-                    name = "Nelly Null",
-                    id = null,
-                    hired = null,
-                    paycheck = null,
-                    onduty = false
-                },
-            };
-        }
-
-        private static List<EmployeeObj> GetTestList()
-        {
-            return new List<EmployeeObj>
-            {
-                new()
-                    { hired = DateTime.Today, id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
-                new()
-                {
-                    hired = DateTime.Today.AddMonths(-1),
-                    id = 2,
-                    name = "Bob Rogers",
-                    onduty = true,
-                    paycheck = 1000.00m
-                },
-                new()
-                {
-                    hired = DateTime.Today.AddMonths(-6),
-                    id = 3,
-                    name = "Charlie Prentiss",
-                    onduty = false,
-                    paycheck = 800.0m
-                },
-                new()
-                {
-                    hired = DateTime.Today.AddMonths(-12),
-                    id = 4,
-                    name = "Danielle O'Shea",
-                    onduty = false,
-                    paycheck = 1200.0m
-                },
-                new()
-                {
-                    hired = DateTime.Today.AddMonths(1),
-                    id = 5,
-                    name = "Ernest Nofzinger",
-                    onduty = true,
-                    paycheck = 1000.00m
-                },
-                new()
-                    { hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m },
-                new()
-                {
-                    hired = DateTime.Today.AddMonths(2),
-                    id = 7,
-                    name = "Roderick 'null' Sqlkeywordtest",
-                    onduty = false,
-                    paycheck = 578.00m
-                },
-                new()
-                {
-                    hired = DateTime.UtcNow.AddHours(-1),
-                    id = 8,
-                    name = "Joe 'Fresh Hire' McGillicuddy",
-                    onduty = false,
-                    paycheck = 123.00m,
-                },
-                new()
-                {
-                    hired = DateTime.UtcNow.AddHours(1),
-                    id = 8,
-                    name = "Carol 'Starting Soon!' Yamashita",
-                    onduty = false,
-                    paycheck = 987.00m,
-                }
-            };
-        }
-
         public LinqExecutorTests()
         {
             this._src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
@@ -161,7 +29,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void QueryListCollection()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             // Construct a simple query and check that it comes out correct
             var syntax = _src.Parse("id gt 1 and paycheck le 1000");
@@ -188,7 +56,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void NestedClauseQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             // Construct a simple query and check that it comes out correct
             var syntax = _src.Parse("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
@@ -222,7 +90,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void BetweenQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("id between 2 and 4");
@@ -262,7 +130,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void StartsWithQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("name startswith 'A'");
@@ -285,7 +153,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void EndsWithQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("name endswith 's'");
@@ -308,7 +176,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void ContainsQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("name contains 's'");
@@ -339,7 +207,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void GreaterThanQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             
             var syntax = _src.Parse("name gt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -360,7 +228,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void GreaterThanOrEqualQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             
             var syntax = _src.Parse("name ge 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -381,7 +249,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void LessThanQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             
             var syntax = _src.Parse("name lt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -402,7 +270,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void LessThanOrEqualQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             
             var syntax = _src.Parse("name le 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -423,7 +291,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void NotEqualQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             var syntax = _src.Parse("Name != 'Alice Smith'");
 
@@ -447,7 +315,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void IsNullQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             var syntax = _src.Parse("Name is NULL");
             var result = syntax.QueryCollection(list);
@@ -467,7 +335,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void ContainsNull()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             // Searchlight interprets the word "null" without apostrophes here to be the string value "null"
             // instead of a null.
             var syntax = _src.Parse("Name contains null");
@@ -482,7 +350,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void InQuery()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             var syntax = _src.Parse("name in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
 
@@ -507,7 +375,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void InQueryInt()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             // getting not implemented error on this line
             // make sure using right formatting, if so then in operator needs adjustment
             var syntax = _src.Parse("id in (1,2,57)");
@@ -523,7 +391,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void InQueryDecimals()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             var syntax = _src.Parse("paycheck in (578.00, 1.234)");
 
@@ -544,7 +412,7 @@ namespace Searchlight.Tests
         [TestMethod]  
         public void StringEqualsCaseInsensitive()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
 
             var syntax = _src.Parse("name eq 'ALICE SMITH'");
 
@@ -565,7 +433,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void DefinedDateOperators()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             
             var syntax = _src.Parse("hired < TODAY");
             var result = syntax.QueryCollection(list);
@@ -597,7 +465,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void NormalDateQueries()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             
             var syntax = _src.Parse("hired > 2020-01-01");
             var result = syntax.QueryCollection(list);
@@ -623,7 +491,7 @@ namespace Searchlight.Tests
         public void SortedQueries()
         {
             // id test ascending and descending
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             var control = (from item in list orderby item.id ascending select item).ToList();
             var syntax = _src.Parse(null, null, "id ASC");
             var result = syntax.QueryCollection(list);
@@ -656,7 +524,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "name DESC");
             result = syntax.QueryCollection(list);
             
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].name, control[i].name);
             }
@@ -666,7 +534,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "paycheck ASC");
             result = syntax.QueryCollection(list);
 
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
@@ -675,7 +543,7 @@ namespace Searchlight.Tests
             syntax = _src.Parse("", null, "paycheck DESC");
             result = syntax.QueryCollection(list);
             
-            for (int i = 0; i < list.Count; i++)
+            for (var i = 0; i < list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
@@ -721,7 +589,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void DefaultReturn()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             var syntax = _src.Parse("");
             syntax.PageNumber = 0; // default is 0
             syntax.PageSize = 0; // default is 0
@@ -735,7 +603,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void PageNumberNoPageSize()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             var syntax = _src.Parse("");
             syntax.PageNumber = 2;
             syntax.PageSize = 0; // default is 0
@@ -749,7 +617,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void PageSizeNoPageNumber()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             var syntax = _src.Parse("");
             
             syntax.PageSize = 2;
@@ -764,7 +632,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void PageSizeAndPageNumber()
         {
-            var list = GetTestList();
+            var list = EmployeeObj.GetTestList();
             var syntax = _src.Parse("");
             syntax.PageSize = 1;
             syntax.PageNumber = 2;
@@ -780,7 +648,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void QueryPartiallyCompatibleCollection()
         {
-            var list = GetCompatibleList();
+            var list = CompatibleEmployeeObj.GetCompatibleList();
 
             // Try a few queries and sorts that _can_ work on a compatible type
             var syntax = _src.Parse("name startswith c");
@@ -804,7 +672,7 @@ namespace Searchlight.Tests
         [TestMethod]
         public void QueryIncompatibleCollection()
         {
-            var list = GetIncompatibleList();
+            var list = IncompatibleEmployeeObj.GetIncompatibleList();
             var syntax = _src.Parse("name startswith a");
             syntax.PageSize = 1;
             syntax.PageNumber = 2;
