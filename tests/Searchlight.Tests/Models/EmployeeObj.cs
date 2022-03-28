@@ -119,6 +119,7 @@ namespace Searchlight.Tests
     {
         public string FullName { get; set; }
         public int Identifier { get; set; }
+        public decimal? IncompatibleMongoField { get; set; }
 
         public static List<IncompatibleEmployeeObj> GetIncompatibleList()
         {

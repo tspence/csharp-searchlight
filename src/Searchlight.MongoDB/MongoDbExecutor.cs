@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Searchlight;
+using Searchlight.Exceptions;
 using Searchlight.Query;
 
 
@@ -24,6 +25,16 @@ namespace MongoPetSitters
         /// <returns></returns>
         public static async Task<FetchResult<T>> QueryMongo<T>(this SyntaxTree tree, IMongoCollection<T> collection)
         {
+            // Check for mongo query safety - not all objects can be safely queried!
+            if (!MongoModelChecker.IsMongoSafe(tree.Source.ModelType))
+            {
+                throw new InvalidMongoModel()
+                {
+                    TableName = tree.Source.TableName,
+                };
+            }
+            
+            // Build the filter and sort
             var filter = BuildMongoFilter<T>(tree.Filter);
             var sort = BuildMongoSort<T>(tree.OrderBy);
 

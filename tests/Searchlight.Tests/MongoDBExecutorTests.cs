@@ -142,20 +142,6 @@ namespace Searchlight.Tests
             Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause) syntax.Filter[1]).Operation);
             Assert.AreEqual(1000.0m, ((CriteriaClause) syntax.Filter[1]).Value.GetValue());
 
-            // // Let's try this query ourselves
-            // var filter = Builders<EmployeeObj>.Filter.Lte(obj => obj.paycheck, 1000.0m);
-            // // var filter = Builders<EmployeeObj>.Filter.And(
-            // //     Builders<EmployeeObj>.Filter.Gt(obj => obj.id, 1),
-            // //     Builders<EmployeeObj>.Filter.Lte(obj => obj.paycheck, 1000.0m)
-            // // );
-            // var matches = await (await _collection.FindAsync(filter)).ToListAsync();
-            // Assert.AreEqual(7, matches.Count);
-            // foreach (var e in matches)
-            // {
-            //     Assert.IsTrue(e.id > 1);
-            //     Assert.IsTrue(e.paycheck <= 1000.0m);
-            // }
-            
             // Execute the query and ensure that each result matches
             var results = await syntax.QueryMongo(_collection);
             Assert.AreEqual(7, results.records.Length);
@@ -754,6 +740,13 @@ namespace Searchlight.Tests
             var result = await syntax.QueryMongo(_collection);
             
             Assert.AreEqual(result.records.Length, 1);
+        }
+        
+        [TestMethod]
+        public async Task TestMongoSafety()
+        {
+            Assert.IsTrue(MongoModelChecker.IsMongoSafe(typeof(EmployeeObj)));
+            Assert.IsFalse(MongoModelChecker.IsMongoSafe(typeof(IncompatibleEmployeeObj)));
         }
     }
 }
