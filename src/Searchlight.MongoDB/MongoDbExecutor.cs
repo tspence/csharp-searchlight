@@ -27,10 +27,6 @@ namespace MongoPetSitters
             var filter = BuildMongoFilter<T>(tree.Filter);
             var sort = BuildMongoSort<T>(tree.OrderBy);
 
-            // Sorting and pagination
-            T[] records;
-            int totalCount;
-
             // Execute a search
             var results = await collection.FindAsync(filter, new FindOptions<T, T>
             {
@@ -40,13 +36,13 @@ namespace MongoPetSitters
                     : null,
                 Limit = tree.PageSize,
             });
-            records = (await results.ToListAsync()).ToArray();
-            totalCount = (int)(await collection.CountDocumentsAsync(filter));
 
             // Produce results
+            var records = (await results.ToListAsync()).ToArray();
+            var totalCount = (await collection.CountDocumentsAsync(filter));
             return new FetchResult<T>()
             {
-                totalCount = totalCount,
+                totalCount = (int)totalCount,
                 pageSize = tree.PageSize,
                 pageNumber = tree.PageNumber,
                 records = records,

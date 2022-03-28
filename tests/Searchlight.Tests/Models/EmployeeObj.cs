@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace Searchlight.Tests
 {
@@ -9,6 +11,7 @@ namespace Searchlight.Tests
         public string name { get; set; }
         public int id { get; set; }
         public DateTime hired { get; set; }
+        [BsonRepresentation(BsonType.Decimal128)]
         public decimal paycheck { get; set; }
         public bool onduty { get; set; }
 
