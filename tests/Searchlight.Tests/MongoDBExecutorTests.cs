@@ -533,8 +533,6 @@ namespace Searchlight.Tests
         [TestMethod]
         public async Task DefinedDateOperators()
         {
-            
-            
             var syntax = _src.Parse("hired < TODAY");
             var result = await syntax.QueryMongo(_collection);
             Assert.IsTrue(result.records.Length == 3 || result.records.Length == 4);

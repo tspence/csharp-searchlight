@@ -159,20 +159,10 @@ namespace MongoPetSitters
                 case BetweenClause betweenClause:
                     var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue.GetValue());
                     var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue.GetValue());
-                    // & operator can be used between Mongo filters
-                    return lower & upper;
+                    return Builders<T>.Filter.And(lower, upper);
 
                 case CompoundClause compoundClause:
-                    var innerFilters = BuildMongoFilter<T>(compoundClause.Children);
-                    switch (compoundClause.Conjunction)
-                    {
-                        case ConjunctionType.OR:
-                            return Builders<T>.Filter.Or(innerFilters);
-                        case ConjunctionType.AND:
-                            return Builders<T>.Filter.And(innerFilters);
-                        default:
-                            throw new NotImplementedException();
-                    }
+                    return BuildMongoFilter<T>(compoundClause.Children);
                 default:
                     throw new NotImplementedException();
             }
