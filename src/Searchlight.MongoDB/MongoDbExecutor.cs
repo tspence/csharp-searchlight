@@ -28,18 +28,25 @@ namespace MongoPetSitters
             var sort = BuildMongoSort<T>(tree.OrderBy);
 
             // Sorting and pagination
+            T[] records;
+            int totalCount;
+
+            // Execute a search
             var results = await collection.FindAsync(filter, new FindOptions<T, T>
             {
                 Sort = sort,
-                Skip = (tree.PageNumber != null && tree.PageSize != null) ? (tree.PageNumber * tree.PageSize) : null,
+                Skip = (tree.PageNumber != null && tree.PageSize != null)
+                    ? (tree.PageNumber * tree.PageSize)
+                    : null,
                 Limit = tree.PageSize,
             });
-            
+            records = (await results.ToListAsync()).ToArray();
+            totalCount = (int)(await collection.CountDocumentsAsync(filter));
+
             // Produce results
-            var records = (await results.ToListAsync()).ToArray();
             return new FetchResult<T>()
             {
-                totalCount = null,
+                totalCount = totalCount,
                 pageSize = tree.PageSize,
                 pageNumber = tree.PageNumber,
                 records = records,
@@ -100,7 +107,7 @@ namespace MongoPetSitters
                 nextConjunction = clause.Conjunction;
             }
 
-            return filter;
+            return filter ?? FilterDefinition<T>.Empty;
         }
 
         private static FilterDefinition<T> BuildOneFilter<T>(BaseClause clause)
