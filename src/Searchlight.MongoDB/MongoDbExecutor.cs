@@ -154,7 +154,14 @@ namespace MongoPetSitters
                     return Builders<T>.Filter.In(inClause.Column.FieldName, valueArray);
 
                 case IsNullClause isNullClause:
-                    return Builders<T>.Filter.Eq(isNullClause.Column.FieldName, BsonNull.Value);
+                    var isNullFilter = Builders<T>.Filter.Or(
+                        Builders<T>.Filter.Exists("name", false),
+                        Builders<T>.Filter.Eq("name", BsonNull.Value),
+                        Builders<T>.Filter.Eq("name", (string)null)
+                    );
+                    return isNullClause.Negated ? 
+                        Builders<T>.Filter.Not(isNullFilter) : 
+                        isNullFilter;
 
                 case BetweenClause betweenClause:
                     var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue.GetValue());
