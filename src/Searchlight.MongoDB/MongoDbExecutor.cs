@@ -155,10 +155,10 @@ namespace MongoPetSitters
                                 new BsonRegularExpression((string)rawValue, "i"));
                         case OperationType.StartsWith:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression((string)rawValue, "i"));
+                                new BsonRegularExpression($"^{rawValue}", "i"));
                         case OperationType.EndsWith:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression((string)rawValue, "i"));
+                                new BsonRegularExpression($"{rawValue}$", "i"));
                         default:
                             throw new NotImplementedException();
                     }
