@@ -92,6 +92,12 @@ namespace MongoPetSitters
             foreach (var clause in clauses)
             {
                 var nextFilter = BuildOneFilter<T>(clause);
+                if (clause.Negated)
+                {
+                    nextFilter = Builders<T>.Filter.Not(nextFilter);
+                }
+                
+                // Merge this into a single filter statement
                 if (filter == null)
                 {
                     filter = nextFilter;
@@ -117,6 +123,13 @@ namespace MongoPetSitters
             return filter ?? FilterDefinition<T>.Empty;
         }
 
+        /// <summary>
+        /// This function doesn't handle negation
+        /// </summary>
+        /// <param name="clause"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
         private static FilterDefinition<T> BuildOneFilter<T>(BaseClause clause)
         {
             switch (clause)
@@ -139,13 +152,13 @@ namespace MongoPetSitters
                             return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
                         case OperationType.Contains:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"/{rawValue}/"));
+                                new BsonRegularExpression($"/{rawValue}/", "i"));
                         case OperationType.StartsWith:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"/^{rawValue}/"));
+                                new BsonRegularExpression($"/^{rawValue}/", "i"));
                         case OperationType.EndsWith:
                             return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"/{rawValue}$/"));
+                                new BsonRegularExpression($"/{rawValue}$/", "i"));
                         default:
                             throw new NotImplementedException();
                     }
@@ -154,14 +167,11 @@ namespace MongoPetSitters
                     return Builders<T>.Filter.In(inClause.Column.FieldName, valueArray);
 
                 case IsNullClause isNullClause:
-                    var isNullFilter = Builders<T>.Filter.Or(
+                    return Builders<T>.Filter.Or(
                         Builders<T>.Filter.Exists("name", false),
                         Builders<T>.Filter.Eq("name", BsonNull.Value),
                         Builders<T>.Filter.Eq("name", (string)null)
                     );
-                    return isNullClause.Negated ? 
-                        Builders<T>.Filter.Not(isNullFilter) : 
-                        isNullFilter;
 
                 case BetweenClause betweenClause:
                     var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue.GetValue());

@@ -104,7 +104,7 @@ namespace Searchlight.Tests
 
             // Assert
             Assert.AreEqual("name", filter.Names.FirstOrDefault());
-            Assert.AreEqual(new BsonRegularExpression("/New Order/"), filter.GetValue("name"));
+            Assert.AreEqual(new BsonRegularExpression("/New Order/", "i"), filter.GetValue("name"));
         }
 
         [TestMethod]
