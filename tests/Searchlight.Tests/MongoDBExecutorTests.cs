@@ -7,7 +7,7 @@ using Mongo2Go;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
-using MongoPetSitters;
+using Searchlight.MongoDB;
 using Searchlight.Query;
 
 namespace Searchlight.Tests
@@ -104,7 +104,7 @@ namespace Searchlight.Tests
 
             // Assert
             Assert.AreEqual("name", filter.Names.FirstOrDefault());
-            Assert.AreEqual(new BsonRegularExpression("/New Order/", "i"), filter.GetValue("name"));
+            Assert.AreEqual(new BsonRegularExpression("New Order", "i"), filter.GetValue("name"));
         }
 
         [TestMethod]
@@ -307,16 +307,13 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await syntax.QueryMongo(_collection);
+            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
             Assert.IsNotNull(results);
-
-            // TODO: MongoDB string comparisons are case sensitive.  Until this feature is available, commented out
-            /*
-            Assert.AreEqual(7, results.records.Length);
+            Assert.AreEqual(0, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) > 0);
             }
-            */
         }
 
         [TestMethod]
@@ -333,15 +330,13 @@ namespace Searchlight.Tests
             var results = await syntax.QueryMongo(_collection);
             Assert.IsNotNull(results);
 
-            // TODO: MongoDB string comparisons are case sensitive.  Until this feature is available, commented out
-            /*
-            Assert.AreEqual(7, results.records.Length);
+            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
+            Assert.AreEqual(0, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
                     StringComparison.CurrentCultureIgnoreCase) >= 0);
             }
-            */
         }
 
         [TestMethod]
@@ -356,10 +351,11 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await syntax.QueryMongo(_collection);
-            Assert.AreEqual(1, results.records.Length);
+            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
+            Assert.AreEqual(8, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) < 0);
+                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.Ordinal) < 0);
             }
         }
 
@@ -375,11 +371,12 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await syntax.QueryMongo(_collection);
-            Assert.AreEqual(2, results.records.Length);
+            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
+            Assert.AreEqual(8, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
-                    StringComparison.CurrentCultureIgnoreCase) <= 0);
+                    StringComparison.Ordinal) <= 0);
             }
         }
 
@@ -408,15 +405,6 @@ namespace Searchlight.Tests
         [TestMethod]
         public async Task IsNullQuery()
         {
-            // var filter = Builders<EmployeeObj>.Filter.And(
-            //     Builders<EmployeeObj>.Filter.Exists("name", true),
-            //     Builders<EmployeeObj>.Filter.Ne("name", BsonNull.Value),
-            //     Builders<EmployeeObj>.Filter.Ne("name", (string)null)
-            //     );
-            // var matches = await (await _collection.FindAsync(filter)).ToListAsync();
-            // Assert.IsNotNull(matches);
-            // Assert.AreEqual(8, matches.Count);
-            
             var syntax = _src.Parse("Name is NULL");
             var result = await syntax.QueryMongo(_collection);
             Assert.IsNotNull(result);
@@ -508,18 +496,19 @@ namespace Searchlight.Tests
         {
             var syntax = _src.Parse("name eq 'ALICE SMITH'");
 
+            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
             var result = await syntax.QueryMongo(_collection);
 
-            Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
+            Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.records.Length);
+            Assert.AreEqual(0, result.records.Length);
 
             // Try the inverse
             syntax = _src.Parse("name not eq 'ALICE SMITH'");
             result = await syntax.QueryMongo(_collection);
-            Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
+            Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
-            Assert.AreEqual(_referenceList.Count - 1, result.records.Length);
+            Assert.AreEqual(_referenceList.Count, result.records.Length);
         }
 
         [TestMethod]

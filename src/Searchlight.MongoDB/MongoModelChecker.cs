@@ -4,9 +4,8 @@ using System.Linq;
 using System.Reflection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using Searchlight;
 
-namespace MongoPetSitters
+namespace Searchlight.MongoDB
 {
     /// <summary>
     /// Verify that a model is safe for use with MongoDB

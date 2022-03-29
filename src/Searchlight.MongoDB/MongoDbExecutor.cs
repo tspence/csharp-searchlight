@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Searchlight;
 using Searchlight.Exceptions;
 using Searchlight.Query;
 
 
-namespace MongoPetSitters
+namespace Searchlight.MongoDB
 {
     /// <summary>
     /// Static extension class that converts Searchlight syntax trees into MongoDB queries
@@ -18,7 +16,10 @@ namespace MongoPetSitters
     public static class MongoDbExecutor
     {
         /// <summary>
-        /// Run the query represented by this syntax tree against an in-memory collection using LINQ
+        /// Run the query represented by this syntax tree against an in-memory collection using LINQ.
+        ///
+        /// Limitations:
+        /// * MongoDB only performs case-sensitive string comparisons due to a limitation in their driver.
         /// </summary>
         /// <param name="tree">The syntax tree of the query to execute</param>
         /// <param name="collection">The collection of data elements to query</param>
