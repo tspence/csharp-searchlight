@@ -88,7 +88,7 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
-            Assert.AreEqual(7, results.records.Length);
+            Assert.AreEqual(8, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);
@@ -119,11 +119,11 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
-            Assert.AreEqual(6, results.records.Length);
+            Assert.AreEqual(7, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);
-                Assert.IsTrue(e.paycheck is 800.0m or 1200.0m or 10.0m or 578.00m or 123.00m or 987.00m);
+                Assert.IsTrue(e.paycheck is 800.0m or 1200.0m or 10.0m or 578.00m or 123.00m or 987.00m or 632.00m);
             }
         }
 
@@ -156,7 +156,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(2, ((BetweenClause)syntax.Filter[0]).LowerValue.GetValue());
             Assert.AreEqual(4, ((BetweenClause)syntax.Filter[0]).UpperValue.GetValue());
             results = await _executor(syntax);
-            Assert.AreEqual(6, results.records.Length);
+            Assert.AreEqual(7, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id is <= 1 or >= 5);
@@ -213,7 +213,7 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
-            Assert.AreEqual(8, results.records.Length);
+            Assert.AreEqual(9, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(e != null && e.name.Contains('s', StringComparison.OrdinalIgnoreCase));
@@ -228,6 +228,15 @@ namespace Searchlight.Tests
                 Assert.IsTrue(
                     e != null && (e.name == null || !e.name.Contains('s', StringComparison.OrdinalIgnoreCase)));
             }
+            
+            // Test for the presence of special characters that might cause problems for parsing
+            syntax = _src.Parse("name contains '''[Not.Regex(safe{\\^|$'''");
+            results = await _executor(syntax);
+            Assert.AreEqual(1, results.records.Length);
+            foreach (var e in results.records)
+            {
+                Assert.IsTrue(e.name.Contains("'[Not.Regex(safe{\\^|$'"));
+            }
         }
 
         private async Task GreaterThanQuery()
@@ -241,7 +250,7 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
-            Assert.AreEqual(7, results.records.Length);
+            Assert.AreEqual(8, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) > 0);
@@ -296,7 +305,7 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
-            Assert.AreEqual(2, results.records.Length);
+            Assert.AreEqual(3, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
@@ -328,7 +337,7 @@ namespace Searchlight.Tests
             result = await _executor(syntax);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
-            Assert.AreEqual(8, result.records.Length);
+            Assert.AreEqual(9, result.records.Length);
         }
 
         private async Task ContainsNull()
@@ -361,7 +370,7 @@ namespace Searchlight.Tests
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsFalse(result.records.Any(p => p.name == "Bob Rogers"));
             Assert.IsNotNull(result);
-            Assert.AreEqual(7, result.records.Length);
+            Assert.AreEqual(8, result.records.Length);
         }
 
         private async Task InQueryInt()
@@ -411,23 +420,23 @@ namespace Searchlight.Tests
         {
             var syntax = _src.Parse("hired < TODAY");
             var result = await _executor(syntax);
-            Assert.IsTrue(result.records.Length == 3 || result.records.Length == 4);
+            Assert.AreEqual(3, result.records.Length);
 
             syntax = _src.Parse("hired < TOMORROW");
             result = await _executor(syntax);
-            Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
+            Assert.AreEqual(6, result.records.Length);
 
             syntax = _src.Parse("hired < tomorrow");
             result = await _executor(syntax);
-            Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
+            Assert.AreEqual(6, result.records.Length);
 
             syntax = _src.Parse("hired > YESTERDAY");
             result = await _executor(syntax);
-            Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
+            Assert.AreEqual(7, result.records.Length);
 
             syntax = _src.Parse("hired > NOW");
             result = await _executor(syntax);
-            Assert.AreEqual(4, result.records.Length);
+            Assert.AreEqual(5, result.records.Length);
 
             syntax = _src.Parse("hired < NOW");
             result = await _executor(syntax);

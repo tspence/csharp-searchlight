@@ -78,6 +78,14 @@ namespace Searchlight.Tests
                     name = "Carol 'Starting Soon!' Yamashita",
                     onduty = false,
                     paycheck = 987.00m,
+                },
+                new()
+                {
+                    hired = DateTime.UtcNow.AddHours(15).ToUniversalTime(),
+                    id = 10,
+                    name = "Barnabas '[Not.Regex(safe{\\^|$' Ellsworth",
+                    onduty = true,
+                    paycheck = 632.00m,
                 }
             };
         }

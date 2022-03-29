@@ -207,7 +207,7 @@ namespace Searchlight.Tests
             // Execute the query and ensure that each result matches
             var results = await syntax.QueryMongo(_collection);
             // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
-            Assert.AreEqual(8, results.records.Length);
+            Assert.AreEqual(9, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.Ordinal) < 0);
@@ -227,7 +227,7 @@ namespace Searchlight.Tests
             // Execute the query and ensure that each result matches
             var results = await syntax.QueryMongo(_collection);
             // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
-            Assert.AreEqual(8, results.records.Length);
+            Assert.AreEqual(9, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
@@ -271,7 +271,7 @@ namespace Searchlight.Tests
 
             // Execute the query and ensure that each result matches
             var results = await syntax.QueryMongo(_collection);
-            Assert.AreEqual(7, results.records.Length);
+            Assert.AreEqual(8, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(e.id > 1);

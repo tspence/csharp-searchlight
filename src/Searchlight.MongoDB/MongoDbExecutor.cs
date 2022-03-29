@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -144,13 +145,13 @@ namespace Searchlight.MongoDB
                         {
                             case OperationType.Contains:
                                 return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression((string)rawValue, "i"));
+                                    new BsonRegularExpression(Regex.Escape((string)rawValue), "i"));
                             case OperationType.StartsWith:
                                 return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression($"^{rawValue}", "i"));
+                                    new BsonRegularExpression($"^{Regex.Escape((string)rawValue)}", "i"));
                             case OperationType.EndsWith:
                                 return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                    new BsonRegularExpression($"{rawValue}$", "i"));
+                                    new BsonRegularExpression($"{Regex.Escape((string)rawValue)}$", "i"));
                             /*
                             default:
                                 return StrCaseCmp<T>(criteria.Column.FieldName, (string)rawValue,
