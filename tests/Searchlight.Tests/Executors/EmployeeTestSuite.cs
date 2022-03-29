@@ -3,133 +3,77 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Mongo2Go;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
-using Searchlight.MongoDB;
 using Searchlight.Query;
+// ReSharper disable StringLiteralTypo
+// ReSharper disable CommentTypo
 
 namespace Searchlight.Tests
 {
-    [TestClass]
-    public class MongoDBExecutorTests
+    public class EmployeeTestSuite
     {
-        private DataSource _src;
-        private MongoDbRunner _runner;
-        private IMongoCollection<EmployeeObj> _collection;
-        private List<EmployeeObj> _referenceList;
+        private readonly DataSource _src;
+        private readonly List<EmployeeObj> _list;
+        private readonly Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> _executor;
 
-        [TestInitialize()]
-        public async Task SetupMongoClient()
+        private EmployeeTestSuite(DataSource src, List<EmployeeObj> list,
+            Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> executor)
         {
-            _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
-            _runner = MongoDbRunner.Start();
-
-            var client = new MongoClient(_runner.ConnectionString);
-            var database = client.GetDatabase("IntegrationTest");
-            _collection = database.GetCollection<EmployeeObj>("TestCollection");
-            _referenceList = EmployeeObj.GetTestList();
-            await _collection.InsertManyAsync(_referenceList);
+            _src = src;
+            _list = list;
+            _executor = executor;
         }
 
-        [TestCleanup]
-        public void CleanupMongo()
+        /// <summary>
+        /// Validates basic correctness of the query engine against this executor
+        /// 
+        /// Does not include any case-insensitive / case-sensitive string comparisons
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="list"></param>
+        /// <param name="executor"></param>
+        public static async Task BasicTestSuite(DataSource src, List<EmployeeObj> list,
+            Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> executor)
         {
-            _collection = null;
-            _runner.Dispose();
+            var suite = new EmployeeTestSuite(src, list, executor);
+            await suite.QueryListCollection();
+            await suite.NestedClauseQuery();
+            await suite.BetweenQuery();
+            await suite.StartsWithQuery();
+            await suite.EndsWithQuery();
+            await suite.ContainsQuery();
+            await suite.NotEqualQuery();
+            await suite.IsNullQuery();
+            await suite.ContainsNull();
+            await suite.InQuery();
+            await suite.InQueryInt();
+            await suite.InQueryDecimals();
+            await suite.DefinedDateOperators();
+            await suite.NormalDateQueries();
+            await suite.SortedQueries();
+            await suite.DefaultReturn();
+            await suite.PageNumberNoPageSize();
+            await suite.PageSizeNoPageNumber();
+            await suite.PageSizeAndPageNumber();
         }
 
-        [TestMethod]
-        public void CriteriaParseTests()
+        /// <summary>
+        /// Validates correctness of this executor's ability to execute case insensitive string comparisons
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="list"></param>
+        /// <param name="executor"></param>
+        public static async Task CaseInsensitiveStringTestSuite(DataSource src, List<EmployeeObj> list,
+            Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> executor)
         {
-            // Arrange
-            var serializerRegistry = BsonSerializer.SerializerRegistry;
-            var documentSerializer = serializerRegistry.GetSerializer<EmployeeObj>();
-
-            // Act
-            var syntax = _src.Parse("id eq 1");
-            var results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
-            var filter = results.Render(documentSerializer, serializerRegistry);
-
-            // Assert
-            Assert.AreEqual(1, filter.GetValue("_id"));
-            Assert.AreEqual("_id", filter.Names.FirstOrDefault());
-
-            // Act
-            syntax = _src.Parse("id > 2");
-            results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
-            filter = results.Render(documentSerializer, serializerRegistry);
-
-            // Assert
-            Assert.AreEqual(2, filter.GetValue("_id").ToBsonDocument().GetValue("$gt"));
-            Assert.AreEqual("$gt", filter.GetValue("_id").ToBsonDocument().Names.FirstOrDefault());
-            Assert.AreEqual("_id", filter.Names.FirstOrDefault());
-
-            // Act
-            syntax = _src.Parse("id < 3");
-            results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
-            filter = results.Render(documentSerializer, serializerRegistry);
-
-            // Assert
-            Assert.AreEqual(3, filter.GetValue("_id").ToBsonDocument().GetValue("$lt"));
-            Assert.AreEqual("$lt", filter.GetValue("_id").ToBsonDocument().Names.FirstOrDefault());
-            Assert.AreEqual("_id", filter.Names.FirstOrDefault());
-
-            // Act
-            syntax = _src.Parse("id >= 4");
-            results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
-            filter = results.Render(documentSerializer, serializerRegistry);
-
-            // Assert
-            Assert.AreEqual(4, filter.GetValue("_id").ToBsonDocument().GetValue("$gte"));
-            Assert.AreEqual("$gte", filter.GetValue("_id").ToBsonDocument().Names.FirstOrDefault());
-            Assert.AreEqual("_id", filter.Names.FirstOrDefault());
-
-            // Act
-            syntax = _src.Parse("id <= 5");
-            results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
-            filter = results.Render(documentSerializer, serializerRegistry);
-
-            // Assert
-            Assert.AreEqual(5, filter.GetValue("_id").ToBsonDocument().GetValue("$lte"));
-            Assert.AreEqual("$lte", filter.GetValue("_id").ToBsonDocument().Names.FirstOrDefault());
-            Assert.AreEqual("_id", filter.Names.FirstOrDefault());
-
-            // Act
-            syntax = _src.Parse("name contains 'New Order'");
-            results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
-            // { $text : { "$search" : "name", "$language" : "New Order" } }
-            filter = results.Render(documentSerializer, serializerRegistry);
-
-            // Assert
-            Assert.AreEqual("name", filter.Names.FirstOrDefault());
-            Assert.AreEqual(new BsonRegularExpression("New Order", "i"), filter.GetValue("name"));
+            var suite = new EmployeeTestSuite(src, list, executor);
+            await suite.LessThanOrEqualQuery();
+            await suite.LessThanQuery();
+            await suite.GreaterThanQuery();
+            await suite.GreaterThanOrEqualQuery();
+            await suite.StringEqualsCaseInsensitive();
         }
 
-        [TestMethod]
-        public void BetweenParseTest()
-        {
-            // Arrange
-            var serializerRegistry = BsonSerializer.SerializerRegistry;
-            var documentSerializer = serializerRegistry.GetSerializer<EmployeeObj>();
-
-            // Act
-            var syntax = _src.Parse("id between 1 and 5");
-            var results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
-            // { "_id" : { "$gte" : 1, "$lte" : 5 } }
-            var filter = results.Render(documentSerializer, serializerRegistry);
-            var inner = filter.GetValue("_id").ToBsonDocument();
-
-            Assert.AreEqual("_id", filter.Names.FirstOrDefault());
-            Assert.AreEqual("$gte", inner.Names.FirstOrDefault());
-            Assert.AreEqual(1, inner.GetValue("$gte"));
-            Assert.AreEqual("$lte", inner.Names.LastOrDefault());
-            Assert.AreEqual(5, inner.GetValue("$lte"));
-        }
-
-        [TestMethod]
-        public async Task BasicCriteria()
+        private async Task QueryListCollection()
         {
             // Construct a simple query and check that it comes out correct
             var syntax = _src.Parse("id gt 1 and paycheck le 1000");
@@ -143,7 +87,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause)syntax.Filter[1]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
+            var results = await _executor(syntax);
             Assert.AreEqual(7, results.records.Length);
             foreach (var e in results.records)
             {
@@ -152,9 +96,7 @@ namespace Searchlight.Tests
             }
         }
 
-
-        [TestMethod]
-        public async Task NestedClauseQuery()
+        private async Task NestedClauseQuery()
         {
             // Construct a simple query and check that it comes out correct
             var syntax = _src.Parse("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
@@ -176,7 +118,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(1000.0m, ((CriteriaClause)cc.Children[1]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
+            var results = await _executor(syntax);
             Assert.AreEqual(6, results.records.Length);
             foreach (var e in results.records)
             {
@@ -185,8 +127,7 @@ namespace Searchlight.Tests
             }
         }
 
-        [TestMethod]
-        public async Task BetweenQuery()
+        private async Task BetweenQuery()
         {
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("id between 2 and 4");
@@ -198,7 +139,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(4, ((BetweenClause)syntax.Filter[0]).UpperValue.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
+            var results = await _executor(syntax);
             Assert.AreEqual(3, results.records.Length);
             foreach (var e in results.records)
             {
@@ -214,7 +155,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("id", ((BetweenClause)syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(2, ((BetweenClause)syntax.Filter[0]).LowerValue.GetValue());
             Assert.AreEqual(4, ((BetweenClause)syntax.Filter[0]).UpperValue.GetValue());
-            results = await syntax.QueryMongo(_collection);
+            results = await _executor(syntax);
             Assert.AreEqual(6, results.records.Length);
             foreach (var e in results.records)
             {
@@ -222,9 +163,7 @@ namespace Searchlight.Tests
             }
         }
 
-
-        [TestMethod]
-        public async Task StartsWithQuery()
+        private async Task StartsWithQuery()
         {
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("name startswith 'A'");
@@ -235,7 +174,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("A", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
+            var results = await _executor(syntax);
             Assert.AreEqual(1, results.records.Length);
             foreach (var e in results.records)
             {
@@ -243,9 +182,7 @@ namespace Searchlight.Tests
             }
         }
 
-
-        [TestMethod]
-        public async Task EndsWithQuery()
+        private async Task EndsWithQuery()
         {
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("name endswith 's'");
@@ -256,7 +193,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("s", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
+            var results = await _executor(syntax);
             Assert.AreEqual(2, results.records.Length);
             foreach (var e in results.records)
             {
@@ -264,9 +201,7 @@ namespace Searchlight.Tests
             }
         }
 
-
-        [TestMethod]
-        public async Task ContainsQuery()
+        private async Task ContainsQuery()
         {
             // Note that the "between" clause is inclusive
             var syntax = _src.Parse("name contains 's'");
@@ -277,7 +212,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("s", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
+            var results = await _executor(syntax);
             Assert.AreEqual(8, results.records.Length);
             foreach (var e in results.records)
             {
@@ -286,7 +221,7 @@ namespace Searchlight.Tests
 
             // Now test the opposite
             syntax = _src.Parse("name not contains 's'");
-            results = await syntax.QueryMongo(_collection);
+            results = await _executor(syntax);
             Assert.AreEqual(1, results.records.Length);
             foreach (var e in results.records)
             {
@@ -295,8 +230,7 @@ namespace Searchlight.Tests
             }
         }
 
-        [TestMethod]
-        public async Task GreaterThanQuery()
+        private async Task GreaterThanQuery()
         {
             var syntax = _src.Parse("name gt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -306,18 +240,15 @@ namespace Searchlight.Tests
             Assert.AreEqual("b", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
-            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
-            Assert.IsNotNull(results);
-            Assert.AreEqual(0, results.records.Length);
+            var results = await _executor(syntax);
+            Assert.AreEqual(7, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) > 0);
             }
         }
 
-        [TestMethod]
-        public async Task GreaterThanOrEqualQuery()
+        private async Task GreaterThanOrEqualQuery()
         {
             var syntax = _src.Parse("name ge 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -327,11 +258,8 @@ namespace Searchlight.Tests
             Assert.AreEqual("bob rogers", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
-            Assert.IsNotNull(results);
-
-            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
-            Assert.AreEqual(0, results.records.Length);
+            var results = await _executor(syntax);
+            Assert.AreEqual(7, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
@@ -339,8 +267,7 @@ namespace Searchlight.Tests
             }
         }
 
-        [TestMethod]
-        public async Task LessThanQuery()
+        private async Task LessThanQuery()
         {
             var syntax = _src.Parse("name lt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -350,17 +277,15 @@ namespace Searchlight.Tests
             Assert.AreEqual("b", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
-            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
-            Assert.AreEqual(8, results.records.Length);
+            var results = await _executor(syntax);
+            Assert.AreEqual(1, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.Ordinal) < 0);
+                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) < 0);
             }
         }
 
-        [TestMethod]
-        public async Task LessThanOrEqualQuery()
+        private async Task LessThanOrEqualQuery()
         {
             var syntax = _src.Parse("name le 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
@@ -370,76 +295,59 @@ namespace Searchlight.Tests
             Assert.AreEqual("bob rogers", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
-            var results = await syntax.QueryMongo(_collection);
-            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
-            Assert.AreEqual(8, results.records.Length);
+            var results = await _executor(syntax);
+            Assert.AreEqual(2, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
-                    StringComparison.Ordinal) <= 0);
+                    StringComparison.CurrentCultureIgnoreCase) <= 0);
             }
         }
 
-        [TestMethod]
-        public async Task NotEqualQuery()
+        private async Task NotEqualQuery()
         {
             var syntax = _src.Parse("Name != 'Alice Smith'");
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
-            Assert.AreEqual(_referenceList.Count - 1, result.records.Length);
+            Assert.AreEqual(_list.Count - 1, result.records.Length);
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
         }
 
 
-        [TestMethod]
-        public void BooleanContains()
-        {
-            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty contains 's'"); });
-            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty contains True"); });
-            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty startswith True"); });
-            Assert.ThrowsException<FieldTypeMismatch>(() => { _src.Parse("OnDuty endswith True"); });
-        }
-
-
-        [TestMethod]
-        public async Task IsNullQuery()
+        private async Task IsNullQuery()
         {
             var syntax = _src.Parse("Name is NULL");
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
             Assert.AreEqual(1, result.records.Length);
 
             // Test the opposite
             syntax = _src.Parse("Name is not NULL");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
             Assert.AreEqual(8, result.records.Length);
         }
 
-
-        [TestMethod]
-        public async Task ContainsNull()
+        private async Task ContainsNull()
         {
             // Searchlight interprets the word "null" without apostrophes here to be the string value "null"
             // instead of a null.
             var syntax = _src.Parse("Name contains null");
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result.records.Length);
             Assert.IsTrue(result.records.Any(p => p.name == "Roderick 'null' Sqlkeywordtest"));
         }
 
-
-        [TestMethod]
-        public async Task InQuery()
+        private async Task InQuery()
         {
             var syntax = _src.Parse("name in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
             Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsTrue(result.records.Any(p => p.name == "Bob Rogers"));
@@ -448,7 +356,7 @@ namespace Searchlight.Tests
 
             // Now run the opposite query
             syntax = _src.Parse("name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsFalse(result.records.Any(p => p.name == "Bob Rogers"));
@@ -456,15 +364,13 @@ namespace Searchlight.Tests
             Assert.AreEqual(7, result.records.Length);
         }
 
-
-        [TestMethod]
-        public async Task InQueryInt()
+        private async Task InQueryInt()
         {
             // getting not implemented error on this line
             // make sure using right formatting, if so then in operator needs adjustment
             var syntax = _src.Parse("id in (1,2,57)");
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
             Assert.IsTrue(result.records.Any(p => p.id == 1));
             Assert.IsTrue(result.records.Any(p => p.id == 2));
@@ -472,174 +378,160 @@ namespace Searchlight.Tests
             Assert.AreEqual(2, result.records.Length);
         }
 
-        [TestMethod]
-        public async Task InQueryDecimals()
+        private async Task InQueryDecimals()
         {
             var syntax = _src.Parse("paycheck in (578.00, 1.234)");
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
             Assert.IsTrue(result.records[0].id == 7);
         }
 
-        [TestMethod]
-        public void InQueryEmptyList()
-        {
-            Assert.ThrowsException<EmptyClause>(() => _src.Parse("name in ()"));
-            Assert.ThrowsException<EmptyClause>(() => _src.Parse("paycheck > 1 AND name in ()"));
-        }
-
-        [TestMethod]
-        public async Task StringEqualsCaseInsensitive()
+        private async Task StringEqualsCaseInsensitive()
         {
             var syntax = _src.Parse("name eq 'ALICE SMITH'");
 
-            // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
-            Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
+            Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
-            Assert.AreEqual(0, result.records.Length);
+            Assert.AreEqual(1, result.records.Length);
 
             // Try the inverse
             syntax = _src.Parse("name not eq 'ALICE SMITH'");
-            result = await syntax.QueryMongo(_collection);
-            Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
+            result = await _executor(syntax);
+            Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
-            Assert.AreEqual(_referenceList.Count, result.records.Length);
+            Assert.AreEqual(_list.Count - 1, result.records.Length);
         }
 
-        [TestMethod]
-        public async Task DefinedDateOperators()
+        private async Task DefinedDateOperators()
         {
             var syntax = _src.Parse("hired < TODAY");
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
             Assert.IsTrue(result.records.Length == 3 || result.records.Length == 4);
 
             syntax = _src.Parse("hired < TOMORROW");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
 
             syntax = _src.Parse("hired < tomorrow");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
 
             syntax = _src.Parse("hired > YESTERDAY");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.IsTrue(result.records.Length == 5 || result.records.Length == 6);
 
             syntax = _src.Parse("hired > NOW");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.AreEqual(4, result.records.Length);
 
             syntax = _src.Parse("hired < NOW");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.AreEqual(5, result.records.Length);
 
             Assert.ThrowsException<FieldTypeMismatch>(() => _src.Parse("hired > yesteryear"));
         }
 
-        [TestMethod]
-        public async Task NormalDateQueries()
+        private async Task NormalDateQueries()
         {
             var syntax = _src.Parse("hired > 2020-01-01");
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
             Assert.IsTrue(result.records.Any());
-            Assert.IsTrue(result.records.Length == _referenceList.Count);
+            Assert.IsTrue(result.records.Length == _list.Count);
 
             syntax = _src.Parse("hired < 1985-01-01");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.IsFalse(result.records.Any());
 
             // Now try the opposite
             syntax = _src.Parse("hired not < 1985-01-01");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.IsTrue(result.records.Any());
-            Assert.IsTrue(result.records.Length == _referenceList.Count);
+            Assert.IsTrue(result.records.Length == _list.Count);
 
             syntax = _src.Parse("hired not > 2020-01-01");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
             Assert.IsFalse(result.records.Any());
         }
 
-        [TestMethod]
-        public async Task SortedQueries()
+        private async Task SortedQueries()
         {
             // id test ascending and descending
-
-            var control = (from item in _referenceList orderby item.id ascending select item).ToList();
+            var control = (from item in _list orderby item.id ascending select item).ToList();
             var syntax = _src.Parse(null, null, "id ASC");
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].id, control[i].id);
             }
 
-            control = (from item in _referenceList orderby item.id descending select item).ToList();
+            control = (from item in _list orderby item.id descending select item).ToList();
             syntax = _src.Parse("", null, "id descending");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].id, control[i].id);
             }
 
             // name test ascending and descending
-            control = (from item in _referenceList orderby item.name ascending select item).ToList();
+            control = (from item in _list orderby item.name ascending select item).ToList();
             syntax = _src.Parse("", null, "name ASC");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].name, control[i].name);
             }
 
-            control = (from item in _referenceList orderby item.name descending select item).ToList();
+            control = (from item in _list orderby item.name descending select item).ToList();
             syntax = _src.Parse("", null, "name DESC");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].name, control[i].name);
             }
 
             // paycheck test ascending and descending
-            control = (from item in _referenceList orderby item.paycheck ascending select item).ToList();
+            control = (from item in _list orderby item.paycheck ascending select item).ToList();
             syntax = _src.Parse("", null, "paycheck ASC");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
 
-            control = (from item in _referenceList orderby item.paycheck descending select item).ToList();
+            control = (from item in _list orderby item.paycheck descending select item).ToList();
             syntax = _src.Parse("", null, "paycheck DESC");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
 
             // onduty test ascending and descending
-            control = (from item in _referenceList orderby item.onduty ascending select item).ToList();
+            control = (from item in _list orderby item.onduty ascending select item).ToList();
             syntax = _src.Parse("", null, "onduty ASC");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
 
-            control = (from item in _referenceList orderby item.onduty descending select item).ToList();
+            control = (from item in _list orderby item.onduty descending select item).ToList();
             syntax = _src.Parse("", null, "onduty DESC");
-            result = await syntax.QueryMongo(_collection);
+            result = await _executor(syntax);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            for (var i = 0; i < _list.Count; i++)
             {
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
@@ -652,84 +544,73 @@ namespace Searchlight.Tests
             // is less than 16ms of drift between the two dates, which is less than one frame on a speedrun
             // of classic Super Mario Bros.
             //
-            
-            control = (from item in _referenceList orderby item.hired ascending select item).ToList();
-            syntax = _src.Parse("", null, "hired ASC");
-            result = await syntax.QueryMongo(_collection);
 
-            for (var i = 0; i < _referenceList.Count; i++)
+            control = (from item in _list orderby item.hired ascending select item).ToList();
+            syntax = _src.Parse("", null, "hired ASC");
+            result = await _executor(syntax);
+
+            for (var i = 0; i < _list.Count; i++)
             {
                 var ts = result.records[i].hired - control[i].hired;
                 Assert.IsTrue(ts.TotalMilliseconds < 16.0);
             }
 
-            control = (from item in _referenceList orderby item.hired descending select item).ToList();
+            control = (from item in _list orderby item.hired descending select item).ToList();
             syntax = _src.Parse("", null, "hired DESC");
-            result = await syntax.QueryMongo(_collection);
-            for (var i = 0; i < _referenceList.Count; i++)
+            result = await _executor(syntax);
+            for (var i = 0; i < _list.Count; i++)
             {
                 var ts = result.records[i].hired - control[i].hired;
                 Assert.IsTrue(ts.TotalMilliseconds < 16.0);
             }
         }
 
-        [TestMethod]
-        public async Task DefaultReturn()
+        private async Task DefaultReturn()
         {
             var syntax = _src.Parse("");
             syntax.PageNumber = 0; // default is 0
             syntax.PageSize = 0; // default is 0
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
             // return everything
-            Assert.AreEqual(_referenceList.Count, result.records.Length);
+            Assert.AreEqual(_list.Count, result.records.Length);
         }
 
-        [TestMethod]
-        public async Task PageNumberNoPageSize()
+        private async Task PageNumberNoPageSize()
         {
             var syntax = _src.Parse("");
             syntax.PageNumber = 2;
             syntax.PageSize = 0; // default is 0
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
             // return everything
-            Assert.AreEqual(result.records.Length, _referenceList.Count);
+            Assert.AreEqual(result.records.Length, _list.Count);
         }
 
-        [TestMethod]
-        public async Task PageSizeNoPageNumber()
+        private async Task PageSizeNoPageNumber()
         {
             var syntax = _src.Parse("");
 
             syntax.PageSize = 2;
             syntax.PageNumber = 0; // no page number defaults to 0
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
             // should take the first 2 elements
             Assert.AreEqual(result.records.Length, 2);
         }
 
-        [TestMethod]
-        public async Task PageSizeAndPageNumber()
+        private async Task PageSizeAndPageNumber()
         {
             var syntax = _src.Parse("");
             syntax.PageSize = 1;
             syntax.PageNumber = 2;
 
-            var result = await syntax.QueryMongo(_collection);
+            var result = await _executor(syntax);
 
             Assert.AreEqual(result.records.Length, 1);
-        }
-
-        [TestMethod]
-        public void TestMongoSafety()
-        {
-            Assert.IsTrue(MongoModelChecker.IsMongoSafe(typeof(EmployeeObj)));
-            Assert.IsFalse(MongoModelChecker.IsMongoSafe(typeof(IncompatibleEmployeeObj)));
         }
     }
 }

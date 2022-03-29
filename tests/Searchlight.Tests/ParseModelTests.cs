@@ -267,6 +267,24 @@ namespace Searchlight.Tests
                 return false;
             }));
         }
+        
+        [TestMethod]
+        public void BooleanFieldWithStringOperators()
+        {
+            var src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty contains 's'"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty contains True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty startswith True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty endswith True"); });
+        }
+        
+        [TestMethod]
+        public void InQueryEmptyList()
+        {
+            var src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+            Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
+            Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
+        }
 
         [TestMethod]
         public void TestFetchRequestNullFilter()

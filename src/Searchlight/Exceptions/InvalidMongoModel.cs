@@ -1,4 +1,6 @@
-﻿namespace Searchlight.Exceptions
+﻿#pragma warning disable CS1591
+
+namespace Searchlight.Exceptions
 {
     /// <summary>
     /// This MongoDB model has at least one field without a BSON decimal representation
