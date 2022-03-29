@@ -645,14 +645,23 @@ namespace Searchlight.Tests
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
 
-            // hired test ascending and descending
+            //
+            // Sorting by DateTime, ascending and descending.
+            //
+            // Some database systems may store dates with slightly different precision than C# does internally.
+            // This means that comparing strict equality is not appropriate.  We instead assert that there
+            // is less than 16ms of drift between the two dates, which is less than one frame on a speedrun
+            // of classic Super Mario Bros.
+            //
+            
             control = (from item in _referenceList orderby item.hired ascending select item).ToList();
             syntax = _src.Parse("", null, "hired ASC");
             result = await syntax.QueryMongo(_collection);
 
             for (var i = 0; i < _referenceList.Count; i++)
             {
-                Assert.AreEqual(result.records[i].hired, control[i].hired);
+                var ts = result.records[i].hired - control[i].hired;
+                Assert.IsTrue(ts.TotalMilliseconds < 16.0);
             }
 
             control = (from item in _referenceList orderby item.hired descending select item).ToList();
@@ -660,7 +669,8 @@ namespace Searchlight.Tests
             result = await syntax.QueryMongo(_collection);
             for (var i = 0; i < _referenceList.Count; i++)
             {
-                Assert.AreEqual(result.records[i].hired, control[i].hired);
+                var ts = result.records[i].hired - control[i].hired;
+                Assert.IsTrue(ts.TotalMilliseconds < 16.0);
             }
         }
 

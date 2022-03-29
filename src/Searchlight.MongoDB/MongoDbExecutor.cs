@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -136,31 +137,43 @@ namespace MongoPetSitters
             {
                 case CriteriaClause criteria:
                     var rawValue = criteria.Value.GetValue();
-                    switch (criteria.Operation)
+                    if (criteria.Column.FieldType == typeof(string))
                     {
-                        case OperationType.Equals:
-                            return Builders<T>.Filter.Eq(criteria.Column.FieldName, rawValue);
-                        case OperationType.NotEqual:
-                            return Builders<T>.Filter.Ne(criteria.Column.FieldName, rawValue);
-                        case OperationType.GreaterThan:
-                            return Builders<T>.Filter.Gt(criteria.Column.FieldName, rawValue);
-                        case OperationType.GreaterThanOrEqual:
-                            return Builders<T>.Filter.Gte(criteria.Column.FieldName, rawValue);
-                        case OperationType.LessThan:
-                            return Builders<T>.Filter.Lt(criteria.Column.FieldName, rawValue);
-                        case OperationType.LessThanOrEqual:
-                            return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
-                        case OperationType.Contains:
-                            return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression((string)rawValue, "i"));
-                        case OperationType.StartsWith:
-                            return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"^{rawValue}", "i"));
-                        case OperationType.EndsWith:
-                            return Builders<T>.Filter.Regex(criteria.Column.FieldName,
-                                new BsonRegularExpression($"{rawValue}$", "i"));
-                        default:
-                            throw new NotImplementedException();
+                        switch (criteria.Operation)
+                        {
+                            case OperationType.Contains:
+                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                    new BsonRegularExpression((string)rawValue, "i"));
+                            case OperationType.StartsWith:
+                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                    new BsonRegularExpression($"^{rawValue}", "i"));
+                            case OperationType.EndsWith:
+                                return Builders<T>.Filter.Regex(criteria.Column.FieldName,
+                                    new BsonRegularExpression($"{rawValue}$", "i"));
+                            default:
+                                return StrCaseCmp<T>(criteria.Column.FieldName, (string)rawValue,
+                                    criteria.Operation);
+                        }
+                    }
+                    else
+                    {
+                        switch (criteria.Operation)
+                        {
+                            case OperationType.Equals:
+                                return Builders<T>.Filter.Eq(criteria.Column.FieldName, rawValue);
+                            case OperationType.NotEqual:
+                                return Builders<T>.Filter.Ne(criteria.Column.FieldName, rawValue);
+                            case OperationType.GreaterThan:
+                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, rawValue);
+                            case OperationType.GreaterThanOrEqual:
+                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, rawValue);
+                            case OperationType.LessThan:
+                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, rawValue);
+                            case OperationType.LessThanOrEqual:
+                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
+                            default:
+                                throw new NotImplementedException();
+                        }
                     }
                 case InClause inClause:
                     var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
@@ -174,8 +187,10 @@ namespace MongoPetSitters
                     );
 
                 case BetweenClause betweenClause:
-                    var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName, betweenClause.LowerValue.GetValue());
-                    var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName, betweenClause.UpperValue.GetValue());
+                    var lower = Builders<T>.Filter.Gte(betweenClause.Column.FieldName,
+                        betweenClause.LowerValue.GetValue());
+                    var upper = Builders<T>.Filter.Lte(betweenClause.Column.FieldName,
+                        betweenClause.UpperValue.GetValue());
                     return Builders<T>.Filter.And(lower, upper);
 
                 case CompoundClause compoundClause:
@@ -183,6 +198,68 @@ namespace MongoPetSitters
                 default:
                     throw new NotImplementedException();
             }
+        }
+
+        /// <summary>
+        /// Because MongoDB doesn't have a StrCaseCmp in it
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <param name="value"></param>
+        /// <param name="op"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static FilterDefinition<T> StrCaseCmp<T>(
+            string fieldName,
+            string value,
+            OperationType op)
+        {
+            var parameterObject = Expression.Parameter(typeof(T), "x");
+            var fieldExpr = Expression.Property(parameterObject, fieldName);
+            var valueExpr = Expression.Constant(value, typeof(string));
+            var comparison = Expression.Call(null,
+                typeof(string).GetMethod("Compare",
+                    new[]
+                    {
+                        typeof(string), typeof(string), typeof(StringComparison)
+                    }),
+                fieldExpr, valueExpr, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+            var constantZero = Expression.Constant(0);
+            BinaryExpression func;
+            switch (op)
+            {
+                case OperationType.GreaterThan:
+                    func = Expression.GreaterThan(comparison, constantZero);
+                    break;
+                case OperationType.GreaterThanOrEqual:
+                    func = Expression.GreaterThanOrEqual(comparison, constantZero);
+                    break;
+                case OperationType.Equals:
+                    func = Expression.Equal(comparison, constantZero);
+                    break;
+                case OperationType.NotEqual:
+                    func = Expression.NotEqual(comparison, constantZero);
+                    break;
+                case OperationType.LessThanOrEqual:
+                    func = Expression.LessThanOrEqual(comparison, constantZero);
+                    break;
+                case OperationType.LessThan:
+                    func = Expression.LessThan(comparison, constantZero);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+            var final = Expression.Lambda<Func<T, bool>>(body: func, parameters: parameterObject);
+            // The goal is to produce this filter:
+            // { 
+            //     $expr: {
+            //         $gte: [
+            //             { $strcasecmp: [ "$name", "space"] },
+            //             0
+            //         ] 
+            //     }
+            // }
+            return Builders<T>.Filter.Where(final);
         }
     }
 }

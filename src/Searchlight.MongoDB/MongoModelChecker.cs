@@ -8,6 +8,9 @@ using Searchlight;
 
 namespace MongoPetSitters
 {
+    /// <summary>
+    /// Verify that a model is safe for use with MongoDB
+    /// </summary>
     public class MongoModelChecker
     {
         private static Dictionary<string, bool> _isMongoSafe = new Dictionary<string, bool>();

@@ -20,10 +20,10 @@ namespace Searchlight.Tests
             return new List<EmployeeObj>
             {
                 new()
-                    { hired = DateTime.Today, id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
+                    { hired = DateTime.Today.ToUniversalTime(), id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(-1),
+                    hired = DateTime.Today.AddMonths(-1).ToUniversalTime(),
                     id = 2,
                     name = "Bob Rogers",
                     onduty = true,
@@ -31,7 +31,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(-6),
+                    hired = DateTime.Today.AddMonths(-6).ToUniversalTime(),
                     id = 3,
                     name = "Charlie Prentiss",
                     onduty = false,
@@ -39,7 +39,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(-12),
+                    hired = DateTime.Today.AddMonths(-12).ToUniversalTime(),
                     id = 4,
                     name = "Danielle O'Shea",
                     onduty = false,
@@ -47,17 +47,17 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(1),
+                    hired = DateTime.Today.AddMonths(1).ToUniversalTime(),
                     id = 5,
                     name = "Ernest Nofzinger",
                     onduty = true,
                     paycheck = 1000.00m
                 },
                 new()
-                    { hired = DateTime.Today.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m },
+                    { hired = DateTime.Today.AddMonths(4).ToUniversalTime(), id = 6, name = null, onduty = false, paycheck = 10.00m },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(2),
+                    hired = DateTime.Today.AddMonths(2).ToUniversalTime(),
                     id = 7,
                     name = "Roderick 'null' Sqlkeywordtest",
                     onduty = false,
@@ -65,7 +65,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.UtcNow.AddHours(-1),
+                    hired = DateTime.UtcNow.AddHours(-1).ToUniversalTime(),
                     id = 8,
                     name = "Joe 'Fresh Hire' McGillicuddy",
                     onduty = false,
@@ -73,7 +73,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.UtcNow.AddHours(1),
+                    hired = DateTime.UtcNow.AddHours(1).ToUniversalTime(),
                     id = 9,
                     name = "Carol 'Starting Soon!' Yamashita",
                     onduty = false,
