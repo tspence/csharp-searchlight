@@ -150,30 +150,29 @@ namespace MongoPetSitters
                             case OperationType.EndsWith:
                                 return Builders<T>.Filter.Regex(criteria.Column.FieldName,
                                     new BsonRegularExpression($"{rawValue}$", "i"));
+                            /*
                             default:
                                 return StrCaseCmp<T>(criteria.Column.FieldName, (string)rawValue,
                                     criteria.Operation);
+                             */
                         }
                     }
-                    else
+                    switch (criteria.Operation)
                     {
-                        switch (criteria.Operation)
-                        {
-                            case OperationType.Equals:
-                                return Builders<T>.Filter.Eq(criteria.Column.FieldName, rawValue);
-                            case OperationType.NotEqual:
-                                return Builders<T>.Filter.Ne(criteria.Column.FieldName, rawValue);
-                            case OperationType.GreaterThan:
-                                return Builders<T>.Filter.Gt(criteria.Column.FieldName, rawValue);
-                            case OperationType.GreaterThanOrEqual:
-                                return Builders<T>.Filter.Gte(criteria.Column.FieldName, rawValue);
-                            case OperationType.LessThan:
-                                return Builders<T>.Filter.Lt(criteria.Column.FieldName, rawValue);
-                            case OperationType.LessThanOrEqual:
-                                return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
-                            default:
-                                throw new NotImplementedException();
-                        }
+                        case OperationType.Equals:
+                            return Builders<T>.Filter.Eq(criteria.Column.FieldName, rawValue);
+                        case OperationType.NotEqual:
+                            return Builders<T>.Filter.Ne(criteria.Column.FieldName, rawValue);
+                        case OperationType.GreaterThan:
+                            return Builders<T>.Filter.Gt(criteria.Column.FieldName, rawValue);
+                        case OperationType.GreaterThanOrEqual:
+                            return Builders<T>.Filter.Gte(criteria.Column.FieldName, rawValue);
+                        case OperationType.LessThan:
+                            return Builders<T>.Filter.Lt(criteria.Column.FieldName, rawValue);
+                        case OperationType.LessThanOrEqual:
+                            return Builders<T>.Filter.Lte(criteria.Column.FieldName, rawValue);
+                        default:
+                            throw new NotImplementedException();
                     }
                 case InClause inClause:
                     var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
@@ -200,8 +199,11 @@ namespace MongoPetSitters
             }
         }
 
+        /*
         /// <summary>
-        /// Because MongoDB doesn't have a StrCaseCmp in it
+        /// This function would eventually permit MongoDB to execute a case insensitive string comparison,
+        /// but the C# MongoDB driver hasn't implemented it yet. We'll leave this code present but commented out
+        /// until ticket https://jira.mongodb.org/browse/CSHARP-4115 is addressed in some fashion. 
         /// </summary>
         /// <param name="fieldName"></param>
         /// <param name="value"></param>
@@ -261,5 +263,6 @@ namespace MongoPetSitters
             // }
             return Builders<T>.Filter.Where(final);
         }
+        */
     }
 }
