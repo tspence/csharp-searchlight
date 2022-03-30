@@ -29,7 +29,7 @@ namespace Searchlight.Tests
         public void CacheTriggerReload()
         {
             // Verify object cache works
-            SimpleCacheTest sct = new SimpleCacheTest();
+            var sct = new SimpleCacheTest();
             Assert.AreEqual("TEST", sct.Get());
             Assert.IsTrue(sct.ReloadCount >= 1);
 

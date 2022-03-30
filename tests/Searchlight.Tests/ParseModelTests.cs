@@ -233,7 +233,7 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("BookCopy"));
             
             // This is the list of expected errors
-            Assert.AreEqual(5, engine.ModelErrors.Count);
+            Assert.AreEqual(4, engine.ModelErrors.Count);
             Assert.IsTrue(engine.ModelErrors.Any(err =>
             {
                 if (err is InvalidDefaultSort defSort)
@@ -266,6 +266,24 @@ namespace Searchlight.Tests
                 }
                 return false;
             }));
+        }
+        
+        [TestMethod]
+        public void BooleanFieldWithStringOperators()
+        {
+            var src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty contains 's'"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty contains True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty startswith True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty endswith True"); });
+        }
+        
+        [TestMethod]
+        public void InQueryEmptyList()
+        {
+            var src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+            Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
+            Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
         }
 
         [TestMethod]
