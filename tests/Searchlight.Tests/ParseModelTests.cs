@@ -48,6 +48,7 @@ namespace Searchlight.Tests
             var ex = Assert.ThrowsException<FieldNotFound>(() => source.ParseFilter(originalFilter));
             Assert.AreEqual("a", ex.FieldName);
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
+            Assert.IsTrue(ex.ErrorMessage.EndsWith("Check the list of known fields to see if the filter contains a typographical error: NAME, DESCRIPTION"));
 
             // Attempt to query a field that does exist, but is not permitted to be queried
             originalFilter = "NotASearchlightField = 'Hello'";

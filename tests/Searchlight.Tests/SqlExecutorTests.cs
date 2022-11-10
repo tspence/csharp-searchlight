@@ -106,6 +106,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("[1", ex.BadToken);
             Assert.AreEqual(1, ex.ExpectedTokens.Length);
             Assert.IsTrue(ex.ExpectedTokens.Contains("("));
+            Assert.IsTrue(ex.ErrorMessage.EndsWith("Searchlight expects to find one of these next: ("));
 
             // Error in "IS NULL" clause
             originalFilter = "b is not complex and should have been just called 'NULL'";

@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.21</version>
+		<version>0.9.22</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -16,10 +16,10 @@
 		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
 		<icon>docs/icons8-searchlight-90.png</icon>
 		<releaseNotes>
-			# 0.9.21
-			March 15, 2022
-
-			* Support for date math in searchlight queries, such as `dateDue between NOW and NOW + 7`
+			# 0.9.22
+			November 10, 2022
+			
+			Updated some exceptions to include more readable error message values.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2022</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
