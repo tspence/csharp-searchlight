@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight.MongoDB</id>
-		<version>0.9.21</version>
+		<version>0.9.22</version>
 		<title>Searchlight.MongoDB</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -16,17 +16,10 @@
 		<summary>Implements the Searchlight query engine on top of MongoDB.</summary>
 		<icon>docs/icons8-searchlight-90.png</icon>
 		<releaseNotes>
-			# 0.9.21
-			March 29, 2022
+			# 0.9.22
+			November 10, 2022
 
-			* Implementation of Searchlight for MongoDB
-			* All test cases run against MongoDB in the same form that they run against in-memory collections
-			* Works using the official C# MongoDB driver
-			* Refactored the test suite to make comparisons across different databases/executors easier 
-			
-			Future improvements planned for MongoDB: 
-			* Case insensitive string comparison
-			* Searchlight collections support
+			Updated some exceptions to include more readable error message values.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2022</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>

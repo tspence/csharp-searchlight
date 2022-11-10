@@ -76,6 +76,7 @@ namespace Searchlight.Tests
             Assert.AreEqual("AnUnknownAlias", ex.IncludeName);
             Assert.AreEqual("TestFlag, AnUnknownAlias, AnotherUnknownAliasButThisOneDoesntGetTestedBecauseTheFirstOneFails", ex.OriginalInclude);
             Assert.IsTrue(ex.KnownIncludes.Contains("TestFlag"));
+            Assert.IsTrue(ex.ErrorMessage.EndsWith("known includes for available values: TestFlag, TestTwo."));
             
             // Check whether two flags can be specified
             syntax = engine.Parse(new FetchRequest()

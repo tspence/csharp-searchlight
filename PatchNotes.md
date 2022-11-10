@@ -1,3 +1,20 @@
+# 0.9.22
+November 10, 2022
+
+Updated some exceptions to include more readable error message values.
+
+# 0.9.21
+March 29, 2022
+
+* Implementation of Searchlight for MongoDB
+* All test cases run against MongoDB in the same form that they run against in-memory collections
+* Works using the official C# MongoDB driver
+* Refactored the test suite to make comparisons across different databases/executors easier 
+
+Future improvements planned for MongoDB: 
+* Case insensitive string comparison
+* Searchlight collections support
+* 
 # 0.9.20
 March 15, 2022
 

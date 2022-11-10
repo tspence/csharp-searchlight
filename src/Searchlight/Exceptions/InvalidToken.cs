@@ -18,9 +18,8 @@ namespace Searchlight
 
         public string ErrorMessage
         {
-            get => $"The filter statement contained an unexpected token, {BadToken}. Searchlight expects to find one of these next:" +
-                   $"{string.Join(", ", ExpectedTokens)}. Example: `(name eq Alice) date eq '2021-09-29'` In this query, Searchlight expects to see " +
-                   "\"AND\" or \"OR\" after the close parenthesis.";
+            get => $"The filter statement contained an unexpected token, '{BadToken}'. Searchlight expects to find one of these next: " +
+                   $"{string.Join(", ", ExpectedTokens)}";
         }
     }
 }
