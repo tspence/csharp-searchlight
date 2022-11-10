@@ -1,5 +1,4 @@
-﻿
-#pragma warning disable CS1591
+﻿#pragma warning disable CS1591
 namespace Searchlight
 {
     /// <summary>
@@ -19,7 +18,8 @@ namespace Searchlight
         public string ErrorMessage
         {
             get =>
-                $"The query filter, {OriginalFilter}, had a field name that was not known. Check the list of known fields to see if the filter contains a typographical error: {KnownFields}";
+                $"The query filter, {OriginalFilter}, had a field name that was not known. Check the list of known fields to see if the filter " +
+                $"contains a typographical error: {string.Join(", ", KnownFields)}";
         }
     }
 }
