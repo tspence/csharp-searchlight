@@ -185,7 +185,7 @@ namespace Searchlight
             {
                 src.TableName = modelAttribute.OriginalName ?? modelType.Name;
                 src.MaximumParameters = modelAttribute.MaximumParameters;
-                src.DefaultSort = modelAttribute.DefaultSort;
+                src.DefaultSort = modelAttribute.DefaultSort ?? modelType.GetDefaultMembers().FirstOrDefault()?.Name;
             }
             else
             {
