@@ -14,7 +14,8 @@ namespace Searchlight.Caching
         /// <summary>
         /// Concurrent dictionary for fetching items
         /// </summary>
-        private ConcurrentDictionary<KEY, ItemCache<ITEM>> _item_dict = new ConcurrentDictionary<KEY, ItemCache<ITEM>>();
+        private readonly ConcurrentDictionary<KEY, ItemCache<ITEM>> _item_dict =
+            new ConcurrentDictionary<KEY, ItemCache<ITEM>>();
 
         /// <summary>
         /// Default time frame is that items expire after an hour
@@ -22,7 +23,9 @@ namespace Searchlight.Caching
         protected TimeSpan _cacheDuration = new TimeSpan(1, 0, 0);
 
 
-        #region Constructor
+        /// <summary>
+        /// Keeps track of items and fetches them if necessary
+        /// </summary>
         public ItemFetchCache()
         {
             // Set defaults
@@ -31,7 +34,6 @@ namespace Searchlight.Caching
             // Hook this to the overall cache reset event
             CacheHelper.ResetAllCachesEvent += this.ResetCacheHandler;
         }
-        #endregion
 
         #region Reset cache
         /// <summary>
@@ -73,8 +75,7 @@ namespace Searchlight.Caching
         /// <returns></returns>
         public ITEM Get(KEY key)
         {
-            ITEM item;
-            bool success = TryGet(key, out item);
+            bool success = TryGet(key, out ITEM item);
             if (!success)
             {
                 throw new KeyNotFoundException();
@@ -91,9 +92,7 @@ namespace Searchlight.Caching
         public bool TryGet(KEY key, out ITEM item)
         {
             bool result = false;
-            item = default(ITEM);
-            ItemCache<ITEM> cached_obj = null;
-            var found = _item_dict.TryGetValue(key, out cached_obj);
+            var found = _item_dict.TryGetValue(key, out ItemCache<ITEM> cached_obj);
             var maximum_cache_age = DateTime.UtcNow.Subtract(_cacheDuration);
 
             // Did we find an object successfully, and is it recent enough?
@@ -126,9 +125,11 @@ namespace Searchlight.Caching
         /// <param name="item_loaded_timestamp"></param>
         protected void Set(KEY key, ITEM item, DateTime item_loaded_timestamp)
         {
-            ItemCache<ITEM> cache = new ItemCache<ITEM>();
-            cache.CachedObject = item;
-            cache.CacheDate = item_loaded_timestamp;
+            var cache = new ItemCache<ITEM>()
+            {
+                CachedObject = item,
+                CacheDate = item_loaded_timestamp
+            };
             _item_dict[key] = cache;
         }
         #endregion

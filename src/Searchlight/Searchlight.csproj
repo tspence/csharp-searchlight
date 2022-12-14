@@ -1,15 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyVersion>0.9.20</AssemblyVersion>
+    <FileVersion>0.9.20</FileVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Exceptions\FilterException.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="System.Linq.Dynamic.Core" Version="1.2.13" />
-  </ItemGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile>bin\Debug\Searchlight.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\Searchlight.xml</DocumentationFile>
+  </PropertyGroup>
 
 </Project>

@@ -2,6 +2,12 @@
 
 namespace Searchlight.Caching
 {
+    /// <summary>
+    /// Represents a cache using a dictionary with defined keys.  This is similar to an IDictionary, but
+    /// it can potentially trigger a cache-fetch.
+    /// </summary>
+    /// <typeparam name="KEY"></typeparam>
+    /// <typeparam name="ITEM"></typeparam>
     public class DictionaryCache<KEY, ITEM> : ObjectCache<Dictionary<KEY, ITEM>>
     {
         /// <summary>
@@ -12,12 +18,11 @@ namespace Searchlight.Caching
         public ITEM GetItem(KEY id)
         {
             var dict = Get();
-            ITEM obj = default(ITEM);
-            if (dict.TryGetValue(id, out obj))
+            if (dict.TryGetValue(id, out ITEM obj))
             {
                 return obj;
             }
-            return default(ITEM);
+            return default;
         }
 
         /// <summary>

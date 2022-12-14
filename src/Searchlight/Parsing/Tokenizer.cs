@@ -46,24 +46,22 @@ namespace Searchlight.Parsing
                     }
 
                     // If the token is actually part of a >= or <= block, add the equal sign to it.
-                    char? c2 = (i + 1 < line.Length) ? line[i + 1] : null;
-                    switch (c, c2)
+                    var c2 = (i + 1 < line.Length) ? (char?)line[i + 1] : null;
+                    if ((c == '!' && c2 == '=') ||
+                        (c == '<' && c2 == '>') ||
+                        (c == '<' && c2 == '=') ||
+                        (c == '>' && c2 == '='))
                     {
-                        case ('!', '='):
-                        case ('<', '>'):
-                        case ('<', '='):
-                        case ('>', '='):
-                            tokens.Enqueue(line.Substring(i, 2));
-                            i++;
-                            break;
-                        case ('<', _):
-                        case ('>', _):
-                            tokens.Enqueue(c.ToString());
-                            break;
+                        tokens.Enqueue(line.Substring(i, 2));
+                        i++;
+                    } else if (c == '<' || c == '>')
+                    {
+                        tokens.Enqueue(c.ToString());
+                    }
+                    else
+                    {
                         // This probably means it's a syntax error, but let's let the parser figure that out
-                        default:
-                            tokens.Enqueue(c.ToString());
-                            break;
+                        tokens.Enqueue(c.ToString());
                     }
 
                     sb.Length = 0;

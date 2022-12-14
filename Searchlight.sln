@@ -5,18 +5,22 @@ VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Searchlight", "src\Searchlight\Searchlight.csproj", "{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Searchlight.Tests", "tests\Searchlight.Tests\Searchlight.Tests.csproj", "{C87B0E18-33A4-43FC-BCE7-C0343FC60228}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Files", "Other Files", "{6FA550FB-FF83-4552-A9C0-3F7C2736385D}"
 	ProjectSection(SolutionItems) = preProject
 		PatchNotes.md = PatchNotes.md
 		README.md = README.md
 		Searchlight.nuspec = Searchlight.nuspec
+		icons8-searchlight-90.png = icons8-searchlight-90.png
+		Searchlight.MongoDB.nuspec = Searchlight.MongoDB.nuspec
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Searchlight.MongoDB", "src\Searchlight.MongoDB\Searchlight.MongoDB.csproj", "{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchlightPerformance", "src\SearchlightPerformance\SearchlightPerformance.csproj", "{64285A31-2226-4BF5-A587-0A4E9A90B9C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight", "src\Searchlight\Searchlight.csproj", "{A259A2E2-62B6-4FC5-BD9A-DC9B3ADF37A2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight.MongoDB", "src\Searchlight.MongoDB\Searchlight.MongoDB.csproj", "{FB14C8E2-F97D-4988-AF0F-B29EE3235EA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Searchlight.Tests", "tests\Searchlight.Tests\Searchlight.Tests.csproj", "{CAC68FBA-3971-4789-8D05-42F3BB9245B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,26 +28,31 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C87B0E18-33A4-43FC-BCE7-C0343FC60228}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C87B0E18-33A4-43FC-BCE7-C0343FC60228}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C87B0E18-33A4-43FC-BCE7-C0343FC60228}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C87B0E18-33A4-43FC-BCE7-C0343FC60228}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A259A2E2-62B6-4FC5-BD9A-DC9B3ADF37A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A259A2E2-62B6-4FC5-BD9A-DC9B3ADF37A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A259A2E2-62B6-4FC5-BD9A-DC9B3ADF37A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A259A2E2-62B6-4FC5-BD9A-DC9B3ADF37A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB14C8E2-F97D-4988-AF0F-B29EE3235EA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB14C8E2-F97D-4988-AF0F-B29EE3235EA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB14C8E2-F97D-4988-AF0F-B29EE3235EA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB14C8E2-F97D-4988-AF0F-B29EE3235EA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAC68FBA-3971-4789-8D05-42F3BB9245B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAC68FBA-3971-4789-8D05-42F3BB9245B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAC68FBA-3971-4789-8D05-42F3BB9245B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAC68FBA-3971-4789-8D05-42F3BB9245B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{CEE9DFAC-4ABE-4558-B9C0-3FD16FFED3AB} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
-		{C87B0E18-33A4-43FC-BCE7-C0343FC60228} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
-		{B53E69CF-CC87-4039-9C4E-61C3DD2873FF} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
+		{A259A2E2-62B6-4FC5-BD9A-DC9B3ADF37A2} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
+		{FB14C8E2-F97D-4988-AF0F-B29EE3235EA0} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
+		{CAC68FBA-3971-4789-8D05-42F3BB9245B2} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
+		{64285A31-2226-4BF5-A587-0A4E9A90B9C7} = {0B19EEE6-D7BF-41CD-884A-6EB31698DCAA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B73979E0-9FBB-4001-82CF-D56D3519E936}

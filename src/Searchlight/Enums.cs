@@ -1,5 +1,9 @@
+#pragma warning disable CS1591
 namespace Searchlight
 {
+    /// <summary>
+    /// Determines the strictness of Searchlight parsing
+    /// </summary>
     public enum AttributeMode {
         /// <summary>
         /// Not recommended - Allows developers to query any field on the model, even fields not tagged with the `SearchlightField` annotation.
@@ -19,7 +23,13 @@ namespace Searchlight
     /// </summary>
     public enum SortDirection
     {
+        /// <summary>
+        /// Indicates a sort where lower value items are before higher value items
+        /// </summary>
         Ascending,
+        /// <summary>
+        /// Indicates a sort where higher value items are before lower value items
+        /// </summary>
         Descending,
     }
 

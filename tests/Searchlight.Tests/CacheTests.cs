@@ -29,7 +29,7 @@ namespace Searchlight.Tests
         public void CacheTriggerReload()
         {
             // Verify object cache works
-            SimpleCacheTest sct = new SimpleCacheTest();
+            var sct = new SimpleCacheTest();
             Assert.AreEqual("TEST", sct.Get());
             Assert.IsTrue(sct.ReloadCount >= 1);
 
@@ -82,8 +82,10 @@ namespace Searchlight.Tests
             protected override Dictionary<string, string> ReloadCache()
             {
                 ReloadCount++;
-                var dict = new Dictionary<string, string>();
-                dict["test"] = "TEST";
+                var dict = new Dictionary<string, string>
+                {
+                    ["test"] = "TEST"
+                };
                 return dict;
             }
         }

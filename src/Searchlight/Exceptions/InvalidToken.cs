@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿#pragma warning disable CS1591
 
 namespace Searchlight
 {
@@ -15,10 +15,11 @@ namespace Searchlight
         public string OriginalFilter { get; internal set; }
         public string BadToken { get; internal set; }
         public string[] ExpectedTokens { get; internal set; }
+
         public string ErrorMessage
         {
-            get => $"The filter statement contained an unexpected token, {BadToken}. Searchlight expects to find one of these next: {ExpectedTokens}" +
-                    ". Example: `(name eq Alice) date eq '2021-09-29'` In this query, Searchlight expects to see \"AND\" or \"OR\" after the close parenthesis.";
+            get => $"The filter statement contained an unexpected token, '{BadToken}'. Searchlight expects to find one of these next: " +
+                   $"{string.Join(", ", ExpectedTokens)}";
         }
     }
 }

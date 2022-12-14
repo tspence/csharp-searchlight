@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+#pragma warning disable CS1591
 
 namespace Searchlight
 {
@@ -30,9 +31,11 @@ namespace Searchlight
             { "EQ", OperationType.Equals },
             { "GT", OperationType.GreaterThan  },
             { "GE", OperationType.GreaterThanOrEqual },
+            { "GTE", OperationType.GreaterThanOrEqual },
             { "NE", OperationType.NotEqual },
             { "LT", OperationType.LessThan },
             { "LE", OperationType.LessThanOrEqual },
+            { "LTE", OperationType.LessThanOrEqual },
 
             // Slightly less common query expressions
             { "BETWEEN",        OperationType.Between     },
@@ -122,10 +125,21 @@ namespace Searchlight
         public static readonly string COMMA = ",";
 
         /// <summary>
+        /// Used for date math
+        /// </summary>
+        public static readonly string ADD = "+";
+
+        /// <summary>
+        /// Used for date math
+        /// </summary>
+        public static readonly string SUBTRACT = "-";
+
+        /// <summary>
         /// Used as shorthand for typing today's date
         /// </summary>
         public static readonly Dictionary<string, Func<DateTime>> DEFINED_DATES = new Dictionary<string, Func<DateTime>>
         {
+            {"NOW", () => DateTime.UtcNow},
             {"TODAY", () => DateTime.Today},
             {"TOMORROW", () => DateTime.Today.AddDays(1)},
             {"YESTERDAY", () => DateTime.Today.AddDays(-1)}

@@ -2,6 +2,10 @@
 
 namespace Searchlight.Caching
 {
+    /// <summary>
+    /// Keeps track of a collection
+    /// </summary>
+    /// <typeparam name="ITEM"></typeparam>
     public class ListCache<ITEM> : ObjectCache<List<ITEM>>
     {
         /// <summary>

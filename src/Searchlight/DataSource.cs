@@ -3,12 +3,10 @@ using Searchlight.Parsing;
 using Searchlight.Query;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Searchlight.Exceptions;
+using Searchlight.Expressions;
 
 namespace Searchlight
 {
@@ -121,7 +119,6 @@ namespace Searchlight
             var upperName = name.Trim().ToUpperInvariant();
             if (_includeDict.ContainsKey(upperName))
             {
-                var existing = _includeDict[upperName];
                 throw new DuplicateInclude
                 {
                     Table = this.TableName,
@@ -132,18 +129,19 @@ namespace Searchlight
             _includeDict[upperName] = incl;
         }
 
-        private static bool CheckPresence(string sort, PropertyInfo[] props)
-        {
-            return (from prop in props
-                where String.Equals(sort, prop.Name, StringComparison.InvariantCultureIgnoreCase)
-                select prop).Any();
-        }
-
+        /// <summary>
+        /// Gets the list of columns for this data source
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<ColumnInfo> GetColumnDefinitions()
         {
             return _columns;
         }
 
+        /// <summary>
+        /// Gets the list of column names for this data source
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<string> ColumnNames()
         {
             return _fieldDict.Keys;
@@ -156,7 +154,7 @@ namespace Searchlight
         /// <returns></returns>
         public ColumnInfo IdentifyColumn(string filterToken)
         {
-            if (String.IsNullOrWhiteSpace(filterToken)) return null;
+            if (string.IsNullOrWhiteSpace(filterToken)) return null;
             _fieldDict.TryGetValue(filterToken.ToUpper(), out ColumnInfo ci);
             return ci;
         }
@@ -171,10 +169,12 @@ namespace Searchlight
         /// <returns></returns>
         public static DataSource Create(SearchlightEngine engine, Type modelType, AttributeMode mode)
         {
-            var src = new DataSource();
-            src.Engine = engine;
-            src.Commands = new List<ICommand>();
-            src.Flags = modelType.GetCustomAttributes<SearchlightFlag>().ToList();
+            var src = new DataSource
+            {
+                Engine = engine,
+                Commands = new List<ICommand>(),
+                Flags = modelType.GetCustomAttributes<SearchlightFlag>().ToList()
+            };
             var modelAttribute = modelType.GetCustomAttribute<SearchlightModel>();
             src.ModelType = modelType;
             if (modelAttribute == null && mode == AttributeMode.Strict)
@@ -208,7 +208,7 @@ namespace Searchlight
                             // If this is a renaming column, add it appropriately
                             Type t = filter.FieldType ?? pi.PropertyType;
                             src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name,
-                                filter.Aliases ?? new string[] { }, t);
+                                filter.Aliases ?? Array.Empty<string>(), t);
                         }
 
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();
@@ -221,7 +221,7 @@ namespace Searchlight
             }
             
             // default sort cannot be null and must be a valid column
-            if (src.DefaultSort is not null)
+            if (src.DefaultSort != null)
             {
                 try
                 {
@@ -284,13 +284,21 @@ namespace Searchlight
             return Parse(fetch);
         }
 
+        /// <summary>
+        /// Parse a fetch request object into a syntax tree
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidPageSize"></exception>
+        /// <exception cref="InvalidPageNumber"></exception>
         public SyntaxTree Parse(FetchRequest request)
         {
-            SyntaxTree query = new SyntaxTree
+            var query = new SyntaxTree
             {
                 Source = this,
                 OriginalFilter = request.filter,
             };
+            
             var tuple = ParseIncludes(request.include);
             query.Includes = tuple.Item1;
             query.Flags = tuple.Item2;
@@ -300,7 +308,7 @@ namespace Searchlight
             {
                 query.PageNumber = request.pageNumber ?? 0;
                 query.PageSize = request.pageSize ?? 50;
-                if (query.PageSize <= 1)
+                if (query.PageSize <= 0)
                 {
                     throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString() };
                 }
@@ -318,34 +326,39 @@ namespace Searchlight
         /// Specify the name of optional collections or commands to include in this fetch request separated by commas.
         /// </summary>
         /// <param name="includes">The names of collections to fetch</param>
-        public Tuple<List<ICommand>, List<SearchlightFlag>> ParseIncludes(string includes)
+        private Tuple<List<ICommand>, List<SearchlightFlag>> ParseIncludes(string includes)
         {
             // We will collect results here
             var list = new List<ICommand>();
             var flags = new List<SearchlightFlag>();
             if (!string.IsNullOrWhiteSpace(includes))
             {
-                foreach (var name in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                foreach (var n in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    var upperName = name.ToUpperInvariant();
-                    if (_includeDict.TryGetValue(upperName, out var obj))
+                    var name = n.Trim();
+                    if (name != null)
                     {
-                        if (obj is ICommand command)
+                        var upperName = name.Trim()?.ToUpperInvariant();
+                        if (_includeDict.TryGetValue(upperName, out var obj))
                         {
-                            list.Add(command);
+                            if (obj is ICommand command)
+                            {
+                                list.Add(command);
+                            }
+                            else if (obj is SearchlightFlag flag)
+                            {
+                                flags.Add(flag);
+                            }
                         }
-                        else if (obj is SearchlightFlag flag)
+                        else
                         {
-                            flags.Add(flag);
+                            throw new IncludeNotFound()
+                            {
+                                OriginalInclude = includes,
+                                IncludeName = name,
+                                KnownIncludes = _knownIncludes.ToArray()
+                            };
                         }
-                    }
-                    else
-                    {
-                        throw new IncludeNotFound() { 
-                            OriginalInclude = includes, 
-                            IncludeName = name, 
-                            KnownIncludes = _knownIncludes.ToArray() 
-                        };
                     }
                 }
             }
@@ -362,14 +375,14 @@ namespace Searchlight
         /// <returns></returns>
         public List<SortInfo> ParseOrderBy(string orderBy)
         {
-            List<SortInfo> list = new List<SortInfo>();
-            if (String.IsNullOrWhiteSpace(orderBy))
+            var list = new List<SortInfo>();
+            if (string.IsNullOrWhiteSpace(orderBy))
             {
                 orderBy = DefaultSort;
             }
 
             // If no sort is specified
-            if (String.IsNullOrWhiteSpace(orderBy))
+            if (string.IsNullOrWhiteSpace(orderBy))
             {
                 return list;
             }
@@ -479,23 +492,23 @@ namespace Searchlight
 
                 // If not, we must have a conjunction
                 string upperToken = token.ToUpperInvariant();
-                if (!StringConstants.SAFE_CONJUNCTIONS.TryGetValue(upperToken, out string conjunction))
+                if (!StringConstants.SAFE_CONJUNCTIONS.ContainsKey(upperToken))
                 {
-                    throw new InvalidToken() { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = filter};
+                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = filter};
                 }
 
                 // Store the value of the conjunction
-                if (String.Equals(StringConstants.AND, upperToken))
+                if (string.Equals(StringConstants.AND, upperToken))
                 {
                     clause.Conjunction = ConjunctionType.AND;
                 }
-                else if (String.Equals(StringConstants.OR, upperToken))
+                else if (string.Equals(StringConstants.OR, upperToken))
                 {
                     clause.Conjunction = ConjunctionType.OR;
                 }
                 else
                 {
-                    throw new InvalidToken() { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = filter };
+                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = filter };
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
@@ -508,7 +521,7 @@ namespace Searchlight
             // If we expected to end with a parenthesis, but didn't, throw an exception here
             if (expectCloseParenthesis)
             {
-                throw new OpenClause() { OriginalFilter = filter };
+                throw new OpenClause { OriginalFilter = filter };
             }
 
             // Here's your clause!
@@ -524,7 +537,7 @@ namespace Searchlight
         private BaseClause ParseOneClause(string filter, Queue<string> tokens)
         {
             // First token is allowed to be a parenthesis or a field name
-            string fieldToken = tokens.Dequeue();
+            var fieldToken = tokens.Dequeue();
 
             // Is it a parenthesis?  If so, parse a compound clause list
             if (fieldToken == StringConstants.OPEN_PARENTHESIS)
@@ -538,11 +551,11 @@ namespace Searchlight
                 return compound;
             }
 
-            // Identify the fieldname -- is it on the approved list?
+            // Identify the field name -- is it on the approved list?
             var columnInfo = IdentifyColumn(fieldToken);
             if (columnInfo == null)
             {
-                if (String.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
+                if (string.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
                 {
                     throw new EmptyClause() { OriginalFilter = filter};
                 }
@@ -551,7 +564,7 @@ namespace Searchlight
             }
 
             // Allow "NOT" tokens here
-            bool negated = false;
+            var negated = false;
             var operationToken = tokens.Dequeue().ToUpperInvariant();
             if (operationToken == StringConstants.NOT)
             {
@@ -560,7 +573,7 @@ namespace Searchlight
             }
 
             // Next is the operation; must validate it against our list of safe tokens.  Case insensitive.
-            if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out OperationType op))
+            if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out var op))
             {
                 throw new InvalidToken()
                 {
@@ -574,23 +587,23 @@ namespace Searchlight
             {
                 // Safe syntax for a "BETWEEN" expression is "column BETWEEN (param1) AND (param2)"
                 case OperationType.Between:
-                    BetweenClause b = new BetweenClause
+                    var b = new BetweenClause
                     {
                         Negated = negated,
                         Column = columnInfo,
-                        LowerValue = ParseParameter(columnInfo, tokens.Dequeue(), filter)
+                        LowerValue = ParseParameter(columnInfo, tokens.Dequeue(), filter, tokens)
                     };
                     Expect(StringConstants.AND, tokens.Dequeue(), filter);
-                    b.UpperValue = ParseParameter(columnInfo, tokens.Dequeue(), filter);
+                    b.UpperValue = ParseParameter(columnInfo, tokens.Dequeue(), filter, tokens);
                     return b;
 
                 // Safe syntax for an "IN" expression is "column IN (param[, param][, param]...)"
                 case OperationType.In:
-                    InClause i = new InClause
+                    var i = new InClause
                     {
                         Column = columnInfo,
                         Negated = negated,
-                        Values = new List<object>()
+                        Values = new List<IExpressionValue>()
                     };
                     Expect(StringConstants.OPEN_PARENTHESIS, tokens.Dequeue(), filter);
 
@@ -598,11 +611,11 @@ namespace Searchlight
                     {
                         while (true)
                         {
-                            i.Values.Add(ParseParameter(columnInfo, tokens.Dequeue(), filter));
-                            string commaOrParen = tokens.Dequeue();
+                            i.Values.Add(ParseParameter(columnInfo, tokens.Dequeue(), filter, tokens));
+                            var commaOrParen = tokens.Dequeue();
                             if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen))
                             {
-                                throw new InvalidToken() { BadToken = commaOrParen, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
+                                throw new InvalidToken { BadToken = commaOrParen, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
                             }
 
                             if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
@@ -610,17 +623,17 @@ namespace Searchlight
                     }
                     else
                     {
-                        throw new EmptyClause() { OriginalFilter = filter };
+                        throw new EmptyClause { OriginalFilter = filter };
                     }
 
                     return i;
 
                 // Safe syntax for an "IS NULL" expression is "column IS [NOT] NULL"
                 case OperationType.IsNull:
-                    IsNullClause iN = new IsNullClause { Column = columnInfo };
+                    var iN = new IsNullClause { Column = columnInfo };
 
                     // Allow "not" to come either before or after the "IS"
-                    string next = tokens.Dequeue().ToUpperInvariant();
+                    var next = tokens.Dequeue().ToUpperInvariant();
                     if (next == StringConstants.NOT)
                     {
                         negated = true;
@@ -633,12 +646,13 @@ namespace Searchlight
 
                 // Safe syntax for all other recognized expressions is "column op param"
                 default:
-                    CriteriaClause c = new CriteriaClause
+                    var valueToken = tokens.Dequeue();
+                    var c = new CriteriaClause
                     {
                         Negated = negated,
                         Operation = op,
                         Column = columnInfo,
-                        Value = ParseParameter(columnInfo, tokens.Dequeue(), filter)
+                        Value = ParseParameter(columnInfo, valueToken, filter, tokens)
                     };
 
                     if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
@@ -649,7 +663,7 @@ namespace Searchlight
                             throw new FieldTypeMismatch() { 
                                 FieldName = c.Column.FieldName, 
                                 FieldType = c.Column.FieldType.ToString(), 
-                                FieldValue = Convert.ToString(c.Value), 
+                                FieldValue = valueToken, 
                                 OriginalFilter = filter
                             };
                         }
@@ -666,16 +680,10 @@ namespace Searchlight
         /// <param name="originalFilter"></param>
         private static void Expect(string expectedToken, string actual, string originalFilter)
         {
-            if (!String.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidToken() { BadToken = actual, ExpectedTokens = new[] { expectedToken }, OriginalFilter = originalFilter };
             }
-        }
-
-        private static object DefinedDateOperators(string valueToken)
-        {
-            StringConstants.DEFINED_DATES.TryGetValue(valueToken.ToUpper(), out var result);
-            return (result != null) ? result.Invoke() : valueToken;
         }
 
         /// <summary>
@@ -684,11 +692,10 @@ namespace Searchlight
         /// <param name="column"></param>
         /// <param name="valueToken"></param>
         /// <param name="originalFilter"></param>
-        private static object ParseParameter(ColumnInfo column, string valueToken, string originalFilter)
+        /// <param name="tokens"></param>
+        private static IExpressionValue ParseParameter(ColumnInfo column, string valueToken, string originalFilter, Queue<string> tokens)
         {
-            // Attempt to cast this item to the specified type
             var fieldType = column.FieldType;
-            object pvalue;
             try
             {
                 // For nullable types, note that the fieldvaluetoken will always be non-null.
@@ -702,48 +709,70 @@ namespace Searchlight
 
                 if (fieldType == typeof(Guid))
                 {
-                    pvalue = Guid.Parse(valueToken);
-
-                    // Special handling for UINT64 to handle certain database servers
+                    return ConstantValue.From(Guid.Parse(valueToken));
                 }
-                else if (fieldType == typeof(UInt64))
+                
+                // Special handling for UINT64 to handle certain database servers
+                if (fieldType == typeof(UInt64))
                 {
                     if (bool.TryParse(valueToken, out var boolVal))
                     {
-                        pvalue = boolVal ? 1UL : 0;
+                        return ConstantValue.From(boolVal ? 1UL : 0);
                     }
-                    else
+                }
+
+                // DateTime objects can use computational math
+                if (fieldType == typeof(DateTime))
+                {
+                    var tokenUpper = valueToken.ToUpper();
+                    
+                    // Is this a defined date, potentially with math?
+                    if (StringConstants.DEFINED_DATES.ContainsKey(tokenUpper))
                     {
-                        pvalue = Convert.ChangeType(valueToken, fieldType);
+                        var computedValue = new ComputedDateValue()
+                        {
+                            Root = tokenUpper,
+                        };
+                        var nextToken = tokens.Count > 0 ? tokens.Peek() : null;
+                        if (nextToken == StringConstants.ADD || nextToken == StringConstants.SUBTRACT)
+                        {
+                            // Retrieve the direction and offset
+                            var direction = tokens.Dequeue();
+                            var offset = tokens.Dequeue();
+                            var ok = int.TryParse(offset, out var offsetValue);
+                            if (!ok)
+                            {
+                                throw new InvalidToken()
+                                {
+                                    BadToken = offset,
+                                    ExpectedTokens = new [] { "an integer" },
+                                };
+                            }
+
+                            // Handle negative offsets
+                            if (direction == StringConstants.SUBTRACT)
+                            {
+                                offsetValue = -offsetValue;
+                            }
+
+                            computedValue.Offset = offsetValue;
+                        }
+                        return computedValue;
                     }
-
-                    // All others use the default behavior
-                }
-                else if (fieldType == typeof(DateTime))
-                {
-                    var definedDate = DefinedDateOperators(valueToken);
-                    // if date is same as the original, convert to DateTime, else make pvalue defined date
-                    pvalue = definedDate.ToString() == valueToken ? Convert.ChangeType(valueToken, fieldType) : definedDate;
-                }
-                else
-                {
-                    pvalue = Convert.ChangeType(valueToken, fieldType);
                 }
 
-                // Value could not be converted to the specified type
+                // All other types use a basic type changer
+                return ConstantValue.From(Convert.ChangeType(valueToken, fieldType));
             }
             catch
             {
-                throw new FieldTypeMismatch() { 
+                throw new FieldTypeMismatch {
                     FieldName = column.FieldName, 
                     FieldType = fieldType.ToString(), 
                     FieldValue = valueToken, 
                     OriginalFilter = originalFilter
                 };
             }
-
-            // Put this into an SQL Parameter list
-            return pvalue;
         }
     }
 }

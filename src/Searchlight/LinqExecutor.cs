@@ -1,13 +1,15 @@
-﻿using Searchlight.Parsing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Searchlight.Parsing;
 using Searchlight.Query;
-using System.Linq.Dynamic.Core;
 
 namespace Searchlight
 {
+    /// <summary>
+    /// Class for executing Searchlight queries against in-memory collections using LINQ
+    /// </summary>
     public static class LinqExecutor
     {
         /// <summary>
@@ -22,17 +24,17 @@ namespace Searchlight
             // Goal of this function is to construct this LINQ expression:
             //   return (from obj in LIST where QUERY select obj)
             // Here's how we'll do it:
-            var queryable = collection.AsQueryable<T>();
+            var queryable = collection.AsQueryable();
             
             // If the user specified a filter 
             var select = Expression.Parameter(typeof(T), "obj");
-            var expression = BuildExpression(select, tree.Filter, tree.Source);
+            var expression = BuildExpression<T>(select, tree.Filter, tree.Source);
             if (expression != null)
             {
                 var whereCallExpression = Expression.Call(
                     typeof(Queryable),
                     "Where",
-                    new Type[] { queryable.ElementType },
+                    new [] { queryable.ElementType },
                     queryable.Expression,
                     Expression.Lambda<Func<T, bool>>(expression, new ParameterExpression[] { select }));
                 queryable = queryable.Provider.CreateQuery<T>(whereCallExpression);
@@ -41,9 +43,7 @@ namespace Searchlight
             // If the user specified a sorting clause
             if (tree.OrderBy.Any())
             {
-                var sortExpression = string.Join(", ",
-                    (from sort in tree.OrderBy select $"{sort.Column.FieldName} {sort.DirectionStr()}"));
-                queryable = queryable.OrderBy(sortExpression);
+                queryable = InternalOrderBy<T>(queryable, tree.Source, tree.OrderBy);
             }
 
             // Compute the list once and keep track of full length
@@ -51,14 +51,17 @@ namespace Searchlight
             var totalCount = filteredAndSorted.Count;
             
             // If the user requested pagination
-            var paginated = (tree.PageNumber, tree.PageSize) switch
+            IEnumerable<T> paginated = filteredAndSorted;
+            if (tree.PageNumber > 0 && tree.PageSize > 0)
             {
                 // case 1: user specified page number and page size
-                (> 0, > 0) => filteredAndSorted.Skip((int)(tree.PageSize * tree.PageNumber)).Take((int)tree.PageSize),
+                paginated = filteredAndSorted.Skip((int)(tree.PageSize * tree.PageNumber)).Take((int)tree.PageSize);
+            }
+            else if (tree.PageNumber == 0 && tree.PageSize > 0)
+            {
                 // case 2: user specified a page size but no page number
-                (0, > 0) => filteredAndSorted.Take((int)tree.PageSize),
-                _ => filteredAndSorted
-            };
+                paginated = filteredAndSorted.Take((int)tree.PageSize);
+            }
 
             // construct the return fetch result
             var result = new FetchResult<T>
@@ -71,6 +74,36 @@ namespace Searchlight
 
             return result;
         }
+        
+        private static IQueryable<T> InternalOrderBy<T>(IQueryable source, DataSource src, List<SortInfo> orderBy)
+        {
+            var queryExpr = source.Expression;
+            var count = 0;
+            ParameterExpression[] parameterExpressions =
+            {
+                Expression.Parameter(source.ElementType, "Param_0")
+            };
+            foreach (var sort in orderBy)
+            {
+                AssertClassHasProperty(typeof(T), src, sort.Column);
+                var methodName = count == 0 ? "OrderBy" : "ThenBy";
+                if (sort.Direction == SortDirection.Descending)
+                {
+                    methodName += "Descending";
+                }
+                var field = Expression.Property(parameterExpressions[0], sort.Column.FieldName);
+                var quote = Expression.Quote(Expression.Lambda(field, parameterExpressions));
+                queryExpr = Expression.Call(
+                    typeof(Queryable), 
+                    methodName,
+                    new[] { source.ElementType, sort.Column.FieldType },
+                    queryExpr, 
+                    quote);
+                count++;
+            }
+
+            return source.Provider.CreateQuery<T>(queryExpr);
+        }
 
         /// <summary>
         /// Build a complex expression from a list of clauses
@@ -79,26 +112,20 @@ namespace Searchlight
         /// <param name="query"></param>
         /// <param name="src"></param>
         /// <returns></returns>
-        private static Expression BuildExpression(ParameterExpression select, List<BaseClause> query, DataSource src)
+        private static Expression BuildExpression<T>(ParameterExpression select, List<BaseClause> query, DataSource src)
         {
-            ConjunctionType ct = ConjunctionType.NONE;
+            var ct = ConjunctionType.NONE;
             Expression result = null;
             foreach (var clause in query)
             {
-                var clauseExpression = BuildOneExpression(select, clause, src);
-
-                // First clause starts a run
+                var clauseExpression = BuildOneExpression<T>(select, clause, src);
                 if (result == null)
                 {
                     result = clauseExpression;
-
-                    // If the previous clause specified 'and'
                 }
                 else if (ct == ConjunctionType.AND)
                 {
                     result = Expression.And(result, clauseExpression);
-
-                    // If the previous clause specified 'or'
                 }
                 else if (ct == ConjunctionType.OR)
                 {
@@ -107,8 +134,6 @@ namespace Searchlight
 
                 ct = clause.Conjunction;
             }
-
-            // Here's your expression
             return result;
         }
 
@@ -119,38 +144,48 @@ namespace Searchlight
         /// <param name="clause"></param>
         /// <param name="src"></param>
         /// <returns></returns>
-        private static Expression BuildOneExpression(ParameterExpression select, BaseClause clause, DataSource src)
+        private static Expression BuildOneExpression<T>(ParameterExpression select, BaseClause clause, DataSource src)
         {
             Expression field;
             Expression value;
+            Expression result;
+
+            var t = typeof(T);
 
             switch (clause)
             {
                 case CriteriaClause criteria:
-                    // Obtain a parameter from this object
-                    field = Expression.Property(@select, criteria.Column.FieldName);
-                    value = Expression.Constant(criteria.Value, criteria.Column.FieldType);
+                    AssertClassHasProperty(t, src, criteria.Column);
+                    
+                    // Fetch value from the criteria
+                    var rawValue = criteria.Value.GetValue();
+                    
+                    // Set up LINQ expressions for this object
+                    var valueType = criteria.Column.FieldType;
+                    field = Expression.Property(select, criteria.Column.FieldName);
+                    value = Expression.Constant(rawValue, valueType);
                     switch (criteria.Operation)
                     {
                         case OperationType.Equals:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.Call(null,
+                                result = Expression.Call(null,
                                     typeof(string).GetMethod("Equals",
-                                        new Type[] { typeof(string), typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(string), typeof(StringComparison) }),
                                     field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase));
                             }
                             else
                             {
-                                return Expression.Equal(field, value);
+                                result = Expression.Equal(field, value);
                             }
+                            break;
                         case OperationType.GreaterThan:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThan(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -159,15 +194,16 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.GreaterThan(field, value);
+                                result = Expression.GreaterThan(field, value);
                             }
+                            break;
                         case OperationType.GreaterThanOrEqual:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThanOrEqual(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -176,15 +212,16 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.GreaterThanOrEqual(field, value);
+                                result = Expression.GreaterThanOrEqual(field, value);
                             }
+                            break;
                         case OperationType.LessThan:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThan(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -193,15 +230,16 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.LessThan(field, value);
+                                result = Expression.LessThan(field, value);
                             }
+                            break;
                         case OperationType.LessThanOrEqual:
                             if (field.Type == typeof(string))
                             {
-                                return Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
+                                result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThanOrEqual(Expression.Call(null,
                                             typeof(string).GetMethod("Compare",
-                                                new Type[]
+                                                new []
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
@@ -210,38 +248,43 @@ namespace Searchlight
                             }
                             else
                             {
-                                return Expression.LessThanOrEqual(field, value);
+                                result = Expression.LessThanOrEqual(field, value);
                             }
+                            break;
                         case OperationType.StartsWith:
-                            return Expression.TryCatch(
+                            result = Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("StartsWith",
-                                        new Type[] { typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
+                            break;
 
                         case OperationType.EndsWith:
-                            return Expression.TryCatch(
+                            result = Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("EndsWith",
-                                        new Type[] { typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
+                            break;
                         case OperationType.Contains:
-                            return Expression.TryCatch(
+                            result = Expression.TryCatch(
                                 Expression.Call(field,
                                     typeof(string).GetMethod("Contains",
-                                        new Type[] { typeof(string), typeof(StringComparison) }),
+                                        new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
+                            break;
                         case OperationType.NotEqual:
-                            return Expression.NotEqual(field, value);
+                            result = Expression.NotEqual(field, value);
+                            break;
                         case OperationType.In:
                         case OperationType.IsNull:
                         case OperationType.Between:
@@ -251,33 +294,78 @@ namespace Searchlight
                         default:
                             throw new NotImplementedException();
                     }
+                    break;
 
                 case BetweenClause betweenClause:
                     field = Expression.Property(@select, betweenClause.Column.FieldName);
                     Expression lowerValue =
-                        Expression.Constant(betweenClause.LowerValue, betweenClause.Column.FieldType);
+                        Expression.Constant(betweenClause.LowerValue.GetValue(), betweenClause.Column.FieldType);
                     Expression upperValue =
-                        Expression.Constant(betweenClause.UpperValue, betweenClause.Column.FieldType);
+                        Expression.Constant(betweenClause.UpperValue.GetValue(), betweenClause.Column.FieldType);
                     Expression lower = Expression.GreaterThanOrEqual(field, lowerValue);
                     Expression upper = Expression.LessThanOrEqual(field, upperValue);
-                    return Expression.And(lower, upper);
+                    result = Expression.And(lower, upper);
+                    break;
 
                 case CompoundClause compoundClause:
-                    return BuildExpression(select, compoundClause.Children, src);
+                    result = BuildExpression<T>(select, compoundClause.Children, src);
+                    break;
 
                 case InClause inClause:
                     field = Expression.Convert(Expression.Property(@select, inClause.Column.FieldName), typeof(object));
-                    value = Expression.Constant(inClause.Values, typeof(List<object>));
-                    return Expression.Call(value,
-                        typeof(List<object>).GetMethod("Contains", new Type[] { typeof(object) }),
+                    var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
+                    value = Expression.Constant(valueArray, typeof(List<object>));
+                    result = Expression.Call(value,
+                        typeof(List<object>).GetMethod("Contains", new [] { typeof(object) }),
                         field);
+                    break;
 
                 case IsNullClause isNullClause:
                     field = Expression.Property(@select, isNullClause.Column.FieldName);
-                    return Expression.Equal(field, Expression.Constant(null));
+                    result = Expression.Equal(field, Expression.Constant(null));
+                    break;
 
                 default:
                     throw new NotImplementedException();
+            }
+
+            // Negate the final expression if specified
+            return clause.Negated ? Expression.Not(result) : result;
+        }
+
+        /// <summary>
+        /// Test this class to make sure it has the specified type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="source"></param>
+        /// <param name="column"></param>
+        /// <exception cref="FieldTypeMismatch"></exception>
+        /// <exception cref="FieldNotFound"></exception>
+        private static void AssertClassHasProperty(Type type, DataSource source, ColumnInfo column)
+        {
+            // If the types match, we've already verified it during engine definition
+            if (source.ModelType == type) return;
+            
+            // If the types don't match, we need to verify at runtime or throw a clear exception
+            var propInfo = type.GetProperty(column.FieldName);
+            if (propInfo != null)
+            {
+                if (propInfo.PropertyType != column.FieldType)
+                {
+                    throw new FieldTypeMismatch()
+                    {
+                        FieldName = $"{column.FieldName} on type {type.Name}",
+                        FieldType = propInfo.PropertyType.ToString(),
+                    };
+                }
+            }
+            else
+            {
+                throw new FieldNotFound()
+                {
+                    FieldName = column.FieldName,
+                    KnownFields = (from p in type.GetProperties() select p.Name).ToArray()
+                };
             }
         }
     }

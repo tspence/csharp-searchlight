@@ -1,4 +1,5 @@
-﻿namespace Searchlight
+﻿#pragma warning disable CS1591
+namespace Searchlight
 {
     public class DuplicateName : SearchlightException
     {

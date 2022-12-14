@@ -8,6 +8,7 @@ namespace Searchlight
     /// <summary>
     /// Represents a field that is permitted to be used as a filter or sort-by column in the SafeParser
     /// </summary>
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class SearchlightField : Attribute
     {
         /// <summary>
