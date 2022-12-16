@@ -29,5 +29,5 @@ jobs:
       run: dotnet build
     - name: Test
       env: 
-        TMP: ${{env.RUNNER_TEMP}}
+        TMP: /tmp
       run: dotnet test
