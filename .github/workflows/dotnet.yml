@@ -10,7 +10,7 @@ jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
     env:
-      TMP: ${{ RUNNER_TEMP }}
+      TMP: ${{env.RUNNER_TEMP}}
     steps:
     - uses: actions/checkout@v2
       name: Checkout Code
