@@ -17,6 +17,12 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
+    - name: Check Environment Variables (RUNNER_TEMP)
+      run: echo "Runner Temp is ${{env.RUNNER_TEMP}}"
+    - name: Check Environment Variables (TMP)
+      env: 
+        TMP: ${{env.RUNNER_TEMP}}
+      run: echo "DotNet TMP is ${{env.TMP}}"
     - name: Restore
       run: dotnet restore
     - name: Build
