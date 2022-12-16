@@ -39,7 +39,10 @@ namespace Searchlight.Tests
         public void CleanupMongo()
         {
             _collection = null;
-            _runner.Dispose();
+            if (_runner != null)
+            {
+                _runner.Dispose();
+            }
         }
 
         [TestMethod]
