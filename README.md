@@ -1,7 +1,7 @@
 [![NuGet](https://img.shields.io/nuget/v/Searchlight.svg?style=plastic)](https://www.nuget.org/packages/Searchlight/)
-[![Travis](https://travis-ci.com/tspence/csharp-searchlight.svg?branch=master&style=plastic)](https://travis-ci.com/tspence/csharp-searchlight)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tspence/csharp-searchlight/dotnet.yml?branch=main)
 
-# csharp-searchlight
+# Searchlight
 
 A lightweight, secure query language for searching through databases and in-memory collections using a fluent REST API with robust, secure searching features.
 
