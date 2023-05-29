@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EphemeralMongo;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Mongo2Go;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -16,7 +16,7 @@ namespace Searchlight.Tests
     public class MongoDBExecutorTests
     {
         private DataSource _src;
-        private MongoDbRunner _runner;
+        private IMongoRunner _runner;
         private IMongoCollection<EmployeeObj> _collection;
         private List<EmployeeObj> _list;
         private Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> _mongo;
@@ -25,7 +25,11 @@ namespace Searchlight.Tests
         public async Task SetupMongoClient()
         {
             _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
-            _runner = MongoDbRunner.Start();
+            var options = new MongoRunnerOptions()
+            {
+
+            };
+            _runner = MongoRunner.Run(options);
 
             var client = new MongoClient(_runner.ConnectionString);
             var database = client.GetDatabase("IntegrationTest");
