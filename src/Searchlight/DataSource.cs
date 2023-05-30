@@ -98,9 +98,8 @@ namespace Searchlight
         {
             if (string.IsNullOrWhiteSpace(name)) return;
             var upperName = name.Trim().ToUpperInvariant();
-            if (_fieldDict.ContainsKey(upperName))
+            if (_fieldDict.TryGetValue(upperName, out var existing))
             {
-                var existing = _fieldDict[upperName];
                 throw new DuplicateName
                 {
                     Table = this.TableName,
@@ -336,9 +335,8 @@ namespace Searchlight
                 foreach (var n in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var name = n.Trim();
-                    if (name != null)
                     {
-                        var upperName = name.Trim()?.ToUpperInvariant();
+                        var upperName = name.Trim().ToUpperInvariant();
                         if (_includeDict.TryGetValue(upperName, out var obj))
                         {
                             if (obj is ICommand command)
