@@ -1,10 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight.Query;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.VisualBasic.FileIO;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Searchlight.Query;
+using Searchlight.Tests.Models;
 
 // This file has lots of intentional misspellings
 // ReSharper disable StringLiteralTypo
@@ -15,7 +14,7 @@ using Microsoft.VisualBasic.FileIO;
 // Highlighting allocations on this file is annoying 
 // ReSharper disable HeapView.DelegateAllocation
 
-namespace Searchlight.Tests
+namespace Searchlight.Tests.Executors
 {
     [TestClass]
     public class LinqExecutorTests
@@ -39,8 +38,8 @@ namespace Searchlight.Tests
         [TestMethod]
         public async Task EmployeeTestSuite()
         {
-            await Tests.EmployeeTestSuite.BasicTestSuite(_src, _list, _linq);
-            await Tests.EmployeeTestSuite.CaseInsensitiveStringTestSuite(_src, _list, _linq);
+            await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _linq);
+            await Executors.EmployeeTestSuite.CaseInsensitiveStringTestSuite(_src, _list, _linq);
         }
         
         // =========================================================

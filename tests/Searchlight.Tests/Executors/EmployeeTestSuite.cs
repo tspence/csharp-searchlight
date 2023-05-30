@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.Query;
+using Searchlight.Tests.Models;
+
 // ReSharper disable StringLiteralTypo
 // ReSharper disable CommentTypo
 
-namespace Searchlight.Tests
+namespace Searchlight.Tests.Executors
 {
     public class EmployeeTestSuite
     {
