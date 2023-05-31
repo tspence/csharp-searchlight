@@ -14,15 +14,17 @@ public class PostgresExecutorTests
     private DataSource _src;
     private string _connectionString;
     private Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> _postgres;
+    private PostgreSqlContainer _container;
+    private List<EmployeeObj> _list;
 
     [TestInitialize]
     public async Task SetupClient()
     {
         _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
-        var container = new PostgreSqlBuilder()
+        _container = new PostgreSqlBuilder()
             .Build();
-        await container.StartAsync();
-        _connectionString = container.GetConnectionString();
+        await _container.StartAsync();
+        _connectionString = _container.GetConnectionString();
         
         // Construct the database schema and insert some test data
         using (var connection = new NpgsqlConnection(_connectionString))
@@ -51,14 +53,28 @@ public class PostgresExecutorTests
         // var client = new MongoClient(_runner.ConnectionString);
         // var database = client.GetDatabase("IntegrationTest");
         // _collection = database.GetCollection<EmployeeObj>("TestCollection");
-        // _list = EmployeeObj.GetTestList();
+        _list = EmployeeObj.GetTestList();
         // await _collection.InsertManyAsync(_list);
         // _mongo = syntax => syntax.QueryMongo(_collection);
         _postgres = syntax =>
         {
             // TODO: Implement postgres and Dapper here
+            return null;
         };
     }
 
-   
+    [TestCleanup]
+    public async Task CleanupMongo()
+    {
+        if (_container != null)
+        {
+            await _container.DisposeAsync();
+        }
+    }
+
+    [TestMethod]
+    public async Task EmployeeTestSuite()
+    {
+        await Tests.EmployeeTestSuite.BasicTestSuite(_src, _list, _postgres);
+    }
 }
