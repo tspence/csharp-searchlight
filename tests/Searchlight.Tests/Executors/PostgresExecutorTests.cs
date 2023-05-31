@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Npgsql;
+using NpgsqlTypes;
 using Searchlight.Query;
 using Testcontainers.PostgreSql;
 
@@ -29,6 +30,8 @@ public class PostgresExecutorTests
         // Construct the database schema and insert some test data
         using (var connection = new NpgsqlConnection(_connectionString))
         {
+            await connection.OpenAsync();
+            
             // Create basic table
             using (var command = new NpgsqlCommand("CREATE TABLE employeeobj (name text null, id int not null, hired date, paycheck numeric, onduty bool)", connection))
             {
@@ -40,11 +43,11 @@ public class PostgresExecutorTests
             {
                 using (var command = new NpgsqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
                 {
-                    command.Parameters.AddWithValue("name", record.name);
-                    command.Parameters.AddWithValue("id", record.id);
-                    command.Parameters.AddWithValue("hired", record.hired);
-                    command.Parameters.AddWithValue("paycheck", record.paycheck);
-                    command.Parameters.AddWithValue("onduty", record.onduty);
+                    command.Parameters.AddWithValue("@name", NpgsqlDbType.Text, (object)record.name ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, record.id);
+                    command.Parameters.AddWithValue("@hired", NpgsqlDbType.Date, record.hired);
+                    command.Parameters.AddWithValue("@paycheck", NpgsqlDbType.Numeric, record.paycheck);
+                    command.Parameters.AddWithValue("@onduty", NpgsqlDbType.Boolean, record.onduty);
                     await command.ExecuteNonQueryAsync();
                 }
             }
