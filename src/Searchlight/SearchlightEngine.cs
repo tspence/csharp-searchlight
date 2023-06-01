@@ -158,34 +158,5 @@ namespace Searchlight
             }
             return this;
         }
-        
-        /// <summary>
-        /// Produces the intro for a query, setting up any flags or options.
-        /// </summary>
-        /// <returns>The query</returns>
-        internal string DecorateIntro(SqlDialect dialect) 
-        {
-            var sb = new StringBuilder();
-            if (useNoCount && dialect == SqlDialect.MicrosoftSqlServer) {
-                sb.Append("SET NOCOUNT ON;\n");
-            }
-            if (useReadUncommitted && dialect == SqlDialect.MicrosoftSqlServer) {
-                sb.Append("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n");
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Produces a table name using all the provided options
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns></returns>
-        internal string DecorateTableName(string tableName) 
-        {
-            if (useNoLock) {
-                return $"{tableName} WITH (nolock)";
-            }
-            return tableName;
-        }
     }
 }

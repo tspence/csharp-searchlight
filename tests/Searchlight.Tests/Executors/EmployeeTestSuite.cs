@@ -416,19 +416,19 @@ namespace Searchlight.Tests
 
         private async Task DefinedDateOperators()
         {
-            var syntax = _src.Parse("hired < TODAY");
+            var syntax = _src.Parse("hired < NOW");
             var result = await _executor(syntax);
             Assert.AreEqual(3, result.records.Length);
 
-            syntax = _src.Parse("hired < TOMORROW");
+            syntax = _src.Parse("hired < NOW + 1");
             result = await _executor(syntax);
             Assert.AreEqual(6, result.records.Length);
 
-            syntax = _src.Parse("hired < tomorrow");
+            syntax = _src.Parse("hired < NOW + 2");
             result = await _executor(syntax);
             Assert.AreEqual(6, result.records.Length);
 
-            syntax = _src.Parse("hired > YESTERDAY");
+            syntax = _src.Parse("hired > NOW - 1");
             result = await _executor(syntax);
             Assert.AreEqual(7, result.records.Length);
 

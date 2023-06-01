@@ -30,8 +30,9 @@ namespace Searchlight
             {
                 cmd.Apply(sql);
             }
-            sql.CommandText = $"{engine.DecorateIntro(SqlDialect.PostgreSql)}" +
-                              $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
+
+            sql.CommandText = $"{DecorateIntro(SqlDialect.PostgreSql, engine)}" +
+                              $"SELECT * FROM {DecorateTableName(SqlDialect.PostgreSql, query.Source.TableName, engine)}{where}{order}{offset}";
             return sql;
         }
 
@@ -40,24 +41,27 @@ namespace Searchlight
             var sql = new SqlQuery() { Syntax = query };
             sql.WhereClause = RenderJoinedClauses(dialect, query.Filter, sql);
             sql.OrderByClause = RenderOrderByClause(query.OrderBy);
-            
+
             // Sanity test - is the query too complicated to be safe to run?
             var maxParams = query.Source.MaximumParameters ?? engine.MaximumParameters ?? 0;
             if (maxParams > 0 && sql.Parameters.Count > maxParams)
             {
-                throw new TooManyParameters() { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
+                throw new TooManyParameters()
+                    { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
             }
 
             return sql;
         }
 
-        private static object RenderOffsetClause(SqlDialect dialect, int? queryPageSize, int? queryPageNumber, SearchlightEngine engine)
+        private static object RenderOffsetClause(SqlDialect dialect, int? queryPageSize, int? queryPageNumber,
+            SearchlightEngine engine)
         {
             if (queryPageNumber != null || queryPageSize != null)
             {
-                var size  = queryPageSize ?? engine.DefaultPageSize;
+                var size = queryPageSize ?? engine.DefaultPageSize;
                 var page = queryPageNumber ?? 0;
-                switch (dialect) {
+                switch (dialect)
+                {
                     case SqlDialect.PostgreSql:
                         return $" LIMIT {size} OFFSET {page * size}";
                     case SqlDialect.MicrosoftSqlServer:
@@ -96,7 +100,7 @@ namespace Searchlight
                     var commandClauses = sql.ResultSetClauses.Count > 0
                         ? string.Join("\n", sql.ResultSetClauses) + "\n"
                         : "";
-                    sql.CommandText = $"{engine.DecorateIntro(SqlDialect.MicrosoftSqlServer)}" +
+                    sql.CommandText = $"{DecorateIntro(SqlDialect.MicrosoftSqlServer, engine)}" +
                                       $"SELECT COUNT(1) AS TotalRecords FROM {query.Source.TableName}{where};\n" +
                                       $"SELECT * INTO #temp FROM {query.Source.TableName}{where}{order}{offset};\n" +
                                       $"SELECT * FROM #temp{order};\n" +
@@ -105,16 +109,17 @@ namespace Searchlight
                 }
                 else
                 {
-                    sql.CommandText = $"{engine.DecorateIntro(SqlDialect.MicrosoftSqlServer)}" +
-                                      $"SELECT COUNT(1) AS TotalRecords FROM {engine.DecorateTableName(query.Source.TableName)}{where};\n" +
-                                      $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset};\n";
+                    sql.CommandText = $"{DecorateIntro(SqlDialect.MicrosoftSqlServer, engine)}" +
+                                      $"SELECT COUNT(1) AS TotalRecords FROM {DecorateTableName(SqlDialect.MicrosoftSqlServer, query.Source.TableName, engine)}{where};\n" +
+                                      $"SELECT * FROM {DecorateTableName(SqlDialect.MicrosoftSqlServer, query.Source.TableName, engine)}{where}{order}{offset};\n";
                 }
             }
             else
             {
-                sql.CommandText = $"{engine.DecorateIntro(SqlDialect.MicrosoftSqlServer)}" +
-                                  $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
+                sql.CommandText = $"{DecorateIntro(SqlDialect.MicrosoftSqlServer, engine)}" +
+                                  $"SELECT * FROM {DecorateTableName(SqlDialect.MicrosoftSqlServer, query.Source.TableName, engine)}{where}{order}{offset}";
             }
+
             return sql;
         }
 
@@ -132,6 +137,7 @@ namespace Searchlight
                 var dir = sort.Direction == SortDirection.Ascending ? "ASC" : "DESC";
                 sb.Append($"{sort.Column.OriginalName} {dir}");
             }
+
             return sb.ToString();
         }
 
@@ -162,8 +168,10 @@ namespace Searchlight
                             throw new NotImplementedException();
                     }
                 }
+
                 sb.Append(RenderClause(dialect, clause[i], sql));
             }
+
             return sb.ToString();
         }
 
@@ -180,7 +188,8 @@ namespace Searchlight
             switch (clause)
             {
                 case BetweenClause bc:
-                    return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue(), bc.Column.FieldType)} AND {sql.AddParameter(bc.UpperValue.GetValue(), bc.Column.FieldType)}";
+                    return
+                        $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue(), bc.Column.FieldType)} AND {sql.AddParameter(bc.UpperValue.GetValue(), bc.Column.FieldType)}";
                 case CompoundClause compoundClause:
                     return $"({RenderJoinedClauses(dialect, compoundClause.Children, sql)})";
                 case CriteriaClause cc:
@@ -214,7 +223,8 @@ namespace Searchlight
                     }
                 case InClause ic:
                     var paramValues = from v in ic.Values select sql.AddParameter(v.GetValue(), ic.Column.FieldType);
-                    return $"{ic.Column.OriginalName} {(ic.Negated ? "NOT " : string.Empty)}IN ({String.Join(", ", paramValues)})";
+                    return
+                        $"{ic.Column.OriginalName} {(ic.Negated ? "NOT " : string.Empty)}IN ({String.Join(", ", paramValues)})";
                 case IsNullClause inc:
                     return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";
                 default:
@@ -252,14 +262,39 @@ namespace Searchlight
                 {
                     sb.Append('\\');
                 }
+
                 sb.Append(c);
             }
 
             return sb.ToString();
         }
+
+        private static string DecorateIntro(SqlDialect dialect, SearchlightEngine engine)
+        {
+            var sb = new StringBuilder();
+            if (engine.useNoCount && dialect == SqlDialect.MicrosoftSqlServer)
+            {
+                sb.Append("SET NOCOUNT ON;\n");
+            }
+
+            if (engine.useReadUncommitted && dialect == SqlDialect.MicrosoftSqlServer)
+            {
+                sb.Append("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n");
+            }
+
+            return sb.ToString();
+        }
+
+        private static string DecorateTableName(SqlDialect dialect, string tableName, SearchlightEngine engine)
+        {
+            if (engine.useNoLock && dialect == SqlDialect.MicrosoftSqlServer)
+            {
+                return $"{tableName} WITH (nolock)";
+            }
+
+            return tableName;
+        }
     }
-
-
     /*
      Old code to someday resurface 
 
