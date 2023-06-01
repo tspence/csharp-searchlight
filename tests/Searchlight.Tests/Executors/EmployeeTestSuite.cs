@@ -220,7 +220,7 @@ namespace Searchlight.Tests
             }
 
             // Now test the opposite
-            syntax = _src.Parse("name not contains 's'");
+            syntax = _src.Parse("name is not null and name not contains 's'");
             results = await _executor(syntax);
             Assert.AreEqual(0, results.records.Length);
             foreach (var e in results.records)
@@ -418,15 +418,15 @@ namespace Searchlight.Tests
         {
             var syntax = _src.Parse("hired < NOW");
             var result = await _executor(syntax);
-            Assert.AreEqual(3, result.records.Length);
+            Assert.AreEqual(5, result.records.Length);
 
             syntax = _src.Parse("hired < NOW + 1");
             result = await _executor(syntax);
-            Assert.AreEqual(6, result.records.Length);
+            Assert.AreEqual(7, result.records.Length);
 
             syntax = _src.Parse("hired < NOW + 2");
             result = await _executor(syntax);
-            Assert.AreEqual(6, result.records.Length);
+            Assert.AreEqual(7, result.records.Length);
 
             syntax = _src.Parse("hired > NOW - 1");
             result = await _executor(syntax);
