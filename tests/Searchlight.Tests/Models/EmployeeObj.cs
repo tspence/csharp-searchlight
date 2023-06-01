@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace Searchlight.Tests
+// ReSharper disable InconsistentNaming
+
+namespace Searchlight.Tests.Models
 {
     [SearchlightModel(DefaultSort = nameof(name))]
     public class EmployeeObj
