@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Npgsql;
 using NpgsqlTypes;
-using Org.BouncyCastle.Asn1.X509.Qualified;
 using Searchlight.Query;
 using Testcontainers.PostgreSql;
 
@@ -35,7 +33,7 @@ public class PostgresExecutorTests
             await connection.OpenAsync();
             
             // Create basic table
-            using (var command = new NpgsqlCommand("CREATE TABLE employeeobj (name text null, id int not null, hired date, paycheck numeric, onduty bool)", connection))
+            using (var command = new NpgsqlCommand("CREATE TABLE employeeobj (name text null, id int not null, hired timestamp with time zone, paycheck numeric, onduty bool)", connection))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -47,7 +45,7 @@ public class PostgresExecutorTests
                 {
                     command.Parameters.AddWithValue("@name", NpgsqlDbType.Text, (object)record.name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, record.id);
-                    command.Parameters.AddWithValue("@hired", NpgsqlDbType.Date, record.hired);
+                    command.Parameters.AddWithValue("@hired", NpgsqlDbType.TimestampTz, record.hired);
                     command.Parameters.AddWithValue("@paycheck", NpgsqlDbType.Numeric, record.paycheck);
                     command.Parameters.AddWithValue("@onduty", NpgsqlDbType.Boolean, record.onduty);
                     await command.ExecuteNonQueryAsync();
@@ -121,7 +119,7 @@ public class PostgresExecutorTests
         }
         else if (parameterType == typeof(DateTime))
         {
-            return NpgsqlDbType.Date;
+            return NpgsqlDbType.TimestampTz;
         }
 
         throw new Exception("Not recognized type");
