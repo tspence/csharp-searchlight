@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Searchlight.Exceptions;
 using Searchlight.Expressions;
+using Searchlight.Tests.Models;
 
 namespace Searchlight.Tests
 {
