@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Searchlight.Exceptions;
+using Searchlight.Parsing;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -21,7 +23,7 @@ namespace Searchlight
         {
             var engine = query.Source.Engine ?? new SearchlightEngine();
             var sql = new SqlQuery {Syntax = query};
-            sql.WhereClause = RenderJoinedClauses(query.Filter, sql);
+            sql.WhereClause = RenderJoinedClauses(SqlDialect.PostgreSql, query.Filter, sql);
             sql.OrderByClause = RenderOrderByClause(query.OrderBy);
 
             // Sanity tests
@@ -32,13 +34,7 @@ namespace Searchlight
             }
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
-            var offset = "";
-            if (query.PageNumber != null || query.PageSize != null)
-            {
-                var size  = query.PageSize ?? 50; // default page size
-                var page = query.PageNumber ?? 0;
-                offset = $" LIMIT {size} OFFSET {page * size}";
-            }
+            var offset = RenderOffsetClause(SqlDialect.PostgreSql, query.PageSize, query.PageNumber, engine);
 
             // Apply all selected commands
             foreach (var cmd in query.Includes)
@@ -49,7 +45,24 @@ namespace Searchlight
                               $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
             return sql;
         }
-        
+
+        private static object RenderOffsetClause(SqlDialect dialect, int? queryPageSize, int? queryPageNumber, SearchlightEngine engine)
+        {
+            if (queryPageNumber != null || queryPageSize != null)
+            {
+                var size  = queryPageSize ?? engine.DefaultPageSize;
+                var page = queryPageNumber ?? 0;
+                switch (dialect) {
+                    case SqlDialect.PostgreSql:
+                        return $" LIMIT {size} OFFSET {page * size}";
+                    case SqlDialect.MicrosoftSqlServer:
+                        return $" OFFSET {page * size} ROWS FETCH NEXT {size} ROWS ONLY";
+                }
+            }
+
+            return string.Empty;
+        }
+
         /// <summary>
         /// Convert this syntax tree to a query in Microsoft SQL Server T/SQL syntax
         /// </summary>
@@ -58,7 +71,7 @@ namespace Searchlight
         {
             var engine = query.Source.Engine ?? new SearchlightEngine();
             var sql = new SqlQuery {Syntax = query};
-            sql.WhereClause = RenderJoinedClauses(query.Filter, sql);
+            sql.WhereClause = RenderJoinedClauses(SqlDialect.MicrosoftSqlServer, query.Filter, sql);
             sql.OrderByClause = RenderOrderByClause(query.OrderBy);
 
             // Sanity tests
@@ -69,13 +82,7 @@ namespace Searchlight
             }
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
-            var offset = "";
-            if (query.PageNumber != null || query.PageSize != null)
-            {
-                var size  = query.PageSize ?? 50; // default page size
-                var page = query.PageNumber ?? 0;
-                offset = $" OFFSET {page * size} ROWS FETCH NEXT {size} ROWS ONLY";
-            }
+            var offset = RenderOffsetClause(SqlDialect.MicrosoftSqlServer, query.PageSize, query.PageNumber, engine);
 
             // Apply all selected commands
             foreach (var cmd in query.Includes)
@@ -135,10 +142,11 @@ namespace Searchlight
         /// <summary>
         /// Render a list of joined clauses using specified conjunctions
         /// </summary>
+        /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
         /// <returns></returns>
-        private static string RenderJoinedClauses(List<BaseClause> clause, SqlQuery sql)
+        private static string RenderJoinedClauses(SqlDialect dialect, List<BaseClause> clause, SqlQuery sql)
         {
             var sb = new StringBuilder();
             for (var i = 0; i < clause.Count; i++)
@@ -158,7 +166,7 @@ namespace Searchlight
                             throw new NotImplementedException();
                     }
                 }
-                sb.Append(RenderClause(clause[i], sql));
+                sb.Append(RenderClause(dialect, clause[i], sql));
             }
             return sb.ToString();
         }
@@ -166,18 +174,19 @@ namespace Searchlight
         /// <summary>
         /// Convert a single clause object into SQL-formatted "WHERE" text
         /// </summary>
+        /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        private static string RenderClause(BaseClause clause, SqlQuery sql)
+        private static string RenderClause(SqlDialect dialect, BaseClause clause, SqlQuery sql)
         {
             switch (clause)
             {
                 case BetweenClause bc:
                     return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue(), bc.Column.FieldType)} AND {sql.AddParameter(bc.UpperValue.GetValue(), bc.Column.FieldType)}";
                 case CompoundClause compoundClause:
-                    return $"({RenderJoinedClauses(compoundClause.Children, sql)})";
+                    return $"({RenderJoinedClauses(dialect, compoundClause.Children, sql)})";
                 case CriteriaClause cc:
                     var rawValue = cc.Value.GetValue();
                     switch (cc.Operation)
@@ -195,23 +204,11 @@ namespace Searchlight
                         case OperationType.NotEqual:
                             return $"{cc.Column.OriginalName} <> {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.Contains:
-                            if (rawValue?.GetType() != typeof(string))
-                            {
-                                throw new Exception("Value was not a string type");
-                            }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue + "%", cc.Column.FieldType)}";
+                            return RenderLikeClause(dialect, cc, sql, rawValue, "%", "%");
                         case OperationType.StartsWith:
-                            if (rawValue?.GetType() != typeof(string))
-                            {
-                                throw new Exception("Value was not a string type");
-                            }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter(rawValue + "%", cc.Column.FieldType)}";
+                            return RenderLikeClause(dialect, cc, sql, rawValue, string.Empty, "%");
                         case OperationType.EndsWith:
-                            if (rawValue?.GetType() != typeof(string))
-                            {
-                                throw new Exception("Value was not a string type");
-                            }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue, cc.Column.FieldType)}";
+                            return RenderLikeClause(dialect, cc, sql, rawValue, "%", string.Empty);
                         case OperationType.Unknown:
                         case OperationType.Between:
                         case OperationType.In:
@@ -227,6 +224,24 @@ namespace Searchlight
                 default:
                     throw new Exception("Unrecognized clause type.");
             }
+        }
+
+        private static string RenderLikeClause(SqlDialect dialect, CriteriaClause clause, SqlQuery sql, object rawValue,
+            string prefix, string suffix)
+        {
+            if (rawValue?.GetType() != typeof(string))
+            {
+                throw new StringValueMismatch()
+                {
+                    RawValue = rawValue,
+                };
+            }
+
+            var likeCommand = dialect == SqlDialect.PostgreSql ? "ILIKE" : "LIKE";
+            var notCommand = clause.Negated ? "NOT " : "";
+            var likeValue = prefix + rawValue + suffix;
+            return
+                $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}";
         }
     }
 
