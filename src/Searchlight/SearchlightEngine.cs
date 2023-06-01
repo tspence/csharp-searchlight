@@ -163,13 +163,13 @@ namespace Searchlight
         /// Produces the intro for a query, setting up any flags or options.
         /// </summary>
         /// <returns>The query</returns>
-        internal string DecorateIntro() 
+        internal string DecorateIntro(SqlDialect dialect) 
         {
             var sb = new StringBuilder();
-            if (useNoCount) {
+            if (useNoCount && dialect == SqlDialect.MicrosoftSqlServer) {
                 sb.Append("SET NOCOUNT ON;\n");
             }
-            if (useReadUncommitted) {
+            if (useReadUncommitted && dialect == SqlDialect.MicrosoftSqlServer) {
                 sb.Append("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n");
             }
             return sb.ToString();

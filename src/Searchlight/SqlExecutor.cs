@@ -13,7 +13,45 @@ namespace Searchlight
     public static class SqlExecutor
     {
         /// <summary>
-        /// Convert this syntax tree to a SQL Query Builder for this data source
+        /// Convert this syntax tree to a query in PostgreSQL syntax
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public static SqlQuery ToPostgresCommand(this SyntaxTree query)
+        {
+            var engine = query.Source.Engine ?? new SearchlightEngine();
+            var sql = new SqlQuery {Syntax = query};
+            sql.WhereClause = RenderJoinedClauses(query.Filter, sql);
+            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
+
+            // Sanity tests
+            var maxParams = query.Source.MaximumParameters ?? query.Source.Engine?.MaximumParameters ?? 0;
+            if (maxParams > 0 && sql.Parameters.Count > maxParams)
+            {
+                throw new TooManyParameters() { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
+            }
+            var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
+            var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
+            var offset = "";
+            if (query.PageNumber != null || query.PageSize != null)
+            {
+                var size  = query.PageSize ?? 50; // default page size
+                var page = query.PageNumber ?? 0;
+                offset = $" LIMIT {size} OFFSET {page * size}";
+            }
+
+            // Apply all selected commands
+            foreach (var cmd in query.Includes)
+            {
+                cmd.Apply(sql);
+            }
+            sql.CommandText = $"{engine.DecorateIntro(SqlDialect.PostgreSql)}" +
+                              $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
+            return sql;
+        }
+        
+        /// <summary>
+        /// Convert this syntax tree to a query in Microsoft SQL Server T/SQL syntax
         /// </summary>
         /// <param name="query">The query to convert to SQL text</param>
         public static SqlQuery ToSqlServerCommand(this SyntaxTree query)
@@ -55,7 +93,7 @@ namespace Searchlight
                     var commandClauses = sql.ResultSetClauses.Count > 0
                         ? String.Join("\n", sql.ResultSetClauses) + "\n"
                         : "";
-                    sql.CommandText = $"{engine.DecorateIntro()}" +
+                    sql.CommandText = $"{engine.DecorateIntro(SqlDialect.MicrosoftSqlServer)}" +
                                       $"SELECT COUNT(1) AS TotalRecords FROM {query.Source.TableName}{where};\n" +
                                       $"SELECT * INTO #temp FROM {query.Source.TableName}{where}{order}{offset};\n" +
                                       $"SELECT * FROM #temp{order};\n" +
@@ -64,14 +102,14 @@ namespace Searchlight
                 }
                 else
                 {
-                    sql.CommandText = $"{engine.DecorateIntro()}" +
+                    sql.CommandText = $"{engine.DecorateIntro(SqlDialect.MicrosoftSqlServer)}" +
                                       $"SELECT COUNT(1) AS TotalRecords FROM {engine.DecorateTableName(query.Source.TableName)}{where};\n" +
                                       $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset};\n";
                 }
             }
             else
             {
-                sql.CommandText = $"{engine.DecorateIntro()}" +
+                sql.CommandText = $"{engine.DecorateIntro(SqlDialect.MicrosoftSqlServer)}" +
                                   $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
             }
             return sql;
@@ -137,7 +175,7 @@ namespace Searchlight
             switch (clause)
             {
                 case BetweenClause bc:
-                    return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue())} AND {sql.AddParameter(bc.UpperValue.GetValue())}";
+                    return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue(), bc.Column.FieldType)} AND {sql.AddParameter(bc.UpperValue.GetValue(), bc.Column.FieldType)}";
                 case CompoundClause compoundClause:
                     return $"({RenderJoinedClauses(compoundClause.Children, sql)})";
                 case CriteriaClause cc:
@@ -145,35 +183,35 @@ namespace Searchlight
                     switch (cc.Operation)
                     {
                         case OperationType.Equals:
-                            return $"{cc.Column.OriginalName} = {sql.AddParameter(rawValue)}";
+                            return $"{cc.Column.OriginalName} = {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.GreaterThan:
-                            return $"{cc.Column.OriginalName} > {sql.AddParameter(rawValue)}";
+                            return $"{cc.Column.OriginalName} > {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.GreaterThanOrEqual:
-                            return $"{cc.Column.OriginalName} >= {sql.AddParameter(rawValue)}";
+                            return $"{cc.Column.OriginalName} >= {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.LessThan:
-                            return $"{cc.Column.OriginalName} < {sql.AddParameter(rawValue)}";
+                            return $"{cc.Column.OriginalName} < {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.LessThanOrEqual:
-                            return $"{cc.Column.OriginalName} <= {sql.AddParameter(rawValue)}";
+                            return $"{cc.Column.OriginalName} <= {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.NotEqual:
-                            return $"{cc.Column.OriginalName} <> {sql.AddParameter(rawValue)}";
+                            return $"{cc.Column.OriginalName} <> {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.Contains:
                             if (rawValue?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue + "%")}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue + "%", cc.Column.FieldType)}";
                         case OperationType.StartsWith:
                             if (rawValue?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter(rawValue + "%")}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter(rawValue + "%", cc.Column.FieldType)}";
                         case OperationType.EndsWith:
                             if (rawValue?.GetType() != typeof(string))
                             {
                                 throw new Exception("Value was not a string type");
                             }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue)}";
+                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue, cc.Column.FieldType)}";
                         case OperationType.Unknown:
                         case OperationType.Between:
                         case OperationType.In:
@@ -182,7 +220,7 @@ namespace Searchlight
                             throw new Exception("Incorrect clause type");
                     }
                 case InClause ic:
-                    var paramValues = from v in ic.Values select sql.AddParameter(v.GetValue());
+                    var paramValues = from v in ic.Values select sql.AddParameter(v.GetValue(), ic.Column.FieldType);
                     return $"{ic.Column.OriginalName} {(ic.Negated ? "NOT " : string.Empty)}IN ({String.Join(", ", paramValues)})";
                 case IsNullClause inc:
                     return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";

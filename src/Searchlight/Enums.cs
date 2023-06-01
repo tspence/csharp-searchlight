@@ -80,4 +80,10 @@ namespace Searchlight
         AND,
         OR
     }
+
+    public enum SqlDialect
+    {
+        MicrosoftSqlServer,
+        PostgreSql,
+    }
 }

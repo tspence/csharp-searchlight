@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Npgsql;
 using NpgsqlTypes;
+using Org.BouncyCastle.Asn1.X509.Qualified;
 using Searchlight.Query;
 using Testcontainers.PostgreSql;
 
@@ -53,17 +55,76 @@ public class PostgresExecutorTests
             }
         }
 
-        // var client = new MongoClient(_runner.ConnectionString);
-        // var database = client.GetDatabase("IntegrationTest");
-        // _collection = database.GetCollection<EmployeeObj>("TestCollection");
+        // Keep track of the correct result expectations and execution process
         _list = EmployeeObj.GetTestList();
-        // await _collection.InsertManyAsync(_list);
-        // _mongo = syntax => syntax.QueryMongo(_collection);
-        _postgres = syntax =>
+        _postgres = async syntax =>
         {
-            // TODO: Implement postgres and Dapper here
-            return null;
+            var sql = syntax.ToPostgresCommand();
+            var result = new List<EmployeeObj>();
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                using (var command = new NpgsqlCommand(sql.CommandText, connection))
+                {
+                    foreach (var p in sql.Parameters)
+                    {
+                        command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]), p.Value);
+                    }
+
+                    try
+                    {
+                        var reader = await command.ExecuteReaderAsync();
+                        while (await reader.NextResultAsync())
+                        {
+                            result.Add(new EmployeeObj()
+                            {
+                                name = reader.GetString(0),
+                                id = reader.GetInt32(1),
+                                hired = reader.GetDateTime(2),
+                                paycheck = reader.GetDecimal(3),
+                                onduty = reader.GetBoolean(4),
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString());
+                    }
+                }
+            }
+
+            // TODO: Would this be better if we used dapper?
+            return new FetchResult<EmployeeObj>()
+            {
+                records = result.ToArray(),
+            };
         };
+    }
+
+    private NpgsqlDbType ConvertNpgsqlType(Type parameterType)
+    {
+        if (parameterType == typeof(bool))
+        {
+            return NpgsqlDbType.Boolean;
+        }
+        else if (parameterType == typeof(string))
+        {
+            return NpgsqlDbType.Text;
+        }
+        else if (parameterType == typeof(Int32))
+        {
+            return NpgsqlDbType.Integer;
+        }
+        else if (parameterType == typeof(decimal))
+        {
+            return NpgsqlDbType.Numeric;
+        }
+        else if (parameterType == typeof(DateTime))
+        {
+            return NpgsqlDbType.Date;
+        }
+
+        throw new Exception("Not recognized type");
     }
 
     [TestCleanup]
