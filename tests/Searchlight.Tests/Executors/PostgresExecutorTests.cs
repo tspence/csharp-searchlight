@@ -74,11 +74,11 @@ public class PostgresExecutorTests
                     try
                     {
                         var reader = await command.ExecuteReaderAsync();
-                        while (await reader.NextResultAsync())
+                        while (await reader.ReadAsync())
                         {
                             result.Add(new EmployeeObj()
                             {
-                                name = reader.GetString(0),
+                                name = reader.IsDBNull(0) ? null : reader.GetString(0),
                                 id = reader.GetInt32(1),
                                 hired = reader.GetDateTime(2),
                                 paycheck = reader.GetDecimal(3),
