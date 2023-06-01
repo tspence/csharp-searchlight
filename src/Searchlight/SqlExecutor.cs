@@ -237,11 +237,29 @@ namespace Searchlight
                 };
             }
 
+            var stringValue = rawValue.ToString();
+
             var likeCommand = dialect == SqlDialect.PostgreSql ? "ILIKE" : "LIKE";
             var notCommand = clause.Negated ? "NOT " : "";
-            var likeValue = prefix + rawValue + suffix;
+            var likeValue = prefix + EscapeLikeValue(stringValue) + suffix;
             return
                 $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}";
+        }
+
+        private static string EscapeLikeValue(string stringValue)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in stringValue)
+            {
+                // These characters must be escaped for string queries
+                if (c == '\\' || c == '_' || c == '[' || c == ']' || c == '^')
+                {
+                    sb.Append('\\');
+                }
+                sb.Append(c);
+            }
+
+            return sb.ToString();
         }
     }
 

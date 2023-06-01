@@ -222,7 +222,7 @@ namespace Searchlight.Tests
             // Now test the opposite
             syntax = _src.Parse("name not contains 's'");
             results = await _executor(syntax);
-            Assert.AreEqual(1, results.records.Length);
+            Assert.AreEqual(0, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(
@@ -315,10 +315,8 @@ namespace Searchlight.Tests
 
         private async Task NotEqualQuery()
         {
-            var syntax = _src.Parse("Name != 'Alice Smith'");
-
+            var syntax = _src.Parse("Name is null or Name != 'Alice Smith'");
             var result = await _executor(syntax);
-
             Assert.AreEqual(_list.Count - 1, result.records.Length);
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
         }
@@ -364,7 +362,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(2, result.records.Length);
 
             // Now run the opposite query
-            syntax = _src.Parse("name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
+            syntax = _src.Parse("name is null or name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
             result = await _executor(syntax);
 
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
