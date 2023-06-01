@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Npgsql;
 using NpgsqlTypes;
 using Searchlight.Query;
+using Searchlight.Tests.Models;
 using Testcontainers.PostgreSql;
 
 namespace Searchlight.Tests.Executors;
@@ -137,6 +138,6 @@ public class PostgresExecutorTests
     [TestMethod]
     public async Task EmployeeTestSuite()
     {
-        await Tests.EmployeeTestSuite.BasicTestSuite(_src, _list, _postgres);
+        await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _postgres);
     }
 }
