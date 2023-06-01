@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Searchlight.Exceptions;
-using Searchlight.Parsing;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -22,16 +20,7 @@ namespace Searchlight
         public static SqlQuery ToPostgresCommand(this SyntaxTree query)
         {
             var engine = query.Source.Engine ?? new SearchlightEngine();
-            var sql = new SqlQuery {Syntax = query};
-            sql.WhereClause = RenderJoinedClauses(SqlDialect.PostgreSql, query.Filter, sql);
-            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
-
-            // Sanity tests
-            var maxParams = query.Source.MaximumParameters ?? query.Source.Engine?.MaximumParameters ?? 0;
-            if (maxParams > 0 && sql.Parameters.Count > maxParams)
-            {
-                throw new TooManyParameters() { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
-            }
+            var sql = CreateSql(SqlDialect.PostgreSql, query, engine);
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
             var offset = RenderOffsetClause(SqlDialect.PostgreSql, query.PageSize, query.PageNumber, engine);
@@ -43,6 +32,22 @@ namespace Searchlight
             }
             sql.CommandText = $"{engine.DecorateIntro(SqlDialect.PostgreSql)}" +
                               $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
+            return sql;
+        }
+
+        private static SqlQuery CreateSql(SqlDialect dialect, SyntaxTree query, SearchlightEngine engine)
+        {
+            var sql = new SqlQuery() { Syntax = query };
+            sql.WhereClause = RenderJoinedClauses(dialect, query.Filter, sql);
+            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
+            
+            // Sanity test - is the query too complicated to be safe to run?
+            var maxParams = query.Source.MaximumParameters ?? engine.MaximumParameters ?? 0;
+            if (maxParams > 0 && sql.Parameters.Count > maxParams)
+            {
+                throw new TooManyParameters() { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
+            }
+
             return sql;
         }
 
@@ -70,16 +75,7 @@ namespace Searchlight
         public static SqlQuery ToSqlServerCommand(this SyntaxTree query)
         {
             var engine = query.Source.Engine ?? new SearchlightEngine();
-            var sql = new SqlQuery {Syntax = query};
-            sql.WhereClause = RenderJoinedClauses(SqlDialect.MicrosoftSqlServer, query.Filter, sql);
-            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
-
-            // Sanity tests
-            var maxParams = query.Source.MaximumParameters ?? query.Source.Engine?.MaximumParameters ?? 0;
-            if (maxParams > 0 && sql.Parameters.Count > maxParams)
-            {
-                throw new TooManyParameters() { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
-            }
+            var sql = CreateSql(SqlDialect.MicrosoftSqlServer, query, engine);
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
             var offset = RenderOffsetClause(SqlDialect.MicrosoftSqlServer, query.PageSize, query.PageNumber, engine);
@@ -98,7 +94,7 @@ namespace Searchlight
                 if (sql.ResultSetClauses.Count > 0)
                 {
                     var commandClauses = sql.ResultSetClauses.Count > 0
-                        ? String.Join("\n", sql.ResultSetClauses) + "\n"
+                        ? string.Join("\n", sql.ResultSetClauses) + "\n"
                         : "";
                     sql.CommandText = $"{engine.DecorateIntro(SqlDialect.MicrosoftSqlServer)}" +
                                       $"SELECT COUNT(1) AS TotalRecords FROM {query.Source.TableName}{where};\n" +
