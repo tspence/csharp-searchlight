@@ -60,6 +60,7 @@ public class SqlServerExecutorTests
         {
             var sql = syntax.ToSqlServerCommand();
             var result = new List<EmployeeObj>();
+            int numResults = 0;
             using (var connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
@@ -81,6 +82,11 @@ public class SqlServerExecutorTests
                     try
                     {
                         var reader = await command.ExecuteReaderAsync();
+                        await reader.ReadAsync();
+                        numResults = reader.GetInt32(0);
+                        
+                        // Skip ahead to next result set
+                        await reader.NextResultAsync();
                         while (await reader.ReadAsync())
                         {
                             result.Add(new EmployeeObj()
@@ -103,6 +109,7 @@ public class SqlServerExecutorTests
             // TODO: Would this be better if we used dapper?
             return new FetchResult<EmployeeObj>()
             {
+                totalCount = numResults,
                 records = result.ToArray(),
             };
         };
