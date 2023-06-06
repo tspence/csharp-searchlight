@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Searchlight.Exceptions;
 using Searchlight.Query;
@@ -197,27 +198,18 @@ namespace Searchlight
                     switch (cc.Operation)
                     {
                         case OperationType.Equals:
-                            return $"{cc.Column.OriginalName} = {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.GreaterThan:
-                            return $"{cc.Column.OriginalName} > {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.GreaterThanOrEqual:
-                            return $"{cc.Column.OriginalName} >= {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.LessThan:
-                            return $"{cc.Column.OriginalName} < {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.LessThanOrEqual:
-                            return $"{cc.Column.OriginalName} <= {sql.AddParameter(rawValue, cc.Column.FieldType)}";
                         case OperationType.NotEqual:
-                            return $"{cc.Column.OriginalName} <> {sql.AddParameter(rawValue, cc.Column.FieldType)}";
+                            return RenderComparisonClause(cc.Column.OriginalName, cc.Negated, cc.Operation, sql.AddParameter(rawValue, cc.Column.FieldType));
                         case OperationType.Contains:
                             return RenderLikeClause(dialect, cc, sql, rawValue, "%", "%");
                         case OperationType.StartsWith:
                             return RenderLikeClause(dialect, cc, sql, rawValue, string.Empty, "%");
                         case OperationType.EndsWith:
                             return RenderLikeClause(dialect, cc, sql, rawValue, "%", string.Empty);
-                        case OperationType.Unknown:
-                        case OperationType.Between:
-                        case OperationType.In:
-                        case OperationType.IsNull:
                         default:
                             throw new Exception("Incorrect clause type");
                     }
@@ -230,6 +222,27 @@ namespace Searchlight
                 default:
                     throw new Exception("Unrecognized clause type.");
             }
+        }
+
+        private static readonly Dictionary<OperationType, Tuple<string, string>> CanonicalOps = new Dictionary<OperationType, Tuple<string, string>>
+        {
+            { OperationType.Equals, new Tuple<string, string>("=", "<>") },
+            { OperationType.NotEqual, new Tuple<string, string>("<>", "=") },
+            { OperationType.LessThan, new Tuple<string, string>("<", ">=") },
+            { OperationType.LessThanOrEqual, new Tuple<string, string>("<=", ">") },
+            { OperationType.GreaterThan, new Tuple<string, string>(">", "<=") },
+            { OperationType.GreaterThanOrEqual, new Tuple<string, string>(">=", "<") },
+        };
+        
+        private static string RenderComparisonClause(string column, bool negated, OperationType op, string parameter)
+        {
+            if (!CanonicalOps.TryGetValue(op, out var opstrings))
+            {
+                throw new Exception($"Invalid comparison type {op}");
+            }
+
+            var operationSymbol = negated ? opstrings.Item2 : opstrings.Item1;
+            return $"{column} {operationSymbol} {parameter}";
         }
 
         private static string RenderLikeClause(SqlDialect dialect, CriteriaClause clause, SqlQuery sql, object rawValue,

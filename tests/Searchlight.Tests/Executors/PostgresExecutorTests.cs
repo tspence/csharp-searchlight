@@ -67,7 +67,17 @@ public class PostgresExecutorTests
                 {
                     foreach (var p in sql.Parameters)
                     {
-                        command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]), p.Value);
+                        var type = sql.ParameterTypes[p.Key];
+                        if (type == typeof(DateTime))
+                        {
+                            command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]),
+                                ((DateTime)p.Value).ToUniversalTime());
+                        }
+                        else
+                        {
+                            command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]),
+                                p.Value);
+                        }
                     }
 
                     try
