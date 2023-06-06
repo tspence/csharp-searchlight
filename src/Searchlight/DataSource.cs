@@ -696,7 +696,7 @@ namespace Searchlight
             var fieldType = column.FieldType;
             try
             {
-                // For nullable types, note that the fieldvaluetoken will always be non-null.
+                // For nullable types, note that the field value token will always be non-null.
                 // This is because the safe parser will throw an exception if there is no token after a query expression.
                 // The only way to test against null is to use the special query expression "<field> IS NULL" or "<field> IS NOT NULL".
                 // The proper way to unroll this is to reconsider the field type as the first generic argument to the nullable object

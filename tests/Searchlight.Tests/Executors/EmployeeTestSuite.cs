@@ -222,9 +222,9 @@ namespace Searchlight.Tests.Executors
             }
 
             // Now test the opposite
-            syntax = _src.Parse("name not contains 's'");
+            syntax = _src.Parse("name is not null and name not contains 's'");
             results = await _executor(syntax);
-            Assert.AreEqual(1, results.records.Length);
+            Assert.AreEqual(0, results.records.Length);
             foreach (var e in results.records)
             {
                 Assert.IsTrue(
@@ -317,10 +317,8 @@ namespace Searchlight.Tests.Executors
 
         private async Task NotEqualQuery()
         {
-            var syntax = _src.Parse("Name != 'Alice Smith'");
-
+            var syntax = _src.Parse("Name is null or Name != 'Alice Smith'");
             var result = await _executor(syntax);
-
             Assert.AreEqual(_list.Count - 1, result.records.Length);
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
         }
@@ -366,7 +364,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual(2, result.records.Length);
 
             // Now run the opposite query
-            syntax = _src.Parse("name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
+            syntax = _src.Parse("name is null or name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
             result = await _executor(syntax);
 
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
@@ -420,19 +418,19 @@ namespace Searchlight.Tests.Executors
 
         private async Task DefinedDateOperators()
         {
-            var syntax = _src.Parse("hired < TODAY");
+            var syntax = _src.Parse("hired < NOW");
             var result = await _executor(syntax);
-            Assert.AreEqual(3, result.records.Length);
+            Assert.AreEqual(5, result.records.Length);
 
-            syntax = _src.Parse("hired < TOMORROW");
+            syntax = _src.Parse("hired < NOW + 1");
             result = await _executor(syntax);
-            Assert.AreEqual(6, result.records.Length);
+            Assert.AreEqual(7, result.records.Length);
 
-            syntax = _src.Parse("hired < tomorrow");
+            syntax = _src.Parse("hired < NOW + 2");
             result = await _executor(syntax);
-            Assert.AreEqual(6, result.records.Length);
+            Assert.AreEqual(7, result.records.Length);
 
-            syntax = _src.Parse("hired > YESTERDAY");
+            syntax = _src.Parse("hired > NOW - 1");
             result = await _executor(syntax);
             Assert.AreEqual(7, result.records.Length);
 
@@ -491,58 +489,58 @@ namespace Searchlight.Tests.Executors
             }
 
             // name test ascending and descending
-            control = (from item in _list orderby item.name ascending select item).ToList();
-            syntax = _src.Parse("", null, "name ASC");
+            control = (from item in _list where item.name is not null orderby item.name ascending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "name ASC");
             result = await _executor(syntax);
 
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 Assert.AreEqual(result.records[i].name, control[i].name);
             }
 
-            control = (from item in _list orderby item.name descending select item).ToList();
-            syntax = _src.Parse("", null, "name DESC");
+            control = (from item in _list where item.name is not null orderby item.name descending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "name DESC");
             result = await _executor(syntax);
 
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 Assert.AreEqual(result.records[i].name, control[i].name);
             }
 
             // paycheck test ascending and descending
-            control = (from item in _list orderby item.paycheck ascending select item).ToList();
-            syntax = _src.Parse("", null, "paycheck ASC");
+            control = (from item in _list where item.name is not null orderby item.paycheck ascending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "paycheck ASC");
             result = await _executor(syntax);
 
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
 
-            control = (from item in _list orderby item.paycheck descending select item).ToList();
-            syntax = _src.Parse("", null, "paycheck DESC");
+            control = (from item in _list where item.name is not null orderby item.paycheck descending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "paycheck DESC");
             result = await _executor(syntax);
 
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 Assert.AreEqual(result.records[i].paycheck, control[i].paycheck);
             }
 
             // onduty test ascending and descending
-            control = (from item in _list orderby item.onduty ascending select item).ToList();
-            syntax = _src.Parse("", null, "onduty ASC");
+            control = (from item in _list where item.name is not null orderby item.onduty ascending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "onduty ASC");
             result = await _executor(syntax);
 
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
 
-            control = (from item in _list orderby item.onduty descending select item).ToList();
-            syntax = _src.Parse("", null, "onduty DESC");
+            control = (from item in _list where item.name is not null orderby item.onduty descending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "onduty DESC");
             result = await _executor(syntax);
 
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 Assert.AreEqual(result.records[i].onduty, control[i].onduty);
             }
@@ -556,20 +554,20 @@ namespace Searchlight.Tests.Executors
             // of classic Super Mario Bros.
             //
 
-            control = (from item in _list orderby item.hired ascending select item).ToList();
-            syntax = _src.Parse("", null, "hired ASC");
+            control = (from item in _list where item.name is not null orderby item.hired ascending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "hired ASC");
             result = await _executor(syntax);
 
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 var ts = result.records[i].hired - control[i].hired;
                 Assert.IsTrue(ts.TotalMilliseconds < 16.0);
             }
 
-            control = (from item in _list orderby item.hired descending select item).ToList();
-            syntax = _src.Parse("", null, "hired DESC");
+            control = (from item in _list where item.name is not null orderby item.hired descending select item).ToList();
+            syntax = _src.Parse("name is not null", null, "hired DESC");
             result = await _executor(syntax);
-            for (var i = 0; i < _list.Count; i++)
+            for (var i = 0; i < control.Count; i++)
             {
                 var ts = result.records[i].hired - control[i].hired;
                 Assert.IsTrue(ts.TotalMilliseconds < 16.0);

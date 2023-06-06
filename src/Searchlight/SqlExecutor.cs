@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
+using Searchlight.Exceptions;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -13,31 +13,76 @@ namespace Searchlight
     public static class SqlExecutor
     {
         /// <summary>
-        /// Convert this syntax tree to a SQL Query Builder for this data source
+        /// Convert this syntax tree to a query in PostgreSQL syntax
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public static SqlQuery ToPostgresCommand(this SyntaxTree query)
+        {
+            var engine = query.Source.Engine ?? new SearchlightEngine();
+            var sql = CreateSql(SqlDialect.PostgreSql, query, engine);
+            var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
+            var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
+            var offset = RenderOffsetClause(SqlDialect.PostgreSql, query.PageSize, query.PageNumber, engine);
+
+            // Apply all selected commands
+            foreach (var cmd in query.Includes)
+            {
+                cmd.Apply(sql);
+            }
+
+            sql.CommandText = $"{DecorateIntro(SqlDialect.PostgreSql, engine)}" +
+                              $"SELECT * FROM {DecorateTableName(SqlDialect.PostgreSql, query.Source.TableName, engine)}{where}{order}{offset}";
+            return sql;
+        }
+
+        private static SqlQuery CreateSql(SqlDialect dialect, SyntaxTree query, SearchlightEngine engine)
+        {
+            var sql = new SqlQuery() { Syntax = query };
+            sql.WhereClause = RenderJoinedClauses(dialect, query.Filter, sql);
+            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
+
+            // Sanity test - is the query too complicated to be safe to run?
+            var maxParams = query.Source.MaximumParameters ?? engine.MaximumParameters ?? 0;
+            if (maxParams > 0 && sql.Parameters.Count > maxParams)
+            {
+                throw new TooManyParameters()
+                    { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
+            }
+
+            return sql;
+        }
+
+        private static object RenderOffsetClause(SqlDialect dialect, int? queryPageSize, int? queryPageNumber,
+            SearchlightEngine engine)
+        {
+            var limit = (queryPageSize ?? 0) == 0 ? engine.DefaultPageSize : queryPageSize.Value;
+            if (limit != null)
+            {
+                var offset = (queryPageNumber ?? 0) * limit;
+                switch (dialect)
+                {
+                    case SqlDialect.PostgreSql:
+                        return $" LIMIT {limit} OFFSET {offset}";
+                    case SqlDialect.MicrosoftSqlServer:
+                        return $" OFFSET {offset} ROWS FETCH NEXT {limit} ROWS ONLY";
+                }
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Convert this syntax tree to a query in Microsoft SQL Server T/SQL syntax
         /// </summary>
         /// <param name="query">The query to convert to SQL text</param>
         public static SqlQuery ToSqlServerCommand(this SyntaxTree query)
         {
             var engine = query.Source.Engine ?? new SearchlightEngine();
-            var sql = new SqlQuery {Syntax = query};
-            sql.WhereClause = RenderJoinedClauses(query.Filter, sql);
-            sql.OrderByClause = RenderOrderByClause(query.OrderBy);
-
-            // Sanity tests
-            var maxParams = query.Source.MaximumParameters ?? query.Source.Engine?.MaximumParameters ?? 0;
-            if (maxParams > 0 && sql.Parameters.Count > maxParams)
-            {
-                throw new TooManyParameters() { MaximumParameterCount = maxParams, OriginalFilter = query.OriginalFilter };
-            }
+            var sql = CreateSql(SqlDialect.MicrosoftSqlServer, query, engine);
             var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
             var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
-            var offset = "";
-            if (query.PageNumber != null || query.PageSize != null)
-            {
-                var size  = query.PageSize ?? 50; // default page size
-                var page = query.PageNumber ?? 0;
-                offset = $" OFFSET {page * size} ROWS FETCH NEXT {size} ROWS ONLY";
-            }
+            var offset = RenderOffsetClause(SqlDialect.MicrosoftSqlServer, query.PageSize, query.PageNumber, engine);
 
             // Apply all selected commands
             foreach (var cmd in query.Includes)
@@ -53,9 +98,9 @@ namespace Searchlight
                 if (sql.ResultSetClauses.Count > 0)
                 {
                     var commandClauses = sql.ResultSetClauses.Count > 0
-                        ? String.Join("\n", sql.ResultSetClauses) + "\n"
+                        ? string.Join("\n", sql.ResultSetClauses) + "\n"
                         : "";
-                    sql.CommandText = $"{engine.DecorateIntro()}" +
+                    sql.CommandText = $"{DecorateIntro(SqlDialect.MicrosoftSqlServer, engine)}" +
                                       $"SELECT COUNT(1) AS TotalRecords FROM {query.Source.TableName}{where};\n" +
                                       $"SELECT * INTO #temp FROM {query.Source.TableName}{where}{order}{offset};\n" +
                                       $"SELECT * FROM #temp{order};\n" +
@@ -64,16 +109,17 @@ namespace Searchlight
                 }
                 else
                 {
-                    sql.CommandText = $"{engine.DecorateIntro()}" +
-                                      $"SELECT COUNT(1) AS TotalRecords FROM {engine.DecorateTableName(query.Source.TableName)}{where};\n" +
-                                      $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset};\n";
+                    sql.CommandText = $"{DecorateIntro(SqlDialect.MicrosoftSqlServer, engine)}" +
+                                      $"SELECT COUNT(1) AS TotalRecords FROM {DecorateTableName(SqlDialect.MicrosoftSqlServer, query.Source.TableName, engine)}{where};\n" +
+                                      $"SELECT * FROM {DecorateTableName(SqlDialect.MicrosoftSqlServer, query.Source.TableName, engine)}{where}{order}{offset};\n";
                 }
             }
             else
             {
-                sql.CommandText = $"{engine.DecorateIntro()}" +
-                                  $"SELECT * FROM {engine.DecorateTableName(query.Source.TableName)}{where}{order}{offset}";
+                sql.CommandText = $"{DecorateIntro(SqlDialect.MicrosoftSqlServer, engine)}" +
+                                  $"SELECT * FROM {DecorateTableName(SqlDialect.MicrosoftSqlServer, query.Source.TableName, engine)}{where}{order}{offset}";
             }
+
             return sql;
         }
 
@@ -91,16 +137,18 @@ namespace Searchlight
                 var dir = sort.Direction == SortDirection.Ascending ? "ASC" : "DESC";
                 sb.Append($"{sort.Column.OriginalName} {dir}");
             }
+
             return sb.ToString();
         }
 
         /// <summary>
         /// Render a list of joined clauses using specified conjunctions
         /// </summary>
+        /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
         /// <returns></returns>
-        private static string RenderJoinedClauses(List<BaseClause> clause, SqlQuery sql)
+        private static string RenderJoinedClauses(SqlDialect dialect, List<BaseClause> clause, SqlQuery sql)
         {
             var sb = new StringBuilder();
             for (var i = 0; i < clause.Count; i++)
@@ -120,79 +168,145 @@ namespace Searchlight
                             throw new NotImplementedException();
                     }
                 }
-                sb.Append(RenderClause(clause[i], sql));
+
+                sb.Append(RenderClause(dialect, clause[i], sql));
             }
+
             return sb.ToString();
         }
 
         /// <summary>
         /// Convert a single clause object into SQL-formatted "WHERE" text
         /// </summary>
+        /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        private static string RenderClause(BaseClause clause, SqlQuery sql)
+        private static string RenderClause(SqlDialect dialect, BaseClause clause, SqlQuery sql)
         {
             switch (clause)
             {
                 case BetweenClause bc:
-                    return $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue())} AND {sql.AddParameter(bc.UpperValue.GetValue())}";
+                    return
+                        $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue(), bc.Column.FieldType)} AND {sql.AddParameter(bc.UpperValue.GetValue(), bc.Column.FieldType)}";
                 case CompoundClause compoundClause:
-                    return $"({RenderJoinedClauses(compoundClause.Children, sql)})";
+                    return $"({RenderJoinedClauses(dialect, compoundClause.Children, sql)})";
                 case CriteriaClause cc:
                     var rawValue = cc.Value.GetValue();
                     switch (cc.Operation)
                     {
                         case OperationType.Equals:
-                            return $"{cc.Column.OriginalName} = {sql.AddParameter(rawValue)}";
                         case OperationType.GreaterThan:
-                            return $"{cc.Column.OriginalName} > {sql.AddParameter(rawValue)}";
                         case OperationType.GreaterThanOrEqual:
-                            return $"{cc.Column.OriginalName} >= {sql.AddParameter(rawValue)}";
                         case OperationType.LessThan:
-                            return $"{cc.Column.OriginalName} < {sql.AddParameter(rawValue)}";
                         case OperationType.LessThanOrEqual:
-                            return $"{cc.Column.OriginalName} <= {sql.AddParameter(rawValue)}";
                         case OperationType.NotEqual:
-                            return $"{cc.Column.OriginalName} <> {sql.AddParameter(rawValue)}";
+                            return RenderComparisonClause(cc.Column.OriginalName, cc.Negated, cc.Operation, sql.AddParameter(rawValue, cc.Column.FieldType));
                         case OperationType.Contains:
-                            if (rawValue?.GetType() != typeof(string))
-                            {
-                                throw new Exception("Value was not a string type");
-                            }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue + "%")}";
+                            return RenderLikeClause(dialect, cc, sql, rawValue, "%", "%");
                         case OperationType.StartsWith:
-                            if (rawValue?.GetType() != typeof(string))
-                            {
-                                throw new Exception("Value was not a string type");
-                            }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter(rawValue + "%")}";
+                            return RenderLikeClause(dialect, cc, sql, rawValue, string.Empty, "%");
                         case OperationType.EndsWith:
-                            if (rawValue?.GetType() != typeof(string))
-                            {
-                                throw new Exception("Value was not a string type");
-                            }
-                            return $"{cc.Column.OriginalName} {(cc.Negated ? "NOT " : "")}LIKE {sql.AddParameter("%" + rawValue)}";
-                        case OperationType.Unknown:
-                        case OperationType.Between:
-                        case OperationType.In:
-                        case OperationType.IsNull:
+                            return RenderLikeClause(dialect, cc, sql, rawValue, "%", string.Empty);
                         default:
                             throw new Exception("Incorrect clause type");
                     }
                 case InClause ic:
-                    var paramValues = from v in ic.Values select sql.AddParameter(v.GetValue());
-                    return $"{ic.Column.OriginalName} {(ic.Negated ? "NOT " : string.Empty)}IN ({String.Join(", ", paramValues)})";
+                    var paramValues = from v in ic.Values select sql.AddParameter(v.GetValue(), ic.Column.FieldType);
+                    return
+                        $"{ic.Column.OriginalName} {(ic.Negated ? "NOT " : string.Empty)}IN ({String.Join(", ", paramValues)})";
                 case IsNullClause inc:
                     return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";
                 default:
                     throw new Exception("Unrecognized clause type.");
             }
         }
+
+        private static readonly Dictionary<OperationType, Tuple<string, string>> CanonicalOps = new Dictionary<OperationType, Tuple<string, string>>
+        {
+            { OperationType.Equals, new Tuple<string, string>("=", "<>") },
+            { OperationType.NotEqual, new Tuple<string, string>("<>", "=") },
+            { OperationType.LessThan, new Tuple<string, string>("<", ">=") },
+            { OperationType.LessThanOrEqual, new Tuple<string, string>("<=", ">") },
+            { OperationType.GreaterThan, new Tuple<string, string>(">", "<=") },
+            { OperationType.GreaterThanOrEqual, new Tuple<string, string>(">=", "<") },
+        };
+        
+        private static string RenderComparisonClause(string column, bool negated, OperationType op, string parameter)
+        {
+            if (!CanonicalOps.TryGetValue(op, out var opstrings))
+            {
+                throw new Exception($"Invalid comparison type {op}");
+            }
+
+            var operationSymbol = negated ? opstrings.Item2 : opstrings.Item1;
+            return $"{column} {operationSymbol} {parameter}";
+        }
+
+        private static string RenderLikeClause(SqlDialect dialect, CriteriaClause clause, SqlQuery sql, object rawValue,
+            string prefix, string suffix)
+        {
+            if (rawValue?.GetType() != typeof(string))
+            {
+                throw new StringValueMismatch()
+                {
+                    RawValue = rawValue,
+                };
+            }
+
+            var stringValue = rawValue.ToString();
+
+            var likeCommand = dialect == SqlDialect.PostgreSql ? "ILIKE" : "LIKE";
+            var notCommand = clause.Negated ? "NOT " : "";
+            var likeValue = prefix + EscapeLikeValue(stringValue) + suffix;
+            return
+                $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}";
+        }
+
+        private static string EscapeLikeValue(string stringValue)
+        {
+            var sb = new StringBuilder();
+            foreach (var c in stringValue)
+            {
+                // These characters must be escaped for string queries
+                if (c == '\\' || c == '_' || c == '[' || c == ']' || c == '^')
+                {
+                    sb.Append('\\');
+                }
+
+                sb.Append(c);
+            }
+
+            return sb.ToString();
+        }
+
+        private static string DecorateIntro(SqlDialect dialect, SearchlightEngine engine)
+        {
+            var sb = new StringBuilder();
+            if (engine.useNoCount && dialect == SqlDialect.MicrosoftSqlServer)
+            {
+                sb.Append("SET NOCOUNT ON;\n");
+            }
+
+            if (engine.useReadUncommitted && dialect == SqlDialect.MicrosoftSqlServer)
+            {
+                sb.Append("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n");
+            }
+
+            return sb.ToString();
+        }
+
+        private static string DecorateTableName(SqlDialect dialect, string tableName, SearchlightEngine engine)
+        {
+            if (engine.useNoLock && dialect == SqlDialect.MicrosoftSqlServer)
+            {
+                return $"{tableName} WITH (nolock)";
+            }
+
+            return tableName;
+        }
     }
-
-
     /*
      Old code to someday resurface 
 
