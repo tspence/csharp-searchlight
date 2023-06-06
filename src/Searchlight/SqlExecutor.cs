@@ -57,16 +57,16 @@ namespace Searchlight
         private static object RenderOffsetClause(SqlDialect dialect, int? queryPageSize, int? queryPageNumber,
             SearchlightEngine engine)
         {
-            if (queryPageNumber != null || queryPageSize != null)
+            var limit = (queryPageSize ?? 0) == 0 ? engine.DefaultPageSize : queryPageSize.Value;
+            if (limit != null)
             {
-                var size = queryPageSize ?? engine.DefaultPageSize;
-                var page = queryPageNumber ?? 0;
+                var offset = (queryPageNumber ?? 0) * limit;
                 switch (dialect)
                 {
                     case SqlDialect.PostgreSql:
-                        return $" LIMIT {size} OFFSET {page * size}";
+                        return $" LIMIT {limit} OFFSET {offset}";
                     case SqlDialect.MicrosoftSqlServer:
-                        return $" OFFSET {page * size} ROWS FETCH NEXT {size} ROWS ONLY";
+                        return $" OFFSET {offset} ROWS FETCH NEXT {limit} ROWS ONLY";
                 }
             }
 
