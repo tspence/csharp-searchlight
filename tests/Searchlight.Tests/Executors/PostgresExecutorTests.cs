@@ -97,7 +97,7 @@ public class PostgresExecutorTests
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.ToString());
+                        Assert.Fail($"Postgres executor generated invalid SQL: {ex}");
                     }
                 }
             }
