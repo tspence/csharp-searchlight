@@ -271,7 +271,7 @@ namespace Searchlight
             foreach (var c in stringValue)
             {
                 // These characters must be escaped for string queries
-                if (c == '\\' || c == '_' || c == '[' || c == ']' || c == '^' || c == '[' || c == ']')
+                if (c == '\\' || c == '_' || c == '[' || c == ']' || c == '^' || c == '%')
                 {
                     sb.Append('\\');
                 }
