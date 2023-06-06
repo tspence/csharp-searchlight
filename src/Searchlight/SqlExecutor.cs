@@ -259,10 +259,11 @@ namespace Searchlight
             var stringValue = rawValue.ToString();
 
             var likeCommand = dialect == SqlDialect.PostgreSql ? "ILIKE" : "LIKE";
+            var escapeCommand = dialect == SqlDialect.MicrosoftSqlServer ? " ESCAPE '\\'" : string.Empty;
             var notCommand = clause.Negated ? "NOT " : "";
             var likeValue = prefix + EscapeLikeValue(stringValue) + suffix;
             return
-                $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}";
+                $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}{escapeCommand}";
         }
 
         private static string EscapeLikeValue(string stringValue)
@@ -271,7 +272,7 @@ namespace Searchlight
             foreach (var c in stringValue)
             {
                 // These characters must be escaped for string queries
-                if (c == '\\' || c == '_' || c == '[' || c == ']' || c == '^')
+                if (c == '\\' || c == '_' || c == '[' || c == ']' || c == '^' || c == '[' || c == ']')
                 {
                     sb.Append('\\');
                 }
