@@ -29,12 +29,12 @@ public class PostgresExecutorTests
         _connectionString = _container.GetConnectionString();
         
         // Construct the database schema and insert some test data
-        using (var connection = new NpgsqlConnection(_connectionString))
+        await using (var connection = new NpgsqlConnection(_connectionString))
         {
             await connection.OpenAsync();
             
             // Create basic table
-            using (var command = new NpgsqlCommand("CREATE TABLE employeeobj (name text null, id int not null, hired timestamp with time zone, paycheck numeric, onduty bool)", connection))
+            await using (var command = new NpgsqlCommand("CREATE TABLE employeeobj (name text null, id int not null, hired timestamp with time zone, paycheck numeric, onduty bool)", connection))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -42,7 +42,7 @@ public class PostgresExecutorTests
             // Insert rows
             foreach (var record in EmployeeObj.GetTestList())
             {
-                using (var command = new NpgsqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
+                await using (var command = new NpgsqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
                 {
                     command.Parameters.AddWithValue("@name", NpgsqlDbType.Text, (object)record.name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, record.id);
@@ -60,24 +60,16 @@ public class PostgresExecutorTests
         {
             var sql = syntax.ToPostgresCommand();
             var result = new List<EmployeeObj>();
-            using (var connection = new NpgsqlConnection(_connectionString))
+            await using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                using (var command = new NpgsqlCommand(sql.CommandText, connection))
+                await using (var command = new NpgsqlCommand(sql.CommandText, connection))
                 {
                     foreach (var p in sql.Parameters)
                     {
                         var type = sql.ParameterTypes[p.Key];
-                        if (type == typeof(DateTime))
-                        {
-                            command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]),
-                                ((DateTime)p.Value).ToUniversalTime());
-                        }
-                        else
-                        {
-                            command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]),
-                                p.Value);
-                        }
+                        command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]),
+                            type == typeof(DateTime) ? ((DateTime)p.Value).ToUniversalTime() : p.Value);
                     }
 
                     try

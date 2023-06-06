@@ -1,8 +1,5 @@
 ﻿using Searchlight.Parsing;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Searchlight.Expressions;
 
 namespace Searchlight.Query

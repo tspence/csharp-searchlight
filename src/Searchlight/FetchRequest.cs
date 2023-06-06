@@ -51,14 +51,7 @@ namespace Searchlight
             }
 
             // Okay, there's a value to provide, let's append it
-            if (String.IsNullOrWhiteSpace(filter))
-            {
-                filter = appendedFilter;
-            }
-            else
-            {
-                filter = $"({filter}) AND {appendedFilter}";
-            }
+            filter = string.IsNullOrWhiteSpace(filter) ? appendedFilter : $"({filter}) AND {appendedFilter}";
         }
     }
 }

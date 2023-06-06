@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Searchlight.Query
 {
@@ -21,6 +18,10 @@ namespace Searchlight.Query
         /// </summary>
         public override string ToString()
         {
+            // TODO: This piece of code raises a worry.  What happens if you mix AND and OR within a compound
+            // clause?  e.g. (A and B or C) - what order will they be parsed in?  A and (b or c)? (a and b) or c?
+            // We should make this deterministic and require that all clauses within a parenthesis have the same
+            // conjunction.
             var sb = new StringBuilder();
             sb.Append("(");
             var numChildren = Children?.Count ?? 0;
