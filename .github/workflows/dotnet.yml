@@ -30,7 +30,7 @@ jobs:
         dotnet tool update dotnet-sonarscanner --tool-path /tmp/sonar
     - name: SonarCloud Start
       run:
-        /tmp/sonardotnet-sonarscanner begin /k:"searchlight_searchlight" /o:"searchlight" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+        /tmp/sonar/dotnet-sonarscanner begin /k:"searchlight_searchlight" /o:"searchlight" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
     - name: Build
       run: dotnet build
     - name: Test
@@ -39,4 +39,4 @@ jobs:
       run: dotnet test
     - name: SonarCloud End
       run:
-        /tmp/sonardotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        /tmp/sonar/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
