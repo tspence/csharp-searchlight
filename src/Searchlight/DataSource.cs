@@ -335,28 +335,26 @@ namespace Searchlight
                 foreach (var n in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var name = n.Trim();
+                    var upperName = name.Trim().ToUpperInvariant();
+                    if (_includeDict.TryGetValue(upperName, out var obj))
                     {
-                        var upperName = name.Trim().ToUpperInvariant();
-                        if (_includeDict.TryGetValue(upperName, out var obj))
+                        if (obj is ICommand command)
                         {
-                            if (obj is ICommand command)
-                            {
-                                list.Add(command);
-                            }
-                            else if (obj is SearchlightFlag flag)
-                            {
-                                flags.Add(flag);
-                            }
+                            list.Add(command);
                         }
-                        else
+                        else if (obj is SearchlightFlag flag)
                         {
-                            throw new IncludeNotFound()
-                            {
-                                OriginalInclude = includes,
-                                IncludeName = name,
-                                KnownIncludes = _knownIncludes.ToArray()
-                            };
+                            flags.Add(flag);
                         }
+                    }
+                    else
+                    {
+                        throw new IncludeNotFound()
+                        {
+                            OriginalInclude = includes,
+                            IncludeName = name,
+                            KnownIncludes = _knownIncludes.ToArray()
+                        };
                     }
                 }
             }
@@ -653,19 +651,19 @@ namespace Searchlight
                         Value = ParseParameter(columnInfo, valueToken, filter, tokens)
                     };
 
-                    if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
-                                                                || c.Operation == OperationType.Contains)
+                    if ((c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
+                                                                 || c.Operation == OperationType.Contains) &&
+                        (c.Column.FieldType != typeof(string)))
                     {
-                        if (c.Column.FieldType != typeof(string))
+                        throw new FieldTypeMismatch()
                         {
-                            throw new FieldTypeMismatch() { 
-                                FieldName = c.Column.FieldName, 
-                                FieldType = c.Column.FieldType.ToString(), 
-                                FieldValue = valueToken, 
-                                OriginalFilter = filter
-                            };
-                        }
+                            FieldName = c.Column.FieldName,
+                            FieldType = c.Column.FieldType.ToString(),
+                            FieldValue = valueToken,
+                            OriginalFilter = filter
+                        };
                     }
+
                     return c;
             }
         }
