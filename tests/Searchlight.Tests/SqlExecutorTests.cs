@@ -201,12 +201,12 @@ namespace Searchlight.Tests
             // Try slightly more complex query expression types - should succeed
             Assert.AreEqual("a BETWEEN @p1 AND @p2", ParseWhereClause("a between 'test1' and 'test9'"));
             Assert.AreEqual("a IN (@p1, @p2)", ParseWhereClause("a in ('test', 'test2')"));
-            Assert.AreEqual("a LIKE @p1", ParseWhereClause("a startswith 'test%'"));
-            Assert.AreEqual("a LIKE @p1", ParseWhereClause("a endswith 'test'"));
-            Assert.AreEqual("a LIKE @p1", ParseWhereClause("a contains 'test'"));
-            Assert.AreEqual("a NOT LIKE @p1", ParseWhereClause("a not startswith 'test%'"));
-            Assert.AreEqual("a NOT LIKE @p1", ParseWhereClause("a not endswith 'test'"));
-            Assert.AreEqual("a NOT LIKE @p1", ParseWhereClause("a not contains 'test'"));
+            Assert.AreEqual("a LIKE @p1 ESCAPE '\\'", ParseWhereClause("a startswith 'test%'"));
+            Assert.AreEqual("a LIKE @p1 ESCAPE '\\'", ParseWhereClause("a endswith 'test'"));
+            Assert.AreEqual("a LIKE @p1 ESCAPE '\\'", ParseWhereClause("a contains 'test'"));
+            Assert.AreEqual("a NOT LIKE @p1 ESCAPE '\\'", ParseWhereClause("a not startswith 'test%'"));
+            Assert.AreEqual("a NOT LIKE @p1 ESCAPE '\\'", ParseWhereClause("a not endswith 'test'"));
+            Assert.AreEqual("a NOT LIKE @p1 ESCAPE '\\'", ParseWhereClause("a not contains 'test'"));
             Assert.AreEqual("a IS NULL", ParseWhereClause("a is null"));
             Assert.AreEqual("a IS NOT NULL", ParseWhereClause("a is not null"));
             Assert.AreEqual("a NOT IN (@p1, @p2)", ParseWhereClause("a not in ('test', 'test2')"));

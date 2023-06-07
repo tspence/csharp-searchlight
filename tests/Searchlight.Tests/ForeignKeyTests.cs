@@ -72,8 +72,8 @@ namespace Searchlight.Tests
             engine.useResultSet = true;
             var query = syntax.ToSqlServerCommand();
             Assert.AreEqual("SET NOCOUNT ON;\nSET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
-                            "SELECT COUNT(1) AS TotalRecords FROM LibraryBook WHERE Author LIKE @p1;\n" +
-                            "SELECT * INTO #temp FROM LibraryBook WHERE Author LIKE @p1 ORDER BY Name ASC OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY;\n" +
+                            "SELECT COUNT(1) AS TotalRecords FROM LibraryBook WHERE Author LIKE @p1 ESCAPE '\\';\n" +
+                            "SELECT * INTO #temp FROM LibraryBook WHERE Author LIKE @p1 ESCAPE '\\' ORDER BY Name ASC OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY;\n" +
                             "SELECT * FROM #temp ORDER BY Name ASC;\n" +
                             "SELECT t1.* FROM BookReservation t1 INNER JOIN #temp ON t1.ISBN = #temp.ISBN;\n" +
                             "DROP TABLE #temp;\n", query.CommandText);
@@ -103,8 +103,8 @@ namespace Searchlight.Tests
             engine.useResultSet = true;
             var query = syntax.ToSqlServerCommand();
             Assert.AreEqual("SET NOCOUNT ON;\nSET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n" +
-                            "SELECT COUNT(1) AS TotalRecords FROM LibraryBook WHERE Author LIKE @p1;\n" +
-                            "SELECT * INTO #temp FROM LibraryBook WHERE Author LIKE @p1 ORDER BY Name ASC OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY;\n" +
+                            "SELECT COUNT(1) AS TotalRecords FROM LibraryBook WHERE Author LIKE @p1 ESCAPE '\\';\n" +
+                            "SELECT * INTO #temp FROM LibraryBook WHERE Author LIKE @p1 ESCAPE '\\' ORDER BY Name ASC OFFSET 20 ROWS FETCH NEXT 20 ROWS ONLY;\n" +
                             "SELECT * FROM #temp ORDER BY Name ASC;\n" +
                             "SELECT t1.* FROM BookReservation t1 INNER JOIN #temp ON t1.ISBN = #temp.ISBN;\n" +
                             "SELECT t2.* FROM BookCopies t2 INNER JOIN #temp ON t2.ISBN = #temp.ISBN;\n" +
