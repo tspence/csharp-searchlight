@@ -253,3 +253,4 @@ paket-files/
 tests/Searchlight.Tests/coverage/
 
 .ionide
+coverage.xml

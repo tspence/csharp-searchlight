@@ -7,14 +7,14 @@ namespace Searchlight
     /// <summary>
     /// This class contains all whitelisted SQL tokens that can be placed into a legitimate SQL string
     /// </summary>
-    public static class StringConstants
+    internal static class StringConstants
     {
         /// <summary>
         /// Represents the list of query expressions we would recognize if the user passed them in a filter.
         /// The "KEY" represents the value we allow the user to provide.
         /// The "VALUE" represents the actual string we will place in the SQL.
         /// </summary>
-        public static readonly Dictionary<string, OperationType> RECOGNIZED_QUERY_EXPRESSIONS = new Dictionary<string, OperationType>
+        internal static readonly Dictionary<string, OperationType> RECOGNIZED_QUERY_EXPRESSIONS = new Dictionary<string, OperationType>
         {
             // Basic SQL query expressions
             { "=",  OperationType.Equals  },
@@ -56,7 +56,7 @@ namespace Searchlight
         /// <summary>
         /// Represents the list of conjunctions that can occur between tests, and the insertion values that we should apply
         /// </summary>
-        public static readonly Dictionary<string, string> SAFE_CONJUNCTIONS = new Dictionary<string, string>
+        internal static readonly Dictionary<string, string> SAFE_CONJUNCTIONS = new Dictionary<string, string>
         {
             { "(", "(" },
             { ")", ")" },
@@ -135,7 +135,7 @@ namespace Searchlight
         /// <summary>
         /// Used as shorthand for typing today's date
         /// </summary>
-        public static readonly Dictionary<string, Func<DateTime>> DEFINED_DATES = new Dictionary<string, Func<DateTime>>
+        internal static readonly Dictionary<string, Func<DateTime>> DEFINED_DATES = new Dictionary<string, Func<DateTime>>
         {
             {"NOW", () => DateTime.UtcNow},
             {"TODAY", () => DateTime.Today},
