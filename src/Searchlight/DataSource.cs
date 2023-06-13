@@ -483,7 +483,7 @@ namespace Searchlight
                 // Do we end on a close parenthesis?
                 if (expectCloseParenthesis && token == StringConstants.CLOSE_PARENTHESIS)
                 {
-                    return working;
+                    return CheckConjunctions(working);
                 }
 
                 // If not, we must have a conjunction
@@ -520,8 +520,23 @@ namespace Searchlight
                 throw new OpenClause { OriginalFilter = filter };
             }
 
-            // Here's your clause!
-            return working;
+            // Let's verify that the clause is fully valid first before accepting it
+            return CheckConjunctions(working);
+        }
+
+        private static List<BaseClause> CheckConjunctions(List<BaseClause> clauses)
+        {
+            var conjunctions = (from item in clauses where item.Conjunction != ConjunctionType.NONE select item.Conjunction)
+                .Distinct();
+            if (conjunctions.Count() > 1)
+            {
+                throw new InconsistentConjunctionException()
+                {
+                    InconsistentClause = string.Join(" ", from item in clauses select item + " " + (item.Conjunction == ConjunctionType.NONE ? string.Empty : item.Conjunction.ToString())).TrimEnd(),
+                };
+            }
+
+            return clauses;
         }
 
         /// <summary>
