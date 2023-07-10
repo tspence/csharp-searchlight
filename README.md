@@ -1,8 +1,8 @@
 [![NuGet](https://img.shields.io/nuget/v/Searchlight.svg?style=plastic)](https://www.nuget.org/packages/Searchlight/)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tspence/csharp-searchlight/dotnet.yml?branch=main)
-[![SonarCloud Coverage](https://sonarcloud.io/api/project_badges/measure?project=searchlight_searchlight&metric=coverage)](https://sonarcloud.io/component_measures/metric/coverage/list?id=searchlight_searchlight)
-[![SonarCloud Bugs](https://sonarcloud.io/api/project_badges/measure?project=searchlight_searchlight&metric=bugs)](https://sonarcloud.io/component_measures/metric/reliability_rating/list?id=searchlight_searchlight)
-[![SonarCloud Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=searchlight_searchlight&metric=vulnerabilities)](https://sonarcloud.io/component_measures/metric/security_rating/list?id=searchlight_searchlight)
+[![SonarCloud Coverage](https://sonarcloud.io/api/project_badges/measure?project=tspence_searchlight&metric=coverage)](https://sonarcloud.io/component_measures/metric/coverage/list?id=tspence_searchlight)
+[![SonarCloud Bugs](https://sonarcloud.io/api/project_badges/measure?project=tspence_searchlight&metric=bugs)](https://sonarcloud.io/component_measures/metric/reliability_rating/list?id=tspence_searchlight)
+[![SonarCloud Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=tspence_searchlight&metric=vulnerabilities)](https://sonarcloud.io/component_measures/metric/security_rating/list?id=tspence_searchlight)
 
 # Searchlight
 
