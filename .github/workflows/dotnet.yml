@@ -33,7 +33,7 @@ jobs:
         dotnet tool update dotnet-coverage --tool-path /tmp/coverage
     - name: SonarCloud Start
       run:
-        /tmp/sonar/dotnet-sonarscanner begin /k:"tspence_searchlight" /o:"tspence" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+        /tmp/sonar/dotnet-sonarscanner begin /k:"tspence_csharp-searchlight" /o:"tspence" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
     - name: Build
       run: dotnet build
     - name: Test
