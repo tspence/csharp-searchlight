@@ -13,6 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Other Files", "Other Files"
 		icons8-searchlight-90.png = icons8-searchlight-90.png
 		Searchlight.MongoDB.nuspec = Searchlight.MongoDB.nuspec
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github\workflows\nuget-publish.yml = .github\workflows\nuget-publish.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SearchlightPerformance", "src\SearchlightPerformance\SearchlightPerformance.csproj", "{64285A31-2226-4BF5-A587-0A4E9A90B9C7}"
