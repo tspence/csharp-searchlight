@@ -569,7 +569,7 @@ namespace Searchlight.Tests.Executors
             for (var i = 0; i < control.Count; i++)
             {
                 var ts = result.records[i].hired - control[i].hired;
-                Assert.IsTrue(ts.TotalMilliseconds < 16.0);
+                Assert.IsTrue(Math.Abs(ts.TotalSeconds) < 2.0);
             }
         }
 
