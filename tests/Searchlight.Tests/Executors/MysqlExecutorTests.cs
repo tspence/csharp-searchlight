@@ -33,7 +33,7 @@ public class MysqlExecutorTests
             await connection.OpenAsync();
             
             // Create basic table
-            await using (var command = new MySqlCommand("CREATE TABLE EmployeeObj (name text null, id int not null, hired date, paycheck decimal, onduty bit)", connection))
+            await using (var command = new MySqlCommand("CREATE TABLE EmployeeObj (name text null, id int not null, hired timestamp, paycheck decimal, onduty bit)", connection))
             {
                 await command.ExecuteNonQueryAsync();
             }

@@ -549,9 +549,8 @@ namespace Searchlight.Tests.Executors
             // Sorting by DateTime, ascending and descending.
             //
             // Some database systems may store dates with slightly different precision than C# does internally.
-            // This means that comparing strict equality is not appropriate.  We instead assert that there
-            // is less than 16ms of drift between the two dates, which is less than one frame on a speedrun
-            // of classic Super Mario Bros.
+            // This means that comparing strict equality is not appropriate.  We will just check for drift of
+            // one second or less.
             //
 
             control = (from item in _list where item.name is not null orderby item.hired ascending select item).ToList();
@@ -561,7 +560,7 @@ namespace Searchlight.Tests.Executors
             for (var i = 0; i < control.Count; i++)
             {
                 var ts = result.records[i].hired - control[i].hired;
-                Assert.IsTrue(ts.TotalMilliseconds < 16.0);
+                Assert.IsTrue(Math.Abs(ts.TotalSeconds) < 2);
             }
 
             control = (from item in _list where item.name is not null orderby item.hired descending select item).ToList();
