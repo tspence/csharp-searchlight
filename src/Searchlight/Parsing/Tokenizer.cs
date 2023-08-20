@@ -36,7 +36,7 @@ namespace Searchlight.Parsing
                     // Whitespace characters always end a token)
                     if (inToken)
                     {
-                        tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
+                        tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i - sb.Length));
                         sb.Length = 0;
                         inToken = false;
                     }
@@ -46,7 +46,7 @@ namespace Searchlight.Parsing
                     // If this is one of the special chars (>, =, etc) end the previous token and count char as its own token
                     if (inToken)
                     {
-                        tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
+                        tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i - sb.Length));
                         inToken = false;
                     }
 
@@ -89,7 +89,7 @@ namespace Searchlight.Parsing
                             }
                             else
                             {
-                                tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
+                                tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i - sb.Length - 1));
                                 sb.Length = 0;
                                 inString = false;
                                 break;
@@ -125,7 +125,7 @@ namespace Searchlight.Parsing
             // Allow strings to end normally
             if (inToken)
             {
-                tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
+                tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i - sb.Length));
             }
 
             // Here's your tokenized list
