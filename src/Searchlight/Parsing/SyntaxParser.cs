@@ -28,15 +28,15 @@ namespace Searchlight.Parsing
             var query = new SyntaxTree
             {
                 Source = source,
-                OriginalFilter = request.filter,
+                OriginalFilter = request?.filter,
             };
             
-            var tuple = ParseIncludes(source, request.include);
+            var tuple = ParseIncludes(source, request?.include);
             query.Includes = tuple.Item1;
             query.Flags = tuple.Item2;
-            query.Filter = ParseFilter(source, request.filter);
-            query.OrderBy = ParseOrderBy(source, request.order);
-            if (request.pageNumber != null || request.pageSize != null)
+            query.Filter = ParseFilter(source, request?.filter);
+            query.OrderBy = ParseOrderBy(source, request?.order);
+            if (request?.pageNumber != null || request?.pageSize != null)
             {
                 query.PageNumber = request.pageNumber ?? 0;
                 query.PageSize = request.pageSize ?? 50;
