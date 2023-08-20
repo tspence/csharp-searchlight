@@ -385,52 +385,52 @@ namespace Searchlight
 
             // Okay, let's tokenize the orderBy statement and begin parsing
             var tokens = Tokenizer.GenerateTokens(orderBy);
-            while (tokens.Count > 0)
+            while (tokens.TokenQueue.Count > 0)
             {
                 var si = new SortInfo { Direction = SortDirection.Ascending };
                 list.Add(si);
 
                 // Identify the field being sorted
-                var colName = tokens.Dequeue();
-                si.Column = IdentifyColumn(colName);
+                var colName = tokens.TokenQueue.Dequeue();
+                si.Column = IdentifyColumn(colName.Value);
                 if (si.Column == null)
                 {
                     throw new FieldNotFound()
                     {
-                        FieldName = colName, KnownFields = ColumnNames().ToArray(), OriginalFilter = orderBy
+                        FieldName = colName.Value, KnownFields = ColumnNames().ToArray(), OriginalFilter = orderBy
                     };
                 }
 
                 // Was that the last token?
-                if (tokens.Count == 0) break;
+                if (tokens.TokenQueue.Count == 0) break;
 
                 // Next, we allow ASC or ASCENDING, DESC or DESCENDING, or a comma (indicating another sort).
                 // First, check for the case of a comma
-                var token = tokens.Dequeue();
-                if (token == StringConstants.COMMA)
+                var token = tokens.TokenQueue.Dequeue();
+                if (token.Value == StringConstants.COMMA)
                 {
-                    if (tokens.Count == 0) throw new TrailingConjunction() { OriginalFilter = orderBy };
+                    if (tokens.TokenQueue.Count == 0) throw new TrailingConjunction() { OriginalFilter = orderBy };
                     continue;
                 }
 
                 // Allow ASC or DESC
-                var tokenUpper = token.ToUpperInvariant();
+                var tokenUpper = token.Value.ToUpperInvariant();
                 if (tokenUpper == StringConstants.ASCENDING || 
-                    tokenUpper == StringConstants.ASCENDING_ABR)
+                    tokenUpper == StringConstants.ASCENDING_ABBR)
                 {
                     si.Direction = SortDirection.Ascending;
                 }
                 else if (tokenUpper == StringConstants.DESCENDING || 
-                         tokenUpper == StringConstants.DESCENDING_ABR)
+                         tokenUpper == StringConstants.DESCENDING_ABBR)
                 {
                     si.Direction = SortDirection.Descending;
                 }
 
                 // Are we at the end?
-                if (tokens.Count == 0) break;
+                if (tokens.TokenQueue.Count == 0) break;
 
                 // Otherwise, we must next have a comma
-                Expect(StringConstants.COMMA, tokens.Dequeue(), orderBy);
+                Expect(StringConstants.COMMA, tokens.TokenQueue.Dequeue().Value, orderBy);
             }
 
             // Here's your sort info
@@ -452,7 +452,15 @@ namespace Searchlight
             }
 
             // First parse the incoming filter into tokens
-            Queue<string> tokens = Tokenizer.GenerateTokens(filter);
+            var tokens = Tokenizer.GenerateTokens(filter);
+            if (tokens.HasUnterminatedLiteral)
+            {
+                throw new UnterminatedString()
+                {
+                    OriginalFilter = filter,
+                    StartPosition = tokens.LastStringLiteralBegin 
+                };
+            }
 
             // Parse a sequence of tokens
             return ParseClauseList(filter, tokens, false);
@@ -465,29 +473,29 @@ namespace Searchlight
         /// <param name="tokens"></param>
         /// <param name="expectCloseParenthesis"></param>
         /// <returns></returns>
-        private List<BaseClause> ParseClauseList(string filter, Queue<string> tokens, bool expectCloseParenthesis)
+        private List<BaseClause> ParseClauseList(string filter, TokenStream tokens, bool expectCloseParenthesis)
         {
             var working = new List<BaseClause>();
-            while (tokens.Count > 0)
+            while (tokens.TokenQueue.Count > 0)
             {
                 // Identify one clause and add it
                 var clause = ParseOneClause(filter, tokens);
                 working.Add(clause);
 
                 // Is this the end of the filter?
-                if (tokens.Count == 0) break;
+                if (tokens.TokenQueue.Count == 0) break;
 
                 // Let's see what the next token is
-                var token = tokens.Dequeue();
+                var token = tokens.TokenQueue.Dequeue();
 
                 // Do we end on a close parenthesis?
-                if (expectCloseParenthesis && token == StringConstants.CLOSE_PARENTHESIS)
+                if (expectCloseParenthesis && token.Value == StringConstants.CLOSE_PARENTHESIS)
                 {
                     return CheckConjunctions(working);
                 }
 
                 // If not, we must have a conjunction
-                string upperToken = token.ToUpperInvariant();
+                string upperToken = token.Value.ToUpperInvariant();
                 if (!StringConstants.SAFE_CONJUNCTIONS.ContainsKey(upperToken))
                 {
                     throw new InvalidToken { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = filter};
@@ -508,7 +516,7 @@ namespace Searchlight
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
-                if (tokens.Count == 0)
+                if (tokens.TokenQueue.Count == 0)
                 {
                     throw new TrailingConjunction() { OriginalFilter = filter };
                 }
@@ -545,13 +553,13 @@ namespace Searchlight
         /// <param name="filter"></param>
         /// <param name="tokens"></param>
         /// <returns></returns>
-        private BaseClause ParseOneClause(string filter, Queue<string> tokens)
+        private BaseClause ParseOneClause(string filter, TokenStream tokens)
         {
             // First token is allowed to be a parenthesis or a field name
-            var fieldToken = tokens.Dequeue();
+            var fieldToken = tokens.TokenQueue.Dequeue();
 
             // Is it a parenthesis?  If so, parse a compound clause list
-            if (fieldToken == StringConstants.OPEN_PARENTHESIS)
+            if (fieldToken.Value == StringConstants.OPEN_PARENTHESIS)
             {
                 var compound = new CompoundClause { Children = ParseClauseList(filter, tokens, true) };
                 if (compound.Children == null || compound.Children.Count == 0)
@@ -563,24 +571,24 @@ namespace Searchlight
             }
 
             // Identify the field name -- is it on the approved list?
-            var columnInfo = IdentifyColumn(fieldToken);
+            var columnInfo = IdentifyColumn(fieldToken.Value);
             if (columnInfo == null)
             {
-                if (string.Equals(fieldToken, StringConstants.CLOSE_PARENTHESIS))
+                if (string.Equals(fieldToken.Value, StringConstants.CLOSE_PARENTHESIS))
                 {
                     throw new EmptyClause() { OriginalFilter = filter};
                 }
 
-                throw new FieldNotFound() { FieldName = fieldToken, KnownFields = ColumnNames().ToArray(), OriginalFilter = filter };
+                throw new FieldNotFound() { FieldName = fieldToken.Value, KnownFields = ColumnNames().ToArray(), OriginalFilter = filter };
             }
 
             // Allow "NOT" tokens here
             var negated = false;
-            var operationToken = tokens.Dequeue().ToUpperInvariant();
+            var operationToken = tokens.TokenQueue.Dequeue().Value.ToUpperInvariant();
             if (operationToken == StringConstants.NOT)
             {
                 negated = true;
-                operationToken = tokens.Dequeue().ToUpperInvariant();
+                operationToken = tokens.TokenQueue.Dequeue().Value.ToUpperInvariant();
             }
 
             // Next is the operation; must validate it against our list of safe tokens.  Case insensitive.
@@ -602,10 +610,10 @@ namespace Searchlight
                     {
                         Negated = negated,
                         Column = columnInfo,
-                        LowerValue = ParseParameter(columnInfo, tokens.Dequeue(), filter, tokens)
+                        LowerValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, filter, tokens)
                     };
-                    Expect(StringConstants.AND, tokens.Dequeue(), filter);
-                    b.UpperValue = ParseParameter(columnInfo, tokens.Dequeue(), filter, tokens);
+                    Expect(StringConstants.AND, tokens.TokenQueue.Dequeue().Value, filter);
+                    b.UpperValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, filter, tokens);
                     return b;
 
                 // Safe syntax for an "IN" expression is "column IN (param[, param][, param]...)"
@@ -616,20 +624,20 @@ namespace Searchlight
                         Negated = negated,
                         Values = new List<IExpressionValue>()
                     };
-                    Expect(StringConstants.OPEN_PARENTHESIS, tokens.Dequeue(), filter);
+                    Expect(StringConstants.OPEN_PARENTHESIS, tokens.TokenQueue.Dequeue().Value, filter);
 
-                    if (tokens.Peek() != StringConstants.CLOSE_PARENTHESIS)
+                    if (tokens.TokenQueue.Peek().Value != StringConstants.CLOSE_PARENTHESIS)
                     {
                         while (true)
                         {
-                            i.Values.Add(ParseParameter(columnInfo, tokens.Dequeue(), filter, tokens));
-                            var commaOrParen = tokens.Dequeue();
-                            if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen))
+                            i.Values.Add(ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, filter, tokens));
+                            var commaOrParen = tokens.TokenQueue.Dequeue();
+                            if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen.Value))
                             {
-                                throw new InvalidToken { BadToken = commaOrParen, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
+                                throw new InvalidToken { BadToken = commaOrParen.Value, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
                             }
 
-                            if (commaOrParen == StringConstants.CLOSE_PARENTHESIS) break;
+                            if (commaOrParen.Value == StringConstants.CLOSE_PARENTHESIS) break;
                         }
                     }
                     else
@@ -644,11 +652,11 @@ namespace Searchlight
                     var iN = new IsNullClause { Column = columnInfo };
 
                     // Allow "not" to come either before or after the "IS"
-                    var next = tokens.Dequeue().ToUpperInvariant();
+                    var next = tokens.TokenQueue.Dequeue().Value.ToUpperInvariant();
                     if (next == StringConstants.NOT)
                     {
                         negated = true;
-                        next = tokens.Dequeue();
+                        next = tokens.TokenQueue.Dequeue().Value.ToUpperInvariant();
                     }
 
                     iN.Negated = negated;
@@ -657,13 +665,13 @@ namespace Searchlight
 
                 // Safe syntax for all other recognized expressions is "column op param"
                 default:
-                    var valueToken = tokens.Dequeue();
+                    var valueToken = tokens.TokenQueue.Dequeue();
                     var c = new CriteriaClause
                     {
                         Negated = negated,
                         Operation = op,
                         Column = columnInfo,
-                        Value = ParseParameter(columnInfo, valueToken, filter, tokens)
+                        Value = ParseParameter(columnInfo, valueToken.Value, filter, tokens)
                     };
 
                     if ((c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
@@ -674,7 +682,7 @@ namespace Searchlight
                         {
                             FieldName = c.Column.FieldName,
                             FieldType = c.Column.FieldType.ToString(),
-                            FieldValue = valueToken,
+                            FieldValue = valueToken.Value,
                             OriginalFilter = filter
                         };
                     }
@@ -704,7 +712,7 @@ namespace Searchlight
         /// <param name="valueToken"></param>
         /// <param name="originalFilter"></param>
         /// <param name="tokens"></param>
-        private static IExpressionValue ParseParameter(ColumnInfo column, string valueToken, string originalFilter, Queue<string> tokens)
+        private static IExpressionValue ParseParameter(ColumnInfo column, string valueToken, string originalFilter, TokenStream tokens)
         {
             var fieldType = column.FieldType;
             try
@@ -744,24 +752,24 @@ namespace Searchlight
                         {
                             Root = tokenUpper,
                         };
-                        var nextToken = tokens.Count > 0 ? tokens.Peek() : null;
-                        if (nextToken == StringConstants.ADD || nextToken == StringConstants.SUBTRACT)
+                        var nextToken = tokens.TokenQueue.Count > 0 ? tokens.TokenQueue.Peek() : null;
+                        if (nextToken.Value == StringConstants.ADD || nextToken.Value == StringConstants.SUBTRACT)
                         {
                             // Retrieve the direction and offset
-                            var direction = tokens.Dequeue();
-                            var offset = tokens.Dequeue();
-                            var ok = int.TryParse(offset, out var offsetValue);
+                            var direction = tokens.TokenQueue.Dequeue();
+                            var offset = tokens.TokenQueue.Dequeue();
+                            var ok = int.TryParse(offset.Value, out var offsetValue);
                             if (!ok)
                             {
                                 throw new InvalidToken()
                                 {
-                                    BadToken = offset,
+                                    BadToken = offset.Value,
                                     ExpectedTokens = new [] { "an integer" },
                                 };
                             }
 
                             // Handle negative offsets
-                            if (direction == StringConstants.SUBTRACT)
+                            if (direction.Value == StringConstants.SUBTRACT)
                             {
                                 offsetValue = -offsetValue;
                             }

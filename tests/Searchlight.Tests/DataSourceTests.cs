@@ -28,6 +28,15 @@ namespace Searchlight.Tests
         }
 
         [TestMethod]
+        public void UnterminatedLiteral()
+        {
+            string originalFilter = "a = 'test and colLong eq 0";
+            var ex = Assert.ThrowsException<UnterminatedString>(() => _source.ParseFilter(originalFilter));
+            Assert.AreEqual(originalFilter, ex.OriginalFilter);
+            Assert.AreEqual(4, ex.StartPosition);
+        }
+
+        [TestMethod]
         public void ParseSortPatterns()
         {
             var list = _source.ParseOrderBy("a");

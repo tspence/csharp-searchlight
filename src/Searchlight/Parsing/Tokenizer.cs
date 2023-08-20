@@ -12,11 +12,16 @@ namespace Searchlight.Parsing
         /// <summary>
         /// Generate tokens out of a line
         /// </summary>
-        /// <param name="line"></param>
-        /// <returns></returns>
-        public static Queue<string> GenerateTokens(string line)
+        /// <param name="line">Original text</param>
+        /// <returns>The token stream to consume</returns>
+        public static TokenStream GenerateTokens(string line)
         {
-            var tokens = new Queue<string>();
+            var tokens = new TokenStream()
+            {
+                OriginalText = line,
+                TokenQueue = new Queue<Token>(),
+                HasUnterminatedLiteral = false,
+            };
             var sb = new StringBuilder();
 
             // Go through each character
@@ -31,7 +36,7 @@ namespace Searchlight.Parsing
                     // Whitespace characters always end a token)
                     if (inToken)
                     {
-                        tokens.Enqueue(sb.ToString());
+                        tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
                         sb.Length = 0;
                         inToken = false;
                     }
@@ -41,7 +46,7 @@ namespace Searchlight.Parsing
                     // If this is one of the special chars (>, =, etc) end the previous token and count char as its own token
                     if (inToken)
                     {
-                        tokens.Enqueue(sb.ToString());
+                        tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
                         inToken = false;
                     }
 
@@ -52,16 +57,16 @@ namespace Searchlight.Parsing
                         (c == '<' && c2 == '=') ||
                         (c == '>' && c2 == '='))
                     {
-                        tokens.Enqueue(line.Substring(i, 2));
+                        tokens.TokenQueue.Enqueue(new Token(line.Substring(i, 2), i));
                         i++;
                     } else if (c == '<' || c == '>')
                     {
-                        tokens.Enqueue(c.ToString());
+                        tokens.TokenQueue.Enqueue(new Token(c.ToString(), i));
                     }
                     else
                     {
                         // This probably means it's a syntax error, but let's let the parser figure that out
-                        tokens.Enqueue(c.ToString());
+                        tokens.TokenQueue.Enqueue(new Token(c.ToString(), i));
                     }
 
                     sb.Length = 0;
@@ -70,6 +75,7 @@ namespace Searchlight.Parsing
                 {
                     // Apostrophes trigger string mode
                     var inString = true;
+                    tokens.LastStringLiteralBegin = i;
                     while (++i < line.Length)
                     {
                         c = line[i];
@@ -83,7 +89,7 @@ namespace Searchlight.Parsing
                             }
                             else
                             {
-                                tokens.Enqueue(sb.ToString());
+                                tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
                                 sb.Length = 0;
                                 inString = false;
                                 break;
@@ -95,10 +101,11 @@ namespace Searchlight.Parsing
                         }
                     }
 
-                    // If the string failed to end properly, throw an error
+                    // If the string failed to end properly, trigger an error
                     if (inString)
                     {
-                        throw new UnterminatedString() { Token = sb.ToString(), OriginalFilter = line };
+                        tokens.HasUnterminatedLiteral = true;
+                        break;
                     }
                 }
                 else
@@ -118,7 +125,7 @@ namespace Searchlight.Parsing
             // Allow strings to end normally
             if (inToken)
             {
-                tokens.Enqueue(sb.ToString());
+                tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i));
             }
 
             // Here's your tokenized list

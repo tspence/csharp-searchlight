@@ -88,14 +88,14 @@ namespace Searchlight
         /// <summary>
         /// Represents descending sort
         /// </summary>
-        public static readonly string DESCENDING = "DESC";
-        public static readonly string DESCENDING_ABR = "DESCENDING";
+        public static readonly string DESCENDING = "DESCENDING";
+        public static readonly string DESCENDING_ABBR = "DESC";
 
         /// <summary>
         /// Represents ascending sort
         /// </summary>
-        public static readonly string ASCENDING = "ASC";
-        public static readonly string ASCENDING_ABR = "ASCENDING";
+        public static readonly string ASCENDING = "ASCENDING";
+        public static readonly string ASCENDING_ABBR = "ASC";
 
         /// <summary>
         /// User specified an inverse operation
