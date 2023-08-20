@@ -260,7 +260,7 @@ namespace Searchlight.Parsing
 
                 // Search for the end of this clause
                 string upperToken = token.Value.ToUpperInvariant();
-                while (!syntax.Expect(StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), upperToken, tokens.OriginalText) && tokens.TokenQueue.Count > 0)
+                while (!syntax.Expect(StringConstants.CLAUSE_JOINS, upperToken, tokens.OriginalText) && tokens.TokenQueue.Count > 0)
                 {
                     token = tokens.TokenQueue.Dequeue();
                     upperToken = token.Value.ToUpperInvariant();
@@ -274,10 +274,6 @@ namespace Searchlight.Parsing
                 else if (string.Equals(StringConstants.OR, upperToken))
                 {
                     clause.Conjunction = ConjunctionType.OR;
-                }
-                else
-                {
-                    syntax.AddError( new InvalidToken { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = tokens.OriginalText });
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error

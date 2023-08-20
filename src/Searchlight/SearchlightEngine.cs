@@ -202,7 +202,7 @@ namespace Searchlight
                     {
                         label = field.FieldName,
                         kind = CompletionItemKind.Field,
-                        detail = "",
+                        detail = field.Description,
                         deprecated = false,
                     });
                 }

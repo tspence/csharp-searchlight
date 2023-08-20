@@ -52,5 +52,25 @@ public class AutocompleteTests
         Assert.AreEqual("colNullableGuid", completion.items[2].label);
         Assert.AreEqual("colNullableULong", completion.items[3].label);
         Assert.AreEqual("colULong", completion.items[4].label);
+        
+        completion = engine.AutocompleteFilter("source", "colNullableGuid eq 0", 10);
+        Assert.IsNotNull(completion);
+        Assert.IsFalse(completion.isIncomplete);
+        Assert.AreEqual(2, completion.items.Count);
+        Assert.AreEqual("colNullableGuid", completion.items[0].label);
+        Assert.AreEqual("colNullableULong", completion.items[1].label);
+    }
+    
+    
+    [TestMethod]
+    public void ConjunctionAutocomplete()
+    {
+        var engine = GetTestEngine();
+        var completion = engine.AutocompleteFilter("source", "colLong eq 0 a", 14);
+        Assert.IsNotNull(completion);
+        Assert.IsFalse(completion.isIncomplete);
+        Assert.AreEqual(2, completion.items.Count);
+        Assert.AreEqual("AND", completion.items[0].label);
+        Assert.AreEqual("OR", completion.items[1].label);
     }
 }

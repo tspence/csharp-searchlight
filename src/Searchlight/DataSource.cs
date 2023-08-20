@@ -65,20 +65,15 @@ namespace Searchlight
         /// <returns></returns>
         public DataSource WithColumn(string columnName, Type columnType)
         {
-            return WithRenamingColumn(columnName, columnName, null, columnType);
+            return WithRenamingColumn(columnName, columnName, null, columnType, null);
         }
 
         /// <summary>
         /// Add a column to this definition
         /// </summary>
-        /// <param name="filterName"></param>
-        /// <param name="columnName"></param>
-        /// <param name="aliases"></param>
-        /// <param name="columnType"></param>
-        /// <returns></returns>
-        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType)
+        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType, string description)
         {
-            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType);
+            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType, description);
             _columns.Add(columnInfo);
 
             // Allow the API caller to either specify either the model name or one of the aliases
@@ -207,7 +202,7 @@ namespace Searchlight
                             // If this is a renaming column, add it appropriately
                             Type t = filter.FieldType ?? pi.PropertyType;
                             src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name,
-                                filter.Aliases ?? Array.Empty<string>(), t);
+                                filter.Aliases ?? Array.Empty<string>(), t, filter.Description);
                         }
 
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();

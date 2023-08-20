@@ -66,6 +66,11 @@ namespace Searchlight
         };
 
         /// <summary>
+        /// The list of clause connectors that are permitted - only two!
+        /// </summary>
+        public static readonly string[] CLAUSE_JOINS = new string[] { "AND", "OR" };
+
+        /// <summary>
         /// Represents the list of single-character operators for tokenization
         /// </summary>
         public static readonly char[] SINGLE_CHARACTER_OPERATORS = new char[] { '=', '>', '<', '(', ')', ',', '!' };

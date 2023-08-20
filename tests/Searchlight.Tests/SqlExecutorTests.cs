@@ -130,12 +130,9 @@ namespace Searchlight.Tests
             var ex2 = Assert.ThrowsException<InvalidToken>(() => _source.ParseFilter(originalFilter));
             Assert.AreEqual(originalFilter, ex2.OriginalFilter);
             Assert.AreEqual("BUTIREALLYTHINKTHAT", ex2.BadToken);
-            Assert.AreEqual(5, ex2.ExpectedTokens.Length);
-            Assert.AreEqual("(", ex2.ExpectedTokens[0]);
-            Assert.AreEqual(")", ex2.ExpectedTokens[1]);
-            Assert.AreEqual("AND", ex2.ExpectedTokens[2]);
-            Assert.AreEqual("OR", ex2.ExpectedTokens[3]);
-            Assert.AreEqual("NOT", ex2.ExpectedTokens[4]);
+            Assert.AreEqual(2, ex2.ExpectedTokens.Length);
+            Assert.AreEqual("AND", ex2.ExpectedTokens[0]);
+            Assert.AreEqual("OR", ex2.ExpectedTokens[1]);
         }
 
 
