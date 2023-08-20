@@ -8,56 +8,82 @@ using Searchlight.Query;
 
 namespace Searchlight.Parsing
 {
-    public class SyntaxParser
+    public static class SyntaxParser
     {
         /// <summary>
-        /// Parse a query and return only the validated information.  If any illegal values or text
-        /// was provided, this function will throw a SearchlightException.
+        /// Shortcut for Parse using a syntax tree.
         /// </summary>
-        public static SyntaxTree Parse(DataSource source, string filter, string include = null, string orderBy = null)
+        public static SyntaxTree Parse(DataSource source, string filter, string include, string orderBy)
         {
             var fetch = new FetchRequest { filter = filter, include = include, order = orderBy };
             return Parse(source, fetch);
         }
 
         /// <summary>
-        /// Parse a fetch request object into a syntax tree
+        /// Tries to parse a fetch request object into a syntax tree.
+        ///
+        /// Returns a valid syntax tree if successful; throws an exception if not.
+        ///
+        /// You should prefer to use TryParse if possible since it will report on multiple exceptions.
         /// </summary>
+        /// <param name="source"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
         public static SyntaxTree Parse(DataSource source, FetchRequest request)
         {
-            var query = new SyntaxTree
+            var syntax = TryParse(source, request);
+            if (syntax.Errors != null && syntax.Errors.Count > 0)
+            {
+                throw syntax.Errors[0];
+            }
+
+            return syntax;
+        }
+        
+        /// <summary>
+        /// Tries to parse a fetch request object into a syntax tree.
+        ///
+        /// Returns either a valid syntax tree or a list of exceptions.
+        /// </summary>
+        public static SyntaxTree TryParse(DataSource source, FetchRequest request)
+        {
+            var syntax = new SyntaxTree
             {
                 Source = source,
                 OriginalFilter = request?.filter,
             };
             
-            var tuple = ParseIncludes(source, request?.include);
-            query.Includes = tuple.Item1;
-            query.Flags = tuple.Item2;
-            query.Filter = ParseFilter(source, request?.filter);
-            query.OrderBy = ParseOrderBy(source, request?.order);
-            if (request?.pageNumber != null || request?.pageSize != null)
+            ParseIncludes(syntax, source, request?.include);
+            ParseFilter(syntax, source, request?.filter);
+            ParseOrderBy(syntax, source, request?.order);
+            ParsePagination(syntax, source, request?.pageNumber, request?.pageSize);
+            return syntax;
+        }
+
+        private static void ParsePagination(SyntaxTree syntax, DataSource source, int? pageNumber, int? pageSize)
+        {
+            if (pageNumber != null || pageSize != null)
             {
-                query.PageNumber = request.pageNumber ?? 0;
-                query.PageSize = request.pageSize ?? 50;
-                if (query.PageSize <= 0)
+                syntax.PageNumber = pageNumber ?? 0;
+                syntax.PageSize = pageSize ?? 50;
+                if (syntax.PageSize <= 0)
                 {
-                    throw new InvalidPageSize { PageSize = request.pageSize == null ? "not specified" : request.pageSize.ToString() };
+                    syntax.AddError(new InvalidPageSize
+                        { PageSize = pageSize == null ? "not specified" : pageSize.ToString() });
                 }
 
-                if (query.PageNumber < 0)
+                if (syntax.PageNumber < 0)
                 {
-                    throw new InvalidPageNumber { PageNumber = request.pageNumber == null ? "not specified" : request.pageNumber.ToString() };
+                    syntax.AddError(new InvalidPageNumber
+                        { PageNumber = pageNumber == null ? "not specified" : pageNumber.ToString() });
                 }
             }
-
-            return query;
         }
 
         /// <summary>
         /// Specify the name of optional collections or commands to include in this fetch request separated by commas.
         /// </summary>
-        private static Tuple<List<ICommand>, List<SearchlightFlag>> ParseIncludes(DataSource source, string includes)
+        private static void ParseIncludes(SyntaxTree syntax, DataSource source, string includes)
         {
             // We will collect results here
             var list = new List<ICommand>();
@@ -81,25 +107,26 @@ namespace Searchlight.Parsing
                     }
                     else
                     {
-                        throw new IncludeNotFound()
+                        syntax.AddError(new IncludeNotFound()
                         {
                             OriginalInclude = includes,
                             IncludeName = name,
                             KnownIncludes = source._knownIncludes.ToArray()
-                        };
+                        });
                     }
                 }
             }
 
             // Here is the list of tested and validated commands
-            return new Tuple<List<ICommand>, List<SearchlightFlag>>(list, flags);
+            syntax.Flags = flags;
+            syntax.Includes = list;
         }
 
         /// <summary>
         /// Parses the orderBy clause requested, or if null, uses the default to ensure
         /// that pagination works
         /// </summary>
-        public static List<SortInfo> ParseOrderBy(DataSource source, string orderBy)
+        internal static List<SortInfo> ParseOrderBy(SyntaxTree syntax, DataSource source, string orderBy)
         {
             var list = new List<SortInfo>();
             if (string.IsNullOrWhiteSpace(orderBy))
@@ -160,10 +187,14 @@ namespace Searchlight.Parsing
                 if (tokens.TokenQueue.Count == 0) break;
 
                 // Otherwise, we must next have a comma
-                Expect(StringConstants.COMMA, tokens.TokenQueue.Dequeue().Value, orderBy);
+                syntax.Expect(StringConstants.COMMA, tokens.TokenQueue.Dequeue().Value, orderBy);
             }
 
             // Here's your sort info
+            if (syntax != null)
+            {
+                syntax.OrderBy = list;
+            }
             return list;
         }
 
@@ -171,40 +202,49 @@ namespace Searchlight.Parsing
         /// Parse the $filter parameter and turn it into a list of validated clauses that can 
         /// then be rendered as SQL or a LINQ expression
         /// </summary>
-        public static List<BaseClause> ParseFilter(DataSource source, string filter)
+        internal static void ParseFilter(SyntaxTree syntax, DataSource source, string filter)
         {
             // Shortcut for no filter
             if (string.IsNullOrEmpty(filter))
             {
-                return new List<BaseClause>();
+                syntax.Filter = new List<BaseClause>();
+                return;
             }
 
             // First parse the incoming filter into tokens
             var tokens = Tokenizer.GenerateTokens(filter);
             if (tokens.HasUnterminatedLiteral)
             {
-                throw new UnterminatedString()
+                syntax.AddError(new UnterminatedString()
                 {
                     OriginalFilter = filter,
                     StartPosition = tokens.LastStringLiteralBegin 
-                };
+                });
+                return;
             }
 
             // Parse a sequence of tokens
-            return ParseClauseList(source, tokens, false);
+            syntax.Filter = ParseClauseList(syntax, source, tokens, false);
         }
 
         /// <summary>
         /// Parse a list of tokens separated by conjunctions
         /// </summary>
-        private static List<BaseClause> ParseClauseList(DataSource source, TokenStream tokens, bool expectCloseParenthesis)
+        private static List<BaseClause> ParseClauseList(SyntaxTree syntax, DataSource source, TokenStream tokens, bool expectCloseParenthesis)
         {
             var working = new List<BaseClause>();
             while (tokens.TokenQueue.Count > 0)
             {
                 // Identify one clause and add it
-                var clause = ParseOneClause(source, tokens);
-                working.Add(clause);
+                var clause = ParseOneClause(syntax, source, tokens);
+                if (clause != null)
+                {
+                    working.Add(clause);
+                }
+                else
+                {
+                    clause = new MalformedClause();
+                }
 
                 // Is this the end of the filter?
                 if (tokens.TokenQueue.Count == 0) break;
@@ -215,14 +255,15 @@ namespace Searchlight.Parsing
                 // Do we end on a close parenthesis?
                 if (expectCloseParenthesis && token.Value == StringConstants.CLOSE_PARENTHESIS)
                 {
-                    return CheckConjunctions(working);
+                    return CheckConjunctions(syntax, working);
                 }
 
-                // If not, we must have a conjunction
+                // Search for the end of this clause
                 string upperToken = token.Value.ToUpperInvariant();
-                if (!StringConstants.SAFE_CONJUNCTIONS.ContainsKey(upperToken))
+                while (!syntax.Expect(StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), upperToken, tokens.OriginalText) && tokens.TokenQueue.Count > 0)
                 {
-                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = tokens.OriginalText};
+                    token = tokens.TokenQueue.Dequeue();
+                    upperToken = token.Value.ToUpperInvariant();
                 }
 
                 // Store the value of the conjunction
@@ -236,36 +277,36 @@ namespace Searchlight.Parsing
                 }
                 else
                 {
-                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = tokens.OriginalText };
+                    syntax.AddError( new InvalidToken { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = tokens.OriginalText });
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
                 if (tokens.TokenQueue.Count == 0)
                 {
-                    throw new TrailingConjunction() { OriginalFilter = tokens.OriginalText };
+                    syntax.AddError( new TrailingConjunction() { OriginalFilter = tokens.OriginalText });
                 }
             }
 
             // If we expected to end with a parenthesis, but didn't, throw an exception here
             if (expectCloseParenthesis)
             {
-                throw new OpenClause { OriginalFilter = tokens.OriginalText };
+                syntax.AddError(new OpenClause { OriginalFilter = tokens.OriginalText });
             }
 
             // Let's verify that the clause is fully valid first before accepting it
-            return CheckConjunctions(working);
+            return CheckConjunctions(syntax, working);
         }
 
-        private static List<BaseClause> CheckConjunctions(List<BaseClause> clauses)
+        private static List<BaseClause> CheckConjunctions(SyntaxTree syntax, List<BaseClause> clauses)
         {
             var conjunctions = (from item in clauses where item.Conjunction != ConjunctionType.NONE select item.Conjunction)
                 .Distinct();
             if (conjunctions.Count() > 1)
             {
-                throw new InconsistentConjunctionException()
+                syntax.AddError(new InconsistentConjunctionException()
                 {
                     InconsistentClause = string.Join(" ", from item in clauses select item + " " + (item.Conjunction == ConjunctionType.NONE ? string.Empty : item.Conjunction.ToString())).TrimEnd(),
-                };
+                });
             }
 
             return clauses;
@@ -274,7 +315,7 @@ namespace Searchlight.Parsing
         /// <summary>
         /// Parse one single clause
         /// </summary>
-        private static BaseClause ParseOneClause(DataSource source, TokenStream tokens)
+        private static BaseClause ParseOneClause(SyntaxTree syntax, DataSource source, TokenStream tokens)
         {
             // First token is allowed to be a parenthesis or a field name
             var fieldToken = tokens.TokenQueue.Dequeue();
@@ -282,10 +323,10 @@ namespace Searchlight.Parsing
             // Is it a parenthesis?  If so, parse a compound clause list
             if (fieldToken.Value == StringConstants.OPEN_PARENTHESIS)
             {
-                var compound = new CompoundClause { Children = ParseClauseList(source, tokens, true) };
+                var compound = new CompoundClause { Children = ParseClauseList(syntax, source, tokens, true) };
                 if (compound.Children == null || compound.Children.Count == 0)
                 {
-                    throw new EmptyClause() { OriginalFilter = tokens.OriginalText };
+                    syntax.AddError(new EmptyClause() { OriginalFilter = tokens.OriginalText });
                 }
 
                 return compound;
@@ -297,10 +338,11 @@ namespace Searchlight.Parsing
             {
                 if (string.Equals(fieldToken.Value, StringConstants.CLOSE_PARENTHESIS))
                 {
-                    throw new EmptyClause() { OriginalFilter = tokens.OriginalText };
+                    syntax.AddError(new EmptyClause() { OriginalFilter = tokens.OriginalText });
                 }
 
-                throw new FieldNotFound() { FieldName = fieldToken.Value, KnownFields = source.ColumnNames().ToArray(), OriginalFilter = tokens.OriginalText };
+                syntax.AddError(new FieldNotFound() { FieldName = fieldToken.Value, KnownFields = source.ColumnNames().ToArray(), OriginalFilter = tokens.OriginalText });
+                return null;
             }
 
             // Allow "NOT" tokens here
@@ -313,14 +355,10 @@ namespace Searchlight.Parsing
             }
 
             // Next is the operation; must validate it against our list of safe tokens.  Case insensitive.
-            if (!StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.TryGetValue(operationToken, out var op))
+            if (!syntax.Expect(StringConstants.RECOGNIZED_QUERY_EXPRESSIONS, operationToken, syntax.OriginalFilter,
+                    out var op))
             {
-                throw new InvalidToken()
-                {
-                    BadToken = operationToken,
-                    ExpectedTokens = StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(),
-                    OriginalFilter = tokens.OriginalText
-                };
+                return null;
             }
 
             switch (op)
@@ -331,10 +369,10 @@ namespace Searchlight.Parsing
                     {
                         Negated = negated,
                         Column = columnInfo,
-                        LowerValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, tokens)
+                        LowerValue = ParseParameter(syntax, columnInfo, tokens.TokenQueue.Dequeue().Value, tokens)
                     };
-                    Expect(StringConstants.AND, tokens.TokenQueue.Dequeue().Value, tokens.OriginalText);
-                    b.UpperValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, tokens);
+                    syntax.Expect(StringConstants.AND, tokens.TokenQueue.Dequeue().Value, tokens.OriginalText);
+                    b.UpperValue = ParseParameter(syntax, columnInfo, tokens.TokenQueue.Dequeue().Value, tokens);
                     return b;
 
                 // Safe syntax for an "IN" expression is "column IN (param[, param][, param]...)"
@@ -345,13 +383,13 @@ namespace Searchlight.Parsing
                         Negated = negated,
                         Values = new List<IExpressionValue>()
                     };
-                    Expect(StringConstants.OPEN_PARENTHESIS, tokens.TokenQueue.Dequeue().Value, tokens.OriginalText);
+                    syntax.Expect(StringConstants.OPEN_PARENTHESIS, tokens.TokenQueue.Dequeue().Value, tokens.OriginalText);
 
                     if (tokens.TokenQueue.Peek().Value != StringConstants.CLOSE_PARENTHESIS)
                     {
                         while (true)
                         {
-                            i.Values.Add(ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, tokens));
+                            i.Values.Add(ParseParameter(syntax, columnInfo, tokens.TokenQueue.Dequeue().Value, tokens));
                             var commaOrParen = tokens.TokenQueue.Dequeue();
                             if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen.Value))
                             {
@@ -381,7 +419,7 @@ namespace Searchlight.Parsing
                     }
 
                     iN.Negated = negated;
-                    Expect(StringConstants.NULL, next, tokens.OriginalText);
+                    syntax.Expect(StringConstants.NULL, next, tokens.OriginalText);
                     return iN;
 
                 // Safe syntax for all other recognized expressions is "column op param"
@@ -392,20 +430,20 @@ namespace Searchlight.Parsing
                         Negated = negated,
                         Operation = op,
                         Column = columnInfo,
-                        Value = ParseParameter(columnInfo, valueToken.Value, tokens)
+                        Value = ParseParameter(syntax, columnInfo, valueToken.Value, tokens)
                     };
 
                     if ((c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
                                                                  || c.Operation == OperationType.Contains) &&
-                        (c.Column.FieldType != typeof(string)))
+                        (c.Column?.FieldType != typeof(string)))
                     {
-                        throw new FieldTypeMismatch()
+                        syntax.AddError(new FieldTypeMismatch()
                         {
-                            FieldName = c.Column.FieldName,
-                            FieldType = c.Column.FieldType.ToString(),
+                            FieldName = c.Column?.FieldName,
+                            FieldType = c.Column?.FieldType?.ToString(),
                             FieldValue = valueToken.Value,
                             OriginalFilter = tokens.OriginalText
-                        };
+                        });
                     }
 
                     return c;
@@ -413,26 +451,9 @@ namespace Searchlight.Parsing
         }
 
         /// <summary>
-        /// Verify that the next token is an expected token
-        /// </summary>
-        /// <param name="expectedToken"></param>
-        /// <param name="actual"></param>
-        /// <param name="originalFilter"></param>
-        private static void Expect(string expectedToken, string actual, string originalFilter)
-        {
-            if (!string.Equals(expectedToken, actual, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new InvalidToken() { BadToken = actual, ExpectedTokens = new[] { expectedToken }, OriginalFilter = originalFilter };
-            }
-        }
-
-        /// <summary>
         /// Parse one value out of a token
         /// </summary>
-        /// <param name="column"></param>
-        /// <param name="valueToken"></param>
-        /// <param name="tokens"></param>
-        private static IExpressionValue ParseParameter(ColumnInfo column, string valueToken, TokenStream tokens)
+        private static IExpressionValue ParseParameter(SyntaxTree syntax, ColumnInfo column, string valueToken, TokenStream tokens)
         {
             var fieldType = column.FieldType;
             try
@@ -481,11 +502,11 @@ namespace Searchlight.Parsing
                             var ok = int.TryParse(offset.Value, out var offsetValue);
                             if (!ok)
                             {
-                                throw new InvalidToken()
+                                syntax.AddError(new InvalidToken()
                                 {
                                     BadToken = offset.Value,
                                     ExpectedTokens = new [] { "an integer" },
-                                };
+                                });
                             }
 
                             // Handle negative offsets
@@ -505,14 +526,14 @@ namespace Searchlight.Parsing
             }
             catch
             {
-                throw new FieldTypeMismatch {
+                syntax.AddError(new FieldTypeMismatch {
                     FieldName = column.FieldName, 
                     FieldType = fieldType.ToString(), 
                     FieldValue = valueToken, 
                     OriginalFilter = tokens.OriginalText
-                };
+                });
+                return null;
             }
         }
-
     }
 }
