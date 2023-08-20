@@ -121,7 +121,7 @@ namespace Searchlight.Tests
             });
 
             // Realistic example of a quirky but valid customer request
-            var clauses = _source.ParseFilter("(a = 'test' OR b = 1)");
+            var clauses = _source.ParseFilter("(a = 'test' OR b = 1)").Filter;
             Assert.IsTrue(clauses[0] is CompoundClause);
             Assert.AreEqual("(a Equals test OR b Equals 1)", clauses[0].ToString());
             Assert.AreEqual(clauses.Count, 1);
@@ -137,10 +137,11 @@ namespace Searchlight.Tests
         [TestMethod]
         public void ParseGteLte()
         {
-            var clauses = _source.ParseFilter("(a gte 'test' OR b lte 1)");
+            var clauses = _source.ParseFilter("(a gte 'test' OR b lte 1)").Filter;
             Assert.IsTrue(clauses[0] is CompoundClause);
             Assert.AreEqual(clauses.Count, 1);
             var cc = clauses[0] as CompoundClause;
+            Assert.IsNotNull(cc);
             Assert.AreEqual(cc.Children.Count, 2);
             Assert.IsTrue(cc.Children[0] is CriteriaClause);
             Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause)cc.Children[0]).Operation);

@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.Exceptions;
 
 namespace Searchlight.Tests
@@ -24,6 +25,22 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("TestAlias2"));
             Assert.IsNotNull(engine.FindTable("TestTableAliases"));
             Assert.AreEqual(engine.FindTable("TestTableAliases"), engine.FindTable("TestAlias1"));
+        }
+        
+        [TestMethod]
+        public void TestUnknownTable()
+        {
+            var engine = new SearchlightEngine().AddClass(typeof(TestTableAliases));
+            Assert.IsNull(engine.FindTable("SomeReallyUnknownTable"));
+            
+            // Parsing for this table should fail
+            var badRequest = new FetchRequest()
+            {
+                table = "AnotherReallyUnknownTable",
+                filter = "field eq value"
+            };
+            var ex = Assert.ThrowsException<TableNotFoundException>(() => engine.Parse(badRequest));
+            Assert.AreEqual(badRequest.table, ex.TableName);
         }
         
         [TestMethod]

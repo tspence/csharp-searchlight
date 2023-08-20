@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Searchlight.Autocomplete;
 using Searchlight.Exceptions;
+using Searchlight.Parsing;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -105,6 +106,10 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             var source = FindTable(request.table);
+            if (source == null)
+            {
+                
+            }
             if (request.pageSize == null)
             {
                 request.pageSize = DefaultPageSize;
@@ -120,7 +125,7 @@ namespace Searchlight
                     throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};
                 }
             }
-            return source?.Parse(request);
+            return SyntaxParser.Parse(source, request);
         }
 
         /// <summary>

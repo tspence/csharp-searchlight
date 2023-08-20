@@ -78,7 +78,7 @@ namespace Searchlight.Tests.Executors
         private async Task QueryListCollection()
         {
             // Construct a simple query and check that it comes out correct
-            var syntax = _src.Parse("id gt 1 and paycheck le 1000");
+            var syntax = _src.ParseFilter("id gt 1 and paycheck le 1000");
             Assert.AreEqual(2, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -101,7 +101,7 @@ namespace Searchlight.Tests.Executors
         private async Task NestedClauseQuery()
         {
             // Construct a simple query and check that it comes out correct
-            var syntax = _src.Parse("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
+            var syntax = _src.ParseFilter("id gt 1 and (paycheck lt 1000 or paycheck gt 1000)");
             Assert.AreEqual(2, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -132,7 +132,7 @@ namespace Searchlight.Tests.Executors
         private async Task BetweenQuery()
         {
             // Note that the "between" clause is inclusive
-            var syntax = _src.Parse("id between 2 and 4");
+            var syntax = _src.ParseFilter("id between 2 and 4");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(false, syntax.Filter[0].Negated);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
@@ -150,7 +150,7 @@ namespace Searchlight.Tests.Executors
             }
 
             // Test the opposite
-            syntax = _src.Parse("id not between 2 and 4");
+            syntax = _src.ParseFilter("id not between 2 and 4");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(true, syntax.Filter[0].Negated);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
@@ -168,7 +168,7 @@ namespace Searchlight.Tests.Executors
         private async Task StartsWithQuery()
         {
             // Note that the "between" clause is inclusive
-            var syntax = _src.Parse("name startswith 'A'");
+            var syntax = _src.ParseFilter("name startswith 'A'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -187,7 +187,7 @@ namespace Searchlight.Tests.Executors
         private async Task EndsWithQuery()
         {
             // Note that the "between" clause is inclusive
-            var syntax = _src.Parse("name endswith 's'");
+            var syntax = _src.ParseFilter("name endswith 's'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -206,7 +206,7 @@ namespace Searchlight.Tests.Executors
         private async Task ContainsQuery()
         {
             // Note that the "between" clause is inclusive
-            var syntax = _src.Parse("name contains 's'");
+            var syntax = _src.ParseFilter("name contains 's'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -222,7 +222,7 @@ namespace Searchlight.Tests.Executors
             }
 
             // Now test the opposite
-            syntax = _src.Parse("name is not null and name not contains 's'");
+            syntax = _src.ParseFilter("name is not null and name not contains 's'");
             results = await _executor(syntax);
             Assert.AreEqual(0, results.records.Length);
             foreach (var e in results.records)
@@ -232,7 +232,7 @@ namespace Searchlight.Tests.Executors
             }
             
             // Test for the presence of special characters that might cause problems for parsing
-            syntax = _src.Parse("name contains '''[Not.Regex(safe{\\^|$'''");
+            syntax = _src.ParseFilter("name contains '''[Not.Regex(safe{\\^|$'''");
             results = await _executor(syntax);
             Assert.AreEqual(1, results.records.Length);
             foreach (var e in results.records)
@@ -243,7 +243,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task GreaterThanQuery()
         {
-            var syntax = _src.Parse("name gt 'b'");
+            var syntax = _src.ParseFilter("name gt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -261,7 +261,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task GreaterThanOrEqualQuery()
         {
-            var syntax = _src.Parse("name ge 'bob rogers'");
+            var syntax = _src.ParseFilter("name ge 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -280,7 +280,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task LessThanQuery()
         {
-            var syntax = _src.Parse("name lt 'b'");
+            var syntax = _src.ParseFilter("name lt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -298,7 +298,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task LessThanOrEqualQuery()
         {
-            var syntax = _src.Parse("name le 'bob rogers'");
+            var syntax = _src.ParseFilter("name le 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -317,7 +317,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task NotEqualQuery()
         {
-            var syntax = _src.Parse("Name is null or Name != 'Alice Smith'");
+            var syntax = _src.ParseFilter("Name is null or Name != 'Alice Smith'");
             var result = await _executor(syntax);
             Assert.AreEqual(_list.Count - 1, result.records.Length);
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
@@ -326,14 +326,14 @@ namespace Searchlight.Tests.Executors
 
         private async Task IsNullQuery()
         {
-            var syntax = _src.Parse("Name is NULL");
+            var syntax = _src.ParseFilter("Name is NULL");
             var result = await _executor(syntax);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
             Assert.AreEqual(1, result.records.Length);
 
             // Test the opposite
-            syntax = _src.Parse("Name is not NULL");
+            syntax = _src.ParseFilter("Name is not NULL");
             result = await _executor(syntax);
             Assert.IsNotNull(result);
             Assert.IsTrue(result.records.Any());
@@ -344,7 +344,7 @@ namespace Searchlight.Tests.Executors
         {
             // Searchlight interprets the word "null" without apostrophes here to be the string value "null"
             // instead of a null.
-            var syntax = _src.Parse("Name contains null");
+            var syntax = _src.ParseFilter("Name contains null");
 
             var result = await _executor(syntax);
             Assert.IsNotNull(result);
@@ -354,7 +354,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task InQuery()
         {
-            var syntax = _src.Parse("name in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
+            var syntax = _src.ParseFilter("name in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
 
             var result = await _executor(syntax);
 
@@ -364,7 +364,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual(2, result.records.Length);
 
             // Now run the opposite query
-            syntax = _src.Parse("name is null or name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
+            syntax = _src.ParseFilter("name is null or name not in ('Alice Smith', 'Bob Rogers', 'Sir Not Appearing in this Film')");
             result = await _executor(syntax);
 
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
@@ -377,7 +377,7 @@ namespace Searchlight.Tests.Executors
         {
             // getting not implemented error on this line
             // make sure using right formatting, if so then in operator needs adjustment
-            var syntax = _src.Parse("id in (1,2,57)");
+            var syntax = _src.ParseFilter("id in (1,2,57)");
 
             var result = await _executor(syntax);
 
@@ -389,7 +389,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task InQueryDecimals()
         {
-            var syntax = _src.Parse("paycheck in (578.00, 1.234)");
+            var syntax = _src.ParseFilter("paycheck in (578.00, 1.234)");
 
             var result = await _executor(syntax);
 
@@ -400,7 +400,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task StringEqualsCaseInsensitive()
         {
-            var syntax = _src.Parse("name eq 'ALICE SMITH'");
+            var syntax = _src.ParseFilter("name eq 'ALICE SMITH'");
 
             var result = await _executor(syntax);
 
@@ -409,7 +409,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual(1, result.records.Length);
 
             // Try the inverse
-            syntax = _src.Parse("name not eq 'ALICE SMITH'");
+            syntax = _src.ParseFilter("name not eq 'ALICE SMITH'");
             result = await _executor(syntax);
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
@@ -418,51 +418,51 @@ namespace Searchlight.Tests.Executors
 
         private async Task DefinedDateOperators()
         {
-            var syntax = _src.Parse("hired < NOW");
+            var syntax = _src.ParseFilter("hired < NOW");
             var result = await _executor(syntax);
             Assert.AreEqual(5, result.records.Length);
 
-            syntax = _src.Parse("hired < NOW + 1");
+            syntax = _src.ParseFilter("hired < NOW + 1");
             result = await _executor(syntax);
             Assert.AreEqual(7, result.records.Length);
 
-            syntax = _src.Parse("hired < NOW + 2");
+            syntax = _src.ParseFilter("hired < NOW + 2");
             result = await _executor(syntax);
             Assert.AreEqual(7, result.records.Length);
 
-            syntax = _src.Parse("hired > NOW - 1");
+            syntax = _src.ParseFilter("hired > NOW - 1");
             result = await _executor(syntax);
             Assert.AreEqual(7, result.records.Length);
 
-            syntax = _src.Parse("hired > NOW");
+            syntax = _src.ParseFilter("hired > NOW");
             result = await _executor(syntax);
             Assert.AreEqual(5, result.records.Length);
 
-            syntax = _src.Parse("hired < NOW");
+            syntax = _src.ParseFilter("hired < NOW");
             result = await _executor(syntax);
             Assert.AreEqual(5, result.records.Length);
 
-            Assert.ThrowsException<FieldTypeMismatch>(() => _src.Parse("hired > yesteryear"));
+            Assert.ThrowsException<FieldTypeMismatch>(() => _src.ParseFilter("hired > yesteryear"));
         }
 
         private async Task NormalDateQueries()
         {
-            var syntax = _src.Parse("hired > 2020-01-01");
+            var syntax = _src.ParseFilter("hired > 2020-01-01");
             var result = await _executor(syntax);
             Assert.IsTrue(result.records.Any());
             Assert.IsTrue(result.records.Length == _list.Count);
 
-            syntax = _src.Parse("hired < 1985-01-01");
+            syntax = _src.ParseFilter("hired < 1985-01-01");
             result = await _executor(syntax);
             Assert.IsFalse(result.records.Any());
 
             // Now try the opposite
-            syntax = _src.Parse("hired not < 1985-01-01");
+            syntax = _src.ParseFilter("hired not < 1985-01-01");
             result = await _executor(syntax);
             Assert.IsTrue(result.records.Any());
             Assert.IsTrue(result.records.Length == _list.Count);
 
-            syntax = _src.Parse("hired not > 2020-01-01");
+            syntax = _src.ParseFilter("hired not > 2020-01-01");
             result = await _executor(syntax);
             Assert.IsFalse(result.records.Any());
         }
@@ -471,7 +471,7 @@ namespace Searchlight.Tests.Executors
         {
             // id test ascending and descending
             var control = (from item in _list orderby item.id ascending select item).ToList();
-            var syntax = _src.Parse(null, null, "id ASC");
+            var syntax = _src.Parse(new FetchRequest() { order = "id ASC" });
             var result = await _executor(syntax);
 
             for (var i = 0; i < _list.Count; i++)
@@ -481,7 +481,7 @@ namespace Searchlight.Tests.Executors
             
             // Multiple sort
             control = (from item in _list orderby item.onduty, item.hired select item).ToList();
-            syntax = _src.Parse("", null, "onduty, hired");
+            syntax = _src.Parse(new FetchRequest() { filter = "", order = "onduty, hired" });
             result = await _executor(syntax);
             for (var i = 0; i < _list.Count; i++)
             {
@@ -490,7 +490,7 @@ namespace Searchlight.Tests.Executors
 
             // Sort by ID only
             control = (from item in _list orderby item.id descending select item).ToList();
-            syntax = _src.Parse("", null, "id descending");
+            syntax = _src.Parse(new FetchRequest() { filter = "", order = "id descending" });
             result = await _executor(syntax);
 
             for (var i = 0; i < _list.Count; i++)
@@ -500,7 +500,7 @@ namespace Searchlight.Tests.Executors
 
             // name test ascending and descending
             control = (from item in _list where item.name is not null orderby item.name ascending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "name ASC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "name ASC" });
             result = await _executor(syntax);
 
             for (var i = 0; i < control.Count; i++)
@@ -509,7 +509,7 @@ namespace Searchlight.Tests.Executors
             }
 
             control = (from item in _list where item.name is not null orderby item.name descending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "name DESC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "name DESC" });
             result = await _executor(syntax);
 
             for (var i = 0; i < control.Count; i++)
@@ -519,7 +519,7 @@ namespace Searchlight.Tests.Executors
 
             // paycheck test ascending and descending
             control = (from item in _list where item.name is not null orderby item.paycheck ascending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "paycheck ASC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "paycheck ASC" });
             result = await _executor(syntax);
 
             for (var i = 0; i < control.Count; i++)
@@ -528,7 +528,7 @@ namespace Searchlight.Tests.Executors
             }
 
             control = (from item in _list where item.name is not null orderby item.paycheck descending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "paycheck DESC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "paycheck DESC" });
             result = await _executor(syntax);
 
             for (var i = 0; i < control.Count; i++)
@@ -538,7 +538,7 @@ namespace Searchlight.Tests.Executors
 
             // onduty test ascending and descending
             control = (from item in _list where item.name is not null orderby item.onduty ascending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "onduty ASC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "onduty ASC" });
             result = await _executor(syntax);
 
             for (var i = 0; i < control.Count; i++)
@@ -547,7 +547,7 @@ namespace Searchlight.Tests.Executors
             }
 
             control = (from item in _list where item.name is not null orderby item.onduty descending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "onduty DESC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "onduty DESC" });
             result = await _executor(syntax);
 
             for (var i = 0; i < control.Count; i++)
@@ -564,7 +564,7 @@ namespace Searchlight.Tests.Executors
             //
 
             control = (from item in _list where item.name is not null orderby item.hired ascending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "hired ASC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "hired ASC" });
             result = await _executor(syntax);
 
             for (var i = 0; i < control.Count; i++)
@@ -574,7 +574,7 @@ namespace Searchlight.Tests.Executors
             }
 
             control = (from item in _list where item.name is not null orderby item.hired descending select item).ToList();
-            syntax = _src.Parse("name is not null", null, "hired DESC");
+            syntax = _src.Parse(new FetchRequest() { filter = "name is not null", order = "hired DESC" });
             result = await _executor(syntax);
             for (var i = 0; i < control.Count; i++)
             {
@@ -585,7 +585,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task DefaultReturn()
         {
-            var syntax = _src.Parse("");
+            var syntax = _src.ParseFilter("");
             syntax.PageNumber = 0; // default is 0
             syntax.PageSize = 0; // default is 0
 
@@ -597,7 +597,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task PageNumberNoPageSize()
         {
-            var syntax = _src.Parse("");
+            var syntax = _src.ParseFilter("");
             syntax.PageNumber = 2;
             syntax.PageSize = 0; // default is 0
 
@@ -609,7 +609,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task PageSizeNoPageNumber()
         {
-            var syntax = _src.Parse("");
+            var syntax = _src.ParseFilter("");
 
             syntax.PageSize = 2;
             syntax.PageNumber = 0; // no page number defaults to 0
@@ -622,7 +622,7 @@ namespace Searchlight.Tests.Executors
 
         private async Task PageSizeAndPageNumber()
         {
-            var syntax = _src.Parse("");
+            var syntax = _src.ParseFilter("");
             syntax.PageSize = 1;
             syntax.PageNumber = 2;
 
