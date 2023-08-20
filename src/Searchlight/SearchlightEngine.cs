@@ -157,30 +157,28 @@ namespace Searchlight
                 filter = trimmedFilter,
             };
             var syntax = SyntaxParser.TryParse(source, request);
-            if (syntax.Errors != null)
+            if (syntax.Errors != null && syntax.Errors.Count == 1)
             {
-                foreach (var e in syntax.Errors)
+                var e = syntax.Errors[0];
+                if (e is InvalidToken invalidToken)
                 {
-                    if (e is InvalidToken invalidToken)
+                    foreach (var token in invalidToken.ExpectedTokens)
                     {
-                        foreach (var token in invalidToken.ExpectedTokens)
+                        completion.items.Add(new CompletionItem()
                         {
-                            completion.items.Add(new CompletionItem()
-                            {
-                                label = token,
-                                deprecated = false,
-                                detail = null,
-                                kind = CompletionItemKind.Keyword,
-                            });
-                        }
-
-                        return completion;
+                            label = token,
+                            deprecated = false,
+                            detail = null,
+                            kind = CompletionItemKind.Keyword,
+                        });
                     }
 
-                    if (e is FieldNotFound fieldNotFound)
-                    {
-                        return AutocompleteFields(source, fieldNotFound.FieldName);
-                    }
+                    return completion;
+                }
+
+                if (e is FieldNotFound fieldNotFound)
+                {
+                    return AutocompleteFields(source, fieldNotFound.FieldName);
                 }
             }
 

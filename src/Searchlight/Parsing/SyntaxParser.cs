@@ -267,6 +267,7 @@ namespace Searchlight.Parsing
                 }
 
                 // Store the value of the conjunction
+                var badToken = false;
                 if (string.Equals(StringConstants.AND, upperToken))
                 {
                     clause.Conjunction = ConjunctionType.AND;
@@ -275,9 +276,13 @@ namespace Searchlight.Parsing
                 {
                     clause.Conjunction = ConjunctionType.OR;
                 }
+                else
+                {
+                    badToken = true;
+                }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
-                if (tokens.TokenQueue.Count == 0)
+                if (!badToken && tokens.TokenQueue.Count == 0)
                 {
                     syntax.AddError( new TrailingConjunction() { OriginalFilter = tokens.OriginalText });
                 }

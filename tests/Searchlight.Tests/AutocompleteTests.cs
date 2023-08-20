@@ -66,7 +66,7 @@ public class AutocompleteTests
     public void ConjunctionAutocomplete()
     {
         var engine = GetTestEngine();
-        var completion = engine.AutocompleteFilter("source", "colLong eq 0 a", 14);
+        var completion = engine.AutocompleteFilter("source", "colLong eq 0 asdasd", 15);
         Assert.IsNotNull(completion);
         Assert.IsFalse(completion.isIncomplete);
         Assert.AreEqual(2, completion.items.Count);
