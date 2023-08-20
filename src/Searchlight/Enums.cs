@@ -81,6 +81,9 @@ namespace Searchlight
         OR
     }
 
+    /// <summary>
+    /// The variant of SQL to use for rendering
+    /// </summary>
     public enum SqlDialect
     {
         MicrosoftSqlServer,

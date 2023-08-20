@@ -7,19 +7,14 @@ namespace Searchlight.Tests
     [TestClass]
     public class DataSourceTests
     {
-        private readonly DataSource _source;
-
-        public DataSourceTests()
-        {
-            _source = new DataSource()
-                .WithColumn("a", typeof(String))
-                .WithColumn("b", typeof(Int32))
-                .WithColumn("colLong", typeof(Int64))
-                .WithColumn("colNullableGuid", typeof(Nullable<Guid>))
-                .WithColumn("colULong", typeof(UInt64))
-                .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
-                .WithColumn("colGuid", typeof(Guid));
-        }
+        private readonly DataSource _source = new DataSource()
+            .WithColumn("a", typeof(String))
+            .WithColumn("b", typeof(Int32))
+            .WithColumn("colLong", typeof(Int64))
+            .WithColumn("colNullableGuid", typeof(Nullable<Guid>))
+            .WithColumn("colULong", typeof(UInt64))
+            .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
+            .WithColumn("colGuid", typeof(Guid));
 
         [TestMethod]
         public void IncorrectFieldValueType()

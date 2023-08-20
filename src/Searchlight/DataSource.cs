@@ -438,8 +438,8 @@ namespace Searchlight
         }
 
         /// <summary>
-        /// Parse the $filter parameter and turn it into a list of validated, whitelisted clauses that can 
-        /// then be parsed into SQL or a LINQ statement
+        /// Parse the $filter parameter and turn it into a list of validated clauses that can 
+        /// then be rendered as SQL or a LINQ expression
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>

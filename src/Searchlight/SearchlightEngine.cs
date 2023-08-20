@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Searchlight.Autocomplete;
 using Searchlight.Exceptions;
 using Searchlight.Query;
 
@@ -120,6 +121,24 @@ namespace Searchlight
                 }
             }
             return source?.Parse(request);
+        }
+
+        /// <summary>
+        /// When typing in a search box in a user interface, call this function to get suggestions.
+        /// </summary>
+        /// <param name="table">The table being searched</param>
+        /// <param name="filter">The filter statement used</param>
+        /// <param name="cursorPosition">The position </param>
+        /// <returns></returns>
+        public CompletionList AutocompleteFilter(string table, string filter, int cursorPosition)
+        {
+            var request = new FetchRequest()
+            {
+                table = table,
+                filter = filter,
+            };
+            var source = FindTable(table);
+            return new CompletionList();
         }
 
         /// <summary>
