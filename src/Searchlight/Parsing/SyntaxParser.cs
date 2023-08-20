@@ -126,7 +126,7 @@ namespace Searchlight.Parsing
         /// Parses the orderBy clause requested, or if null, uses the default to ensure
         /// that pagination works
         /// </summary>
-        internal static List<SortInfo> ParseOrderBy(SyntaxTree syntax, DataSource source, string orderBy)
+        internal static void ParseOrderBy(SyntaxTree syntax, DataSource source, string orderBy)
         {
             var list = new List<SortInfo>();
             if (string.IsNullOrWhiteSpace(orderBy))
@@ -137,7 +137,8 @@ namespace Searchlight.Parsing
             // If no sort is specified
             if (string.IsNullOrWhiteSpace(orderBy))
             {
-                return list;
+                syntax.OrderBy = list;
+                return;
             }
 
             // Okay, let's tokenize the orderBy statement and begin parsing
@@ -152,10 +153,10 @@ namespace Searchlight.Parsing
                 si.Column = source.IdentifyColumn(colName.Value);
                 if (si.Column == null)
                 {
-                    throw new FieldNotFound()
+                    syntax.AddError(new FieldNotFound()
                     {
                         FieldName = colName.Value, KnownFields = source.ColumnNames().ToArray(), OriginalFilter = orderBy
-                    };
+                    });
                 }
 
                 // Was that the last token?
@@ -166,7 +167,10 @@ namespace Searchlight.Parsing
                 var token = tokens.TokenQueue.Dequeue();
                 if (token.Value == StringConstants.COMMA)
                 {
-                    if (tokens.TokenQueue.Count == 0) throw new TrailingConjunction() { OriginalFilter = orderBy };
+                    if (tokens.TokenQueue.Count == 0)
+                    {
+                        syntax.AddError(new TrailingConjunction() { OriginalFilter = orderBy });
+                    }
                     continue;
                 }
 
@@ -191,11 +195,7 @@ namespace Searchlight.Parsing
             }
 
             // Here's your sort info
-            if (syntax != null)
-            {
-                syntax.OrderBy = list;
-            }
-            return list;
+            syntax.OrderBy = list;
         }
 
         /// <summary>
@@ -287,7 +287,7 @@ namespace Searchlight.Parsing
                 }
             }
 
-            // If we expected to end with a parenthesis, but didn't, throw an exception here
+            // If we expected to end with a parenthesis, but didn't, report a problem
             if (expectCloseParenthesis)
             {
                 syntax.AddError(new OpenClause { OriginalFilter = tokens.OriginalText });
@@ -391,17 +391,13 @@ namespace Searchlight.Parsing
                         {
                             i.Values.Add(ParseParameter(syntax, columnInfo, tokens.TokenQueue.Dequeue().Value, tokens));
                             var commaOrParen = tokens.TokenQueue.Dequeue();
-                            if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen.Value))
-                            {
-                                throw new InvalidToken { BadToken = commaOrParen.Value, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = tokens.OriginalText };
-                            }
-
+                            syntax.Expect(StringConstants.SAFE_LIST_TOKENS, commaOrParen.Value, tokens.OriginalText);
                             if (commaOrParen.Value == StringConstants.CLOSE_PARENTHESIS) break;
                         }
                     }
                     else
                     {
-                        throw new EmptyClause { OriginalFilter = tokens.OriginalText };
+                        syntax.AddError(new EmptyClause { OriginalFilter = tokens.OriginalText });
                     }
 
                     return i;

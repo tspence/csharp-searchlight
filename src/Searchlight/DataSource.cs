@@ -224,8 +224,9 @@ namespace Searchlight
             {
                 try
                 {
-                    var sort = SyntaxParser.ParseOrderBy(null, src, src.DefaultSort);
-                    if (sort.Count == 0)
+                    var syntax = new SyntaxTree();
+                    SyntaxParser.ParseOrderBy(syntax, src, src.DefaultSort);
+                    if (syntax.Errors != null && syntax.Errors.Count > 0)
                     {
                         throw new InvalidDefaultSort
                             {Table = src.TableName, DefaultSort = src.DefaultSort};
@@ -296,7 +297,13 @@ namespace Searchlight
         /// <returns>The list of sort instructions if parsed successfully, or an exception</returns>
         public List<SortInfo> ParseOrderBy(string orderBy)
         {
-            return SyntaxParser.ParseOrderBy(null, this, orderBy);
+            var syntax = new SyntaxTree();
+            SyntaxParser.ParseOrderBy(syntax, this, orderBy);
+            if (syntax.Errors != null && syntax.Errors.Count > 0)
+            {
+                throw syntax.Errors[0];
+            }
+            return syntax.OrderBy;
         }
     }
 }
