@@ -17,6 +17,29 @@ namespace Searchlight
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
+        public static SqlQuery ToMySqlCommand(this SyntaxTree query)
+        {
+            var engine = query.Source.Engine ?? new SearchlightEngine();
+            var sql = CreateSql(SqlDialect.MySql, query, engine);
+            var where = sql.WhereClause.Length > 0 ? $" WHERE {sql.WhereClause}" : "";
+            var order = sql.OrderByClause.Length > 0 ? $" ORDER BY {sql.OrderByClause}" : "";
+            var offset = RenderOffsetClause(SqlDialect.MySql, query.PageSize, query.PageNumber, engine);
+
+            // Apply all selected commands
+            foreach (var cmd in query.Includes)
+            {
+                cmd.Apply(sql);
+            }
+
+            sql.CommandText = $"{DecorateIntro(SqlDialect.MySql, engine)}" +
+                              $"SELECT * FROM {DecorateTableName(SqlDialect.MySql, query.Source.TableName, engine)}{where}{order}{offset}";
+            return sql;
+        }
+        /// <summary>
+        /// Convert this syntax tree to a query in PostgreSQL syntax
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public static SqlQuery ToPostgresCommand(this SyntaxTree query)
         {
             var engine = query.Source.Engine ?? new SearchlightEngine();
@@ -62,6 +85,7 @@ namespace Searchlight
                 var offset = (queryPageNumber ?? 0) * limit;
                 switch (dialect)
                 {
+                    case SqlDialect.MySql:
                     case SqlDialect.PostgreSql:
                         return $" LIMIT {limit} OFFSET {offset}";
                     case SqlDialect.MicrosoftSqlServer:
