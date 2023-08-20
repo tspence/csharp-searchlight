@@ -162,15 +162,19 @@ namespace Searchlight
                 var e = syntax.Errors[0];
                 if (e is InvalidToken invalidToken)
                 {
-                    foreach (var token in invalidToken.ExpectedTokens)
+                    foreach (var token in invalidToken.ExpectedTokens.OrderBy(s => s))
                     {
-                        completion.items.Add(new CompletionItem()
+                        if (invalidToken.BadToken == null || token.StartsWith(invalidToken.BadToken,
+                                StringComparison.InvariantCultureIgnoreCase))
                         {
-                            label = token,
-                            deprecated = false,
-                            detail = null,
-                            kind = CompletionItemKind.Keyword,
-                        });
+                            completion.items.Add(new CompletionItem()
+                            {
+                                label = token,
+                                deprecated = false,
+                                detail = null,
+                                kind = CompletionItemKind.Keyword,
+                            });
+                        }
                     }
 
                     return completion;
