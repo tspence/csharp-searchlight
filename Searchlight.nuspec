@@ -22,6 +22,7 @@
 
 			Added test containers for MySQL.
 			Revised some tests for clock drift.
+			Improved overall testing for clause string conversion.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2023</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection friendly readable domain-specific DSL</tags>

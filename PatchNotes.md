@@ -1,8 +1,9 @@
 # 1.0.1
-July 30, 2023
+August 19, 2023
 
 Added test containers for MySQL.
 Revised some tests for clock drift.
+Improved overall testing for clause string conversion.
 
 # 1.0.0
 July 13, 2023

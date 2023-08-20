@@ -478,7 +478,17 @@ namespace Searchlight.Tests.Executors
             {
                 Assert.AreEqual(result.records[i].id, control[i].id);
             }
+            
+            // Multiple sort
+            control = (from item in _list orderby item.onduty, item.hired select item).ToList();
+            syntax = _src.Parse("", null, "onduty, hired");
+            result = await _executor(syntax);
+            for (var i = 0; i < _list.Count; i++)
+            {
+                Assert.AreEqual(result.records[i].id, control[i].id);
+            }
 
+            // Sort by ID only
             control = (from item in _list orderby item.id descending select item).ToList();
             syntax = _src.Parse("", null, "id descending");
             result = await _executor(syntax);
