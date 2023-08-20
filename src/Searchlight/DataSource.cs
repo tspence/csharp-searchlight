@@ -656,7 +656,7 @@ namespace Searchlight
                     if (next == StringConstants.NOT)
                     {
                         negated = true;
-                        next = tokens.TokenQueue.Dequeue().Value.ToUpperInvariant();
+                        next = tokens.TokenQueue.Dequeue().Value;
                     }
 
                     iN.Negated = negated;
@@ -753,7 +753,7 @@ namespace Searchlight
                             Root = tokenUpper,
                         };
                         var nextToken = tokens.TokenQueue.Count > 0 ? tokens.TokenQueue.Peek() : null;
-                        if (nextToken.Value == StringConstants.ADD || nextToken.Value == StringConstants.SUBTRACT)
+                        if (nextToken != null && (nextToken.Value == StringConstants.ADD || nextToken.Value == StringConstants.SUBTRACT))
                         {
                             // Retrieve the direction and offset
                             var direction = tokens.TokenQueue.Dequeue();
