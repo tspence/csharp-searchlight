@@ -184,6 +184,11 @@ namespace Searchlight
                 {
                     return AutocompleteFields(source, fieldNotFound.FieldName);
                 }
+
+                if (e is TrailingConjunction trailingConjunction)
+                {
+                    return AutocompleteFields(source, null);
+                }
             }
 
             // Uncertain how to handle this; let's give no advice

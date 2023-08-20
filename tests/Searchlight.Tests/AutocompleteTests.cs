@@ -83,4 +83,20 @@ public class AutocompleteTests
         Assert.AreEqual("ENDSWITH", completion.items[0].label);
         Assert.AreEqual("EQ", completion.items[1].label);
     }
+    
+    [TestMethod]
+    public void NextFieldAutocomplete ()
+    {
+        var engine = GetTestEngine();
+        var completion = engine.AutocompleteFilter("source", "colLong eq 0 AND ", 17);
+        Assert.IsNotNull(completion);
+        Assert.IsFalse(completion.isIncomplete);
+        Assert.AreEqual(7, completion.items.Count);
+        Assert.AreEqual("a", completion.items[0].label);
+        Assert.AreEqual("b", completion.items[1].label);
+        Assert.AreEqual("colGuid", completion.items[2].label);
+        Assert.AreEqual("colLong", completion.items[3].label);
+        Assert.AreEqual("colNullableGuid", completion.items[4].label);
+        Assert.AreEqual("colNullableULong", completion.items[5].label);
+        Assert.AreEqual("colULong", completion.items[6].label);    }
 }
