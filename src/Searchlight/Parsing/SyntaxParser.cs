@@ -387,7 +387,7 @@ namespace Searchlight.Parsing
 
                     if (tokens.TokenQueue.Peek().Value != StringConstants.CLOSE_PARENTHESIS)
                     {
-                        while (true)
+                        while (tokens.TokenQueue.Count > 1)
                         {
                             i.Values.Add(ParseParameter(syntax, columnInfo, tokens.TokenQueue.Dequeue().Value, tokens));
                             var commaOrParen = tokens.TokenQueue.Dequeue();

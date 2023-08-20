@@ -63,7 +63,8 @@ namespace Searchlight.Tests
             var source = new DataSource() { TableName = "tableau" };
             var engine = new SearchlightEngine().AddDataSource(source);
             engine.Parse(new FetchRequest() { table = "tableau" });
-            Assert.IsTrue(mockFetchRequest.pageSize == engine.MaximumPageSize); }
+            Assert.IsTrue(mockFetchRequest.pageSize == engine.MaximumPageSize); 
+        }
 
         [TestMethod]
         public void Test_ParsingRequestWithInvalidPageSize()
@@ -73,9 +74,11 @@ namespace Searchlight.Tests
             {
                 MaximumPageSize = 1000
             };
+            var source = new DataSource() { TableName = "tableau" };
+            engine.AddDataSource(source);
             Assert.ThrowsException<InvalidPageSize>(() => engine.Parse(mockFetchRequest));
         }
-
+        
         [TestMethod]
         public void Test_DefaultPageSize()
         {
