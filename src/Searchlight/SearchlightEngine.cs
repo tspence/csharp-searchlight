@@ -108,7 +108,10 @@ namespace Searchlight
             var source = FindTable(request.table);
             if (source == null)
             {
-                
+                throw new TableNotFoundException()
+                {
+                    TableName = request.table,
+                };
             }
             if (request.pageSize == null)
             {

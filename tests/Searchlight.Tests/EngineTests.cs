@@ -60,8 +60,9 @@ namespace Searchlight.Tests
         [TestMethod]
         public void Test_SettingRequestPageSizeWhenNotSpecified()
         {
-            var engine = new SearchlightEngine();
-            engine.Parse(mockFetchRequest);
+            var source = new DataSource() { TableName = "tableau" };
+            var engine = new SearchlightEngine().AddDataSource(source);
+            engine.Parse(new FetchRequest() { table = "tableau" });
             Assert.IsTrue(mockFetchRequest.pageSize == engine.MaximumPageSize); }
 
         [TestMethod]
