@@ -463,23 +463,22 @@ namespace Searchlight
             }
 
             // Parse a sequence of tokens
-            return ParseClauseList(filter, tokens, false);
+            return ParseClauseList(tokens, false);
         }
 
         /// <summary>
         /// Parse a list of tokens separated by conjunctions
         /// </summary>
-        /// <param name="filter"></param>
         /// <param name="tokens"></param>
         /// <param name="expectCloseParenthesis"></param>
         /// <returns></returns>
-        private List<BaseClause> ParseClauseList(string filter, TokenStream tokens, bool expectCloseParenthesis)
+        private List<BaseClause> ParseClauseList(TokenStream tokens, bool expectCloseParenthesis)
         {
             var working = new List<BaseClause>();
             while (tokens.TokenQueue.Count > 0)
             {
                 // Identify one clause and add it
-                var clause = ParseOneClause(filter, tokens);
+                var clause = ParseOneClause(tokens);
                 working.Add(clause);
 
                 // Is this the end of the filter?
@@ -498,7 +497,7 @@ namespace Searchlight
                 string upperToken = token.Value.ToUpperInvariant();
                 if (!StringConstants.SAFE_CONJUNCTIONS.ContainsKey(upperToken))
                 {
-                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = filter};
+                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = StringConstants.SAFE_CONJUNCTIONS.Keys.ToArray(), OriginalFilter = tokens.OriginalText};
                 }
 
                 // Store the value of the conjunction
@@ -512,20 +511,20 @@ namespace Searchlight
                 }
                 else
                 {
-                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = filter };
+                    throw new InvalidToken { BadToken = upperToken, ExpectedTokens = new[] { "AND", "OR" }, OriginalFilter = tokens.OriginalText };
                 }
 
                 // Is this the end of the filter?  If so that's a trailing conjunction error
                 if (tokens.TokenQueue.Count == 0)
                 {
-                    throw new TrailingConjunction() { OriginalFilter = filter };
+                    throw new TrailingConjunction() { OriginalFilter = tokens.OriginalText };
                 }
             }
 
             // If we expected to end with a parenthesis, but didn't, throw an exception here
             if (expectCloseParenthesis)
             {
-                throw new OpenClause { OriginalFilter = filter };
+                throw new OpenClause { OriginalFilter = tokens.OriginalText };
             }
 
             // Let's verify that the clause is fully valid first before accepting it
@@ -550,10 +549,9 @@ namespace Searchlight
         /// <summary>
         /// Parse one single clause
         /// </summary>
-        /// <param name="filter"></param>
         /// <param name="tokens"></param>
         /// <returns></returns>
-        private BaseClause ParseOneClause(string filter, TokenStream tokens)
+        private BaseClause ParseOneClause(TokenStream tokens)
         {
             // First token is allowed to be a parenthesis or a field name
             var fieldToken = tokens.TokenQueue.Dequeue();
@@ -561,10 +559,10 @@ namespace Searchlight
             // Is it a parenthesis?  If so, parse a compound clause list
             if (fieldToken.Value == StringConstants.OPEN_PARENTHESIS)
             {
-                var compound = new CompoundClause { Children = ParseClauseList(filter, tokens, true) };
+                var compound = new CompoundClause { Children = ParseClauseList(tokens, true) };
                 if (compound.Children == null || compound.Children.Count == 0)
                 {
-                    throw new EmptyClause() { OriginalFilter = filter};
+                    throw new EmptyClause() { OriginalFilter = tokens.OriginalText };
                 }
 
                 return compound;
@@ -576,10 +574,10 @@ namespace Searchlight
             {
                 if (string.Equals(fieldToken.Value, StringConstants.CLOSE_PARENTHESIS))
                 {
-                    throw new EmptyClause() { OriginalFilter = filter};
+                    throw new EmptyClause() { OriginalFilter = tokens.OriginalText };
                 }
 
-                throw new FieldNotFound() { FieldName = fieldToken.Value, KnownFields = ColumnNames().ToArray(), OriginalFilter = filter };
+                throw new FieldNotFound() { FieldName = fieldToken.Value, KnownFields = ColumnNames().ToArray(), OriginalFilter = tokens.OriginalText };
             }
 
             // Allow "NOT" tokens here
@@ -598,7 +596,7 @@ namespace Searchlight
                 {
                     BadToken = operationToken,
                     ExpectedTokens = StringConstants.RECOGNIZED_QUERY_EXPRESSIONS.Keys.ToArray(),
-                    OriginalFilter = filter
+                    OriginalFilter = tokens.OriginalText
                 };
             }
 
@@ -610,10 +608,10 @@ namespace Searchlight
                     {
                         Negated = negated,
                         Column = columnInfo,
-                        LowerValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, filter, tokens)
+                        LowerValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, tokens)
                     };
-                    Expect(StringConstants.AND, tokens.TokenQueue.Dequeue().Value, filter);
-                    b.UpperValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, filter, tokens);
+                    Expect(StringConstants.AND, tokens.TokenQueue.Dequeue().Value, tokens.OriginalText);
+                    b.UpperValue = ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, tokens);
                     return b;
 
                 // Safe syntax for an "IN" expression is "column IN (param[, param][, param]...)"
@@ -624,17 +622,17 @@ namespace Searchlight
                         Negated = negated,
                         Values = new List<IExpressionValue>()
                     };
-                    Expect(StringConstants.OPEN_PARENTHESIS, tokens.TokenQueue.Dequeue().Value, filter);
+                    Expect(StringConstants.OPEN_PARENTHESIS, tokens.TokenQueue.Dequeue().Value, tokens.OriginalText);
 
                     if (tokens.TokenQueue.Peek().Value != StringConstants.CLOSE_PARENTHESIS)
                     {
                         while (true)
                         {
-                            i.Values.Add(ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, filter, tokens));
+                            i.Values.Add(ParseParameter(columnInfo, tokens.TokenQueue.Dequeue().Value, tokens));
                             var commaOrParen = tokens.TokenQueue.Dequeue();
                             if (!StringConstants.SAFE_LIST_TOKENS.Contains(commaOrParen.Value))
                             {
-                                throw new InvalidToken { BadToken = commaOrParen.Value, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = filter };
+                                throw new InvalidToken { BadToken = commaOrParen.Value, ExpectedTokens = StringConstants.SAFE_LIST_TOKENS, OriginalFilter = tokens.OriginalText };
                             }
 
                             if (commaOrParen.Value == StringConstants.CLOSE_PARENTHESIS) break;
@@ -642,7 +640,7 @@ namespace Searchlight
                     }
                     else
                     {
-                        throw new EmptyClause { OriginalFilter = filter };
+                        throw new EmptyClause { OriginalFilter = tokens.OriginalText };
                     }
 
                     return i;
@@ -660,7 +658,7 @@ namespace Searchlight
                     }
 
                     iN.Negated = negated;
-                    Expect(StringConstants.NULL, next, filter);
+                    Expect(StringConstants.NULL, next, tokens.OriginalText);
                     return iN;
 
                 // Safe syntax for all other recognized expressions is "column op param"
@@ -671,7 +669,7 @@ namespace Searchlight
                         Negated = negated,
                         Operation = op,
                         Column = columnInfo,
-                        Value = ParseParameter(columnInfo, valueToken.Value, filter, tokens)
+                        Value = ParseParameter(columnInfo, valueToken.Value, tokens)
                     };
 
                     if ((c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
@@ -683,7 +681,7 @@ namespace Searchlight
                             FieldName = c.Column.FieldName,
                             FieldType = c.Column.FieldType.ToString(),
                             FieldValue = valueToken.Value,
-                            OriginalFilter = filter
+                            OriginalFilter = tokens.OriginalText
                         };
                     }
 
@@ -710,9 +708,8 @@ namespace Searchlight
         /// </summary>
         /// <param name="column"></param>
         /// <param name="valueToken"></param>
-        /// <param name="originalFilter"></param>
         /// <param name="tokens"></param>
-        private static IExpressionValue ParseParameter(ColumnInfo column, string valueToken, string originalFilter, TokenStream tokens)
+        private static IExpressionValue ParseParameter(ColumnInfo column, string valueToken, TokenStream tokens)
         {
             var fieldType = column.FieldType;
             try
@@ -789,7 +786,7 @@ namespace Searchlight
                     FieldName = column.FieldName, 
                     FieldType = fieldType.ToString(), 
                     FieldValue = valueToken, 
-                    OriginalFilter = originalFilter
+                    OriginalFilter = tokens.OriginalText
                 };
             }
         }
