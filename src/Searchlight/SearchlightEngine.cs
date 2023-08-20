@@ -140,13 +140,75 @@ namespace Searchlight
         /// <returns></returns>
         public CompletionList AutocompleteFilter(string table, string filter, int cursorPosition)
         {
+            var source = FindTable(table);
+            var completion = new CompletionList() { items = new List<CompletionItem>() };
+            
+            // If the user hasn't typed anything, just give them a list of fields
+            if (cursorPosition == 0 || string.IsNullOrWhiteSpace(filter))
+            {
+                return AutocompleteFields(source, null);
+            }
+
+            // Trim the autocomplete to the cursor position
+            var trimmedFilter = filter.Substring(0, cursorPosition);
             var request = new FetchRequest()
             {
                 table = table,
-                filter = filter,
+                filter = trimmedFilter,
             };
-            var source = FindTable(table);
-            return new CompletionList();
+            var syntax = SyntaxParser.TryParse(source, request);
+            if (syntax.Errors != null)
+            {
+                foreach (var e in syntax.Errors)
+                {
+                    if (e is InvalidToken invalidToken)
+                    {
+                        foreach (var token in invalidToken.ExpectedTokens)
+                        {
+                            completion.items.Add(new CompletionItem()
+                            {
+                                label = token,
+                                deprecated = false,
+                                detail = null,
+                                kind = CompletionItemKind.Keyword,
+                            });
+                        }
+
+                        return completion;
+                    }
+
+                    if (e is FieldNotFound fieldNotFound)
+                    {
+                        return AutocompleteFields(source, fieldNotFound.FieldName);
+                    }
+                }
+            }
+
+            // Uncertain how to handle this; let's give no advice
+            return completion;
+        }
+
+        private CompletionList AutocompleteFields(DataSource source, string prefix)
+        {
+            var completion = new CompletionList()
+            {
+                items = new List<CompletionItem>(),
+            };
+            foreach (var field in source._columns.OrderBy(c => c.FieldName))
+            {
+                if (prefix == null || field.FieldName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    completion.items.Add(new CompletionItem()
+                    {
+                        label = field.FieldName,
+                        kind = CompletionItemKind.Field,
+                        detail = "",
+                        deprecated = false,
+                    });
+                }
+            }
+
+            return completion;
         }
 
         /// <summary>
