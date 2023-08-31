@@ -1,11 +1,11 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Searchlight;
 using Searchlight.Query;
 using System.Linq;
 using System.Threading.Tasks;
 using Searchlight.Exceptions;
 using Searchlight.Expressions;
+using Searchlight.Tests.Models;
 
 namespace Searchlight.Tests
 {
@@ -23,7 +23,7 @@ namespace Searchlight.Tests
         [SearchlightField(OriginalName = "field_name")]
         public string Name { get; set; }
 
-        [SearchlightField(Aliases = new string[] {"desription", "DescriptionText"})]
+        [SearchlightField(Aliases = new[] {"desription", "DescriptionText"})]
         public string Description { get; set; }
 
         [SearchlightField] public string NotASearchlightField { get; set; }
@@ -51,10 +51,10 @@ namespace Searchlight.Tests
             Assert.IsTrue(ex.ErrorMessage.EndsWith("Check the list of known fields to see if the filter contains a typographical error: NAME, DESCRIPTION"));
 
             // Attempt to query a field that does exist, but is not permitted to be queried
-            originalFilter = "NotASearchlightField = 'Hello'";
-            ex = Assert.ThrowsException<FieldNotFound>(() => source.ParseFilter(originalFilter));
-            Assert.AreEqual("NotASearchlightField", ex.FieldName);
-            Assert.AreEqual(originalFilter, ex.OriginalFilter);
+            string anotherFilter = "NotASearchlightField = 'Hello'";
+            var ex2 = Assert.ThrowsException<FieldNotFound>(() => source.ParseFilter(anotherFilter));
+            Assert.AreEqual("NotASearchlightField", ex2.FieldName);
+            Assert.AreEqual(anotherFilter, ex2.OriginalFilter);
         }
 
         [TestMethod]
@@ -77,8 +77,8 @@ namespace Searchlight.Tests
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
 
             // Attempt to query a field that does exist, but is not permitted to be queried
-            originalFilter = "NotASearchlightField = 'Hello'";
-            var clauses = source.ParseFilter(originalFilter);
+            var anotherFilter = "NotASearchlightField = 'Hello'";
+            var clauses = source.ParseFilter(anotherFilter);
             Assert.AreEqual(1, clauses.Count);
             var cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
@@ -130,10 +130,10 @@ namespace Searchlight.Tests
         [SearchlightModel]
         public class TestFieldConflicts
         {
-            [SearchlightField(Aliases = new string[] {"description"})]
+            [SearchlightField(Aliases = new[] {"description"})]
             public string Name { get; set; }
 
-            [SearchlightField(Aliases = new string[] {"desription", "DescriptionText"})]
+            [SearchlightField(Aliases = new[] {"desription", "DescriptionText"})]
             public string Description { get; set; }
         }
 
@@ -142,7 +142,7 @@ namespace Searchlight.Tests
         {
             var ex = Assert.ThrowsException<DuplicateName>(() =>
             {
-                var source = DataSource.Create(null, typeof(TestFieldConflicts), AttributeMode.Strict);
+                var _ = DataSource.Create(null, typeof(TestFieldConflicts), AttributeMode.Strict);
             });
             Assert.AreEqual("DESCRIPTION", ex.ConflictingName);
             Assert.AreEqual("Name", ex.ExistingColumn);
@@ -155,7 +155,7 @@ namespace Searchlight.Tests
             // "THIS" isn't a searchlight model; in strict mode it doesn't work
             Assert.ThrowsException<NonSearchlightModel>(() =>
             {
-                var source = DataSource.Create(null, this.GetType(), AttributeMode.Strict);
+                var _ = DataSource.Create(null, this.GetType(), AttributeMode.Strict);
             });
 
             // But if I try it in loose mode, will skip NonSearchlightModel error
@@ -169,30 +169,30 @@ namespace Searchlight.Tests
         [SearchlightModel(DefaultSort = "name")]
         public class TestWithDefaultSort
         {
-            [SearchlightField(Aliases = new string[] {"fullName"})]
+            [SearchlightField(Aliases = new[] {"fullName"})]
             public string Name { get; set; }
 
-            [SearchlightField(Aliases = new string[] {"DescriptionText"})]
+            [SearchlightField(Aliases = new[] {"DescriptionText"})]
             public string Description { get; set; }
         }
 
         [SearchlightModel]
         public class TestWithNoDefaultSort
         {
-            [SearchlightField(Aliases = new string[] {"fullName"})]
+            [SearchlightField(Aliases = new[] {"fullName"})]
             public string Name { get; set; }
             
-            [SearchlightField(Aliases = new string[] {"DescriptionText"})]
+            [SearchlightField(Aliases = new[] {"DescriptionText"})]
             public string Description { get; set; }
         }
 
         [SearchlightModel(DefaultSort = "Invalid")]
         public class TestInvalidDefaultSort
         {
-            [SearchlightField(Aliases = new string[] {"fullName"})]
+            [SearchlightField(Aliases = new[] {"fullName"})]
             public string Name { get; set; }
             
-            [SearchlightField(Aliases = new string[] {"DescriptionText"})]
+            [SearchlightField(Aliases = new[] {"DescriptionText"})]
             public string Description { get; set; }
         }
 
@@ -200,7 +200,7 @@ namespace Searchlight.Tests
         public void TestDefaultSort()
         {
             var source = DataSource.Create(null, typeof(TestWithDefaultSort), AttributeMode.Strict);
-            var query = source.Parse(null, null, null);
+            var query = source.Parse(null, null);
             Assert.AreEqual(1, query.OrderBy.Count);
             Assert.AreEqual("Name", query.OrderBy[0].Column.FieldName);
             Assert.AreEqual(SortDirection.Ascending, query.OrderBy[0].Direction);
@@ -483,6 +483,30 @@ namespace Searchlight.Tests
             Assert.IsNotNull(ic);
             Assert.AreEqual("YESTERDAY", ic.Root);
             Assert.AreEqual(-7, ic.Offset);
+        }
+
+        [TestMethod]
+        public void InconsistentCompoundClause()
+        {
+            var source = DataSource.Create(null, typeof(TestStrictMode), AttributeMode.Strict);
+            var columns = source.GetColumnDefinitions().ToArray();
+            Assert.AreEqual(2, columns.Length);
+            Assert.AreEqual("Name", columns[0].FieldName);
+            Assert.AreEqual(typeof(string), columns[0].FieldType);
+            Assert.AreEqual("Description", columns[1].FieldName);
+            Assert.AreEqual(typeof(string), columns[1].FieldType);
+
+            // Attempt to execute an imprecise query within a compound clause
+            string impreciseCompound = "name is not null and (name eq Alice OR name eq Bob AND description contains employee)";
+            var ex1 = Assert.ThrowsException<InconsistentConjunctionException>(() => source.ParseFilter(impreciseCompound));
+            Assert.AreEqual("Name Equals Alice OR Name Equals Bob AND Description Contains employee", ex1.InconsistentClause);
+            Assert.IsTrue(ex1.ErrorMessage.StartsWith("Mixing AND and OR conjunctions in the same statement results in an imprecise query."));
+
+            // Attempt to execute an imprecise query at the root level
+            string impreciseRoot = "name eq Alice OR name eq Bob AND description contains employee";
+            var ex2 = Assert.ThrowsException<InconsistentConjunctionException>(() => source.ParseFilter(impreciseRoot));
+            Assert.AreEqual("Name Equals Alice OR Name Equals Bob AND Description Contains employee", ex2.InconsistentClause);
+            Assert.IsTrue(ex2.ErrorMessage.StartsWith("Mixing AND and OR conjunctions in the same statement results in an imprecise query."));
         }
     }
 }

@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Text;
 using Searchlight.Query;
 
 namespace Searchlight {
@@ -20,6 +20,7 @@ namespace Searchlight {
         public SqlQuery()
         {
             Parameters = new Dictionary<string, object>();
+            ParameterTypes = new Dictionary<string, Type>();
             ResultSetClauses = new List<string>();
         }
 
@@ -48,11 +49,17 @@ namespace Searchlight {
         /// </summary>
         public List<string> ResultSetClauses { get; }
 
-        internal string AddParameter(object p)
+        /// <summary>
+        /// The list of parameter types to use
+        /// </summary>
+        public Dictionary<string, Type> ParameterTypes { get; set; }
+
+        internal string AddParameter(object p, Type t)
         {
             var num = Parameters.Count + 1;
             var name = $"@p{num}";
             Parameters.Add(name, p);
+            ParameterTypes.Add(name, t);
             return name;
         }
     }

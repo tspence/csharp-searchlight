@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Searchlight.Exceptions;
 using Searchlight.Query;
 
@@ -157,35 +156,6 @@ namespace Searchlight
                 }
             }
             return this;
-        }
-        
-        /// <summary>
-        /// Produces the intro for a query, setting up any flags or options.
-        /// </summary>
-        /// <returns>The query</returns>
-        internal string DecorateIntro() 
-        {
-            var sb = new StringBuilder();
-            if (useNoCount) {
-                sb.Append("SET NOCOUNT ON;\n");
-            }
-            if (useReadUncommitted) {
-                sb.Append("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;\n");
-            }
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Produces a table name using all the provided options
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns></returns>
-        internal string DecorateTableName(string tableName) 
-        {
-            if (useNoLock) {
-                return $"{tableName} WITH (nolock)";
-            }
-            return tableName;
         }
     }
 }

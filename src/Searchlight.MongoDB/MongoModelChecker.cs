@@ -10,7 +10,7 @@ namespace Searchlight.MongoDB
     /// <summary>
     /// Verify that a model is safe for use with MongoDB
     /// </summary>
-    public class MongoModelChecker
+    public static class MongoModelChecker
     {
         private static Dictionary<string, bool> _isMongoSafe = new Dictionary<string, bool>();
 

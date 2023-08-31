@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace Searchlight.Tests
+// ReSharper disable InconsistentNaming
+
+namespace Searchlight.Tests.Models
 {
     [SearchlightModel(DefaultSort = nameof(name))]
     public class EmployeeObj
@@ -20,10 +23,10 @@ namespace Searchlight.Tests
             return new List<EmployeeObj>
             {
                 new()
-                    { hired = DateTime.Today.ToUniversalTime(), id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
+                    { hired = DateTime.UtcNow.AddMinutes(-1), id = 1, name = "Alice Smith", onduty = true, paycheck = 1000.00m },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(-1).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddMonths(-1),
                     id = 2,
                     name = "Bob Rogers",
                     onduty = true,
@@ -31,7 +34,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(-6).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddMonths(-6),
                     id = 3,
                     name = "Charlie Prentiss",
                     onduty = false,
@@ -39,7 +42,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(-12).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddMonths(-12),
                     id = 4,
                     name = "Danielle O'Shea",
                     onduty = false,
@@ -47,17 +50,17 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(1).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddMonths(1),
                     id = 5,
                     name = "Ernest Nofzinger",
                     onduty = true,
                     paycheck = 1000.00m
                 },
                 new()
-                    { hired = DateTime.Today.AddMonths(4).ToUniversalTime(), id = 6, name = null, onduty = false, paycheck = 10.00m },
+                    { hired = DateTime.UtcNow.AddMonths(4), id = 6, name = null, onduty = false, paycheck = 10.00m },
                 new()
                 {
-                    hired = DateTime.Today.AddMonths(2).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddMonths(2),
                     id = 7,
                     name = "Roderick 'null' Sqlkeywordtest",
                     onduty = false,
@@ -65,7 +68,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.UtcNow.AddHours(-1).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddHours(-1),
                     id = 8,
                     name = "Joe 'Fresh Hire' McGillicuddy",
                     onduty = false,
@@ -73,7 +76,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.UtcNow.AddHours(1).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddHours(1),
                     id = 9,
                     name = "Carol 'Starting Soon!' Yamashita",
                     onduty = false,
@@ -81,7 +84,7 @@ namespace Searchlight.Tests
                 },
                 new()
                 {
-                    hired = DateTime.UtcNow.AddHours(15).ToUniversalTime(),
+                    hired = DateTime.UtcNow.AddHours(15),
                     id = 10,
                     name = "Barnabas '[Not.Regex(safe{\\^|$' Ellsworth",
                     onduty = true,

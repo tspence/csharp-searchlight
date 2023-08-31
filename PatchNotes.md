@@ -1,3 +1,14 @@
+# 1.0.0
+July 13, 2023
+
+Significant work on testing Searchlight:
+* Added integration tests for Postgres, MongoDB, and SQL Server.
+* Added SonarCloud for analyzing potential vulnerabilities.
+* Report an error when a compound clause contains both AND and OR statements.  This prevents unclear order-of-operations risks when someone specifies (A and B or C).
+* Fixed issues with negated queries.  If a user specifies "not eq"
+* Addressed test issues with dates and time zones and evaluation of nullability of generic collections vs databases
+* Addressed issues with escaping of string values; fixes issue where an end user searches for a string containing percentage signs
+
 # 0.9.22
 November 10, 2022
 

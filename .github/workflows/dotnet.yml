@@ -9,6 +9,7 @@ on:
 jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v2
       name: Checkout Code
@@ -16,9 +17,30 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
+    - name: Check Environment Variables (RUNNER_TEMP)
+      run: echo "Runner Temp is ${{env.RUNNER_TEMP}}"
+    - name: Check Environment Variables (TMP)
+      env: 
+        TMP: ${{env.RUNNER_TEMP}}
+      run: echo "DotNet TMP is ${{env.TMP}}"
     - name: Restore
       run: dotnet restore
+    - name: SonarCloud Install
+      run:
+        dotnet tool update dotnet-sonarscanner --tool-path /tmp/sonar
+    - name: Coverage Install
+      run:
+        dotnet tool update dotnet-coverage --tool-path /tmp/coverage
+    - name: SonarCloud Start
+      run:
+        /tmp/sonar/dotnet-sonarscanner begin /k:"tspence_csharp-searchlight" /o:"tspence" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
     - name: Build
       run: dotnet build
     - name: Test
-      run: dotnet test
+      env: 
+        TMP: /tmp
+      run:
+        /tmp/coverage/dotnet-coverage collect "dotnet test" -f xml -o "coverage.xml"
+    - name: SonarCloud End
+      run:
+        /tmp/sonar/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

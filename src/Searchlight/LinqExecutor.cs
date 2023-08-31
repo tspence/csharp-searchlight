@@ -170,6 +170,7 @@ namespace Searchlight
                             if (field.Type == typeof(string))
                             {
                                 result = Expression.Call(null,
+                                    // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("Equals",
                                         new [] { typeof(string), typeof(string), typeof(StringComparison) }),
                                     field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase));
@@ -184,6 +185,7 @@ namespace Searchlight
                             {
                                 result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThan(Expression.Call(null,
+                                            // ReSharper disable once AssignNullToNotNullAttribute
                                             typeof(string).GetMethod("Compare",
                                                 new []
                                                 {
@@ -202,6 +204,7 @@ namespace Searchlight
                             {
                                 result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.GreaterThanOrEqual(Expression.Call(null,
+                                            // ReSharper disable once AssignNullToNotNullAttribute
                                             typeof(string).GetMethod("Compare",
                                                 new []
                                                 {
@@ -220,6 +223,7 @@ namespace Searchlight
                             {
                                 result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThan(Expression.Call(null,
+                                            // ReSharper disable once AssignNullToNotNullAttribute
                                             typeof(string).GetMethod("Compare",
                                                 new []
                                                 {
@@ -238,6 +242,7 @@ namespace Searchlight
                             {
                                 result = Expression.And(Expression.NotEqual(field, Expression.Constant(null)),
                                     Expression.LessThanOrEqual(Expression.Call(null,
+                                            // ReSharper disable once AssignNullToNotNullAttribute
                                             typeof(string).GetMethod("Compare",
                                                 new []
                                                 {
@@ -254,6 +259,7 @@ namespace Searchlight
                         case OperationType.StartsWith:
                             result = Expression.TryCatch(
                                 Expression.Call(field,
+                                    // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("StartsWith",
                                         new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
@@ -265,6 +271,7 @@ namespace Searchlight
                         case OperationType.EndsWith:
                             result = Expression.TryCatch(
                                 Expression.Call(field,
+                                    // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("EndsWith",
                                         new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
@@ -275,6 +282,7 @@ namespace Searchlight
                         case OperationType.Contains:
                             result = Expression.TryCatch(
                                 Expression.Call(field,
+                                    // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("Contains",
                                         new [] { typeof(string), typeof(StringComparison) }),
                                     value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
@@ -316,6 +324,7 @@ namespace Searchlight
                     var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
                     value = Expression.Constant(valueArray, typeof(List<object>));
                     result = Expression.Call(value,
+                        // ReSharper disable once AssignNullToNotNullAttribute
                         typeof(List<object>).GetMethod("Contains", new [] { typeof(object) }),
                         field);
                     break;

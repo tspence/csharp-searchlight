@@ -1,5 +1,8 @@
 [![NuGet](https://img.shields.io/nuget/v/Searchlight.svg?style=plastic)](https://www.nuget.org/packages/Searchlight/)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/tspence/csharp-searchlight/dotnet.yml?branch=main)
+[![SonarCloud Coverage](https://sonarcloud.io/api/project_badges/measure?project=tspence_csharp-searchlight&metric=coverage)](https://sonarcloud.io/summary/overall?id=tspence_csharp-searchlight)
+[![SonarCloud Bugs](https://sonarcloud.io/api/project_badges/measure?project=tspence_csharp-searchlight&metric=bugs)](https://sonarcloud.io/summary/overall?id=tspence_csharp-searchlight)
+[![SonarCloud Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=tspence_csharp-searchlight&metric=vulnerabilities)](https://sonarcloud.io/summary/overall?id=tspence_csharp-searchlight)
 
 # Searchlight
 
@@ -8,7 +11,25 @@ A lightweight, secure query language for searching through databases and in-memo
 # What is Searchlight?
 
 Searchlight is a simple and safe query language for API design.  [Designed with security in mind](https://tedspence.com/protecting-apis-with-layered-security-8c989fb5a19f), 
-it works well with REST, provides complex features, and is easier to learn than GraphQL.  
+it works well with REST, provides complex features, and is easier to learn than GraphQL or OData.  
+
+Both OData and GraphQL are designed to help programmers write queries.  Searchlight is designed to help real human beings 
+write queries.  Because of its focus on human readability, Searchlight queries can be exposed to end users and they will
+generally make sense and be readable.
+
+Compare these alternatives:
+
+| Language | Example | Explanation |
+|---|---|---|
+| Searchlight | `name startswith A or status = 'Active'` | Friendly and readable |
+| OData | `(startswith(name, 'A')) or (status eq 'Active')` | Functions in OData are designed with programmers in mind, not humans. |
+| GraphQL | `{ { name: "A%" } or: { status: "Active" } }` | GraphQL is designed to be written in JSON, not english. |
+
+Many programmers find that OData and GraphQL are required for certain types of integration, but Searchlight can be integrated
+to make it easy for end users to work with your code.  In fact, you can convert a Searchlight query into an OData query using
+the Linq executor.
+
+# Key features of Searchlight
 
 * **Fast**
 Searchlight uses precalculated search tables for performance of roughly 24 microseconds per six calls to Parse, or about 4
@@ -17,30 +38,22 @@ microseconds per FetchRequest object parsed.
 As a compiled language, the Searchlight query language is safe from SQL injection attacks.  Malformed queries generate clear
 error messages within Searchlight, and if you choose to use Searchlight on top of an SQL database, all queries executed on 
 your database will use parameterized values.
-* **Database independent**
-You can use Searchlight against SQL databases, NoSQL databases, or in-memory collections.  If you change your mind later
-and decide to switch to a different database technology, Searchlight still works.
-* **Search in memory**
-With Searchlight, you can search in-memory collections or use REDIS to cache data.  You can still search the data just like
-it was in a SQL-based database.
-* **Powerful queries**
-Searchlight lets you execute complex search statements such as `in`, `startsWith`, `contains`, and others.  You can create
-complex queries using parenthesis and conjunctions (AND/OR).
-* **Reduce database usage**
-You can use Searchlight to make multiple-result-set database calls with an SQL database to avoid executing multiple
-fetch statements.
-* **Self-documenting**
-If you mistype the name of a field, you get an error that indicates exactly which field name was misspelled, and a list of all
-known fields you can use.
-* **Standardized queries**
-The Searchlight API pattern allows for filtering, fetching extra data, sorting, and pagination.  
-* **Programmatic control**
-You can examine the Searchlight abstract syntax tree for performance problems, inappropriate filters, or query statements
-too complex for your database and reject those queries before they waste unnecessary query cycles on your data store.
 * **Human readable**
 Unlike JSON-based query systems, Searchlight is easily readable and should be familiar to most people who are comfortable
 using SQL and LINQ languages.  Searchlight uses words instead of symbols to avoid unnecessary escaping rules for HTML and HTTP
 requests.
+* **Database independent**
+You can use Searchlight against SQL databases, NoSQL databases, or in-memory collections.  If you change your mind later
+and decide to switch to a different database technology, Searchlight still works.
+* **Powerful queries**
+Searchlight lets you execute complex search statements such as `in`, `startsWith`, `contains`, and others.  You can create
+complex queries using parenthesis and conjunctions (AND/OR).
+* **Self-documenting**
+If you mistype the name of a field, you get an error that indicates exactly which field name was misspelled, and a list of all
+known fields you can use.
+* **Programmatic control**
+You can examine the Searchlight abstract syntax tree for performance problems, inappropriate filters, or query statements
+too complex for your database and reject those queries before they waste unnecessary query cycles on your data store.
 
 # Using Searchlight
 The typical API pattern for Searchlight works as follows:
@@ -238,21 +251,4 @@ public class MyAccount
     [SearchlightField(Aliases = new string[] { "OldName", "NewName", "TransitionalName" })]
     public string AccountName { get; set; }
 }
-```
-
-# Constructing Searchlight models programmatically
-
-Constructing a model manually works as follows:
-
-```csharp
-var source = new SearchlightDataSource()
-    .WithColumn("a", typeof(String), null)
-    .WithColumn("b", typeof(Int32), null)
-    .WithColumn("colLong", typeof(Int64), null)
-    .WithColumn("colNullableGuid", typeof(Nullable<Guid>), null)
-    .WithColumn("colULong", typeof(UInt64), null)
-    .WithColumn("colNullableULong", typeof(Nullable<UInt64>), null)
-    .WithColumn("colGuid", typeof(Guid), null);
-source.MaximumParameters = 200;
-source.DefaultSortField = "a";
 ```

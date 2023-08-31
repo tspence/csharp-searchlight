@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>0.9.22</version>
+		<version>1.0.0</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -11,18 +11,25 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<readme>docs/README.md</readme>
 		<description>
-			A lightweight, secure query language for searching through databases and in-memory collections using a fluent REST API with robust, secure searching features.
+			A lightweight, secure, and human readable domain-specific query language for searching through databases and in-memory collections.  
+			Works alongside REST, GraphQL, and OData to make human readable API queries possible.
 		</description>
-		<summary>Be fully database independent with the Searchlight query parser and execution engine for your REST API.</summary>
+		<summary>A friendly and readable domain specific query language for your API.</summary>
 		<icon>docs/icons8-searchlight-90.png</icon>
 		<releaseNotes>
-			# 0.9.22
-			November 10, 2022
+			# 1.0.0
+			July 13, 2023
 			
-			Updated some exceptions to include more readable error message values.
+			Significant work on testing Searchlight:
+			* Added integration tests for Postgres, MongoDB, and SQL Server.
+			* Added SonarCloud for analyzing potential vulnerabilities.
+			* Report an error when a compound clause contains both AND and OR statements.  This prevents unclear order-of-operations risks when someone specifies (A and B or C).
+			* Fixed issues with negated queries.  If a user specifies "not eq"
+			* Addressed test issues with dates and time zones and evaluation of nullability of generic collections vs databases
+			* Addressed issues with escaping of string values; fixes issue where an end user searches for a string containing percentage signs
 		</releaseNotes>
-		<copyright>Copyright 2013 - 2022</copyright>
-    	<tags>REST query language abstract syntax tree parser sql-injection protection</tags>
+		<copyright>Copyright 2013 - 2023</copyright>
+    	<tags>REST query language abstract syntax tree parser sql-injection protection friendly readable domain-specific DSL</tags>
 		<repository type="git" url="https://github.com/tspence/csharp-searchlight" />
 		<dependencies>
 			<group targetFramework=".NETStandard2.0"/>

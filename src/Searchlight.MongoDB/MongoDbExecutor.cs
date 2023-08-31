@@ -70,10 +70,10 @@ namespace Searchlight.MongoDB
             {
                 switch (sortInfo.Direction)
                 {
-                    case Searchlight.SortDirection.Ascending:
+                    case SortDirection.Ascending:
                         list.Add(Builders<T>.Sort.Ascending(sortInfo.Column.FieldName));
                         break;
-                    case Searchlight.SortDirection.Descending:
+                    case SortDirection.Descending:
                         list.Add(Builders<T>.Sort.Descending(sortInfo.Column.FieldName));
                         break;
                 }
@@ -180,7 +180,7 @@ namespace Searchlight.MongoDB
                     var valueArray = (from v in inClause.Values select v.GetValue()).ToList();
                     return Builders<T>.Filter.In(inClause.Column.FieldName, valueArray);
 
-                case IsNullClause isNullClause:
+                case IsNullClause _:
                     return Builders<T>.Filter.Or(
                         Builders<T>.Filter.Exists("name", false),
                         Builders<T>.Filter.Eq("name", BsonNull.Value),

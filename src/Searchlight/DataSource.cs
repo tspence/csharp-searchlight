@@ -98,9 +98,8 @@ namespace Searchlight
         {
             if (string.IsNullOrWhiteSpace(name)) return;
             var upperName = name.Trim().ToUpperInvariant();
-            if (_fieldDict.ContainsKey(upperName))
+            if (_fieldDict.TryGetValue(upperName, out var existing))
             {
-                var existing = _fieldDict[upperName];
                 throw new DuplicateName
                 {
                     Table = this.TableName,
@@ -336,29 +335,26 @@ namespace Searchlight
                 foreach (var n in includes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var name = n.Trim();
-                    if (name != null)
+                    var upperName = name.Trim().ToUpperInvariant();
+                    if (_includeDict.TryGetValue(upperName, out var obj))
                     {
-                        var upperName = name.Trim()?.ToUpperInvariant();
-                        if (_includeDict.TryGetValue(upperName, out var obj))
+                        if (obj is ICommand command)
                         {
-                            if (obj is ICommand command)
-                            {
-                                list.Add(command);
-                            }
-                            else if (obj is SearchlightFlag flag)
-                            {
-                                flags.Add(flag);
-                            }
+                            list.Add(command);
                         }
-                        else
+                        else if (obj is SearchlightFlag flag)
                         {
-                            throw new IncludeNotFound()
-                            {
-                                OriginalInclude = includes,
-                                IncludeName = name,
-                                KnownIncludes = _knownIncludes.ToArray()
-                            };
+                            flags.Add(flag);
                         }
+                    }
+                    else
+                    {
+                        throw new IncludeNotFound()
+                        {
+                            OriginalInclude = includes,
+                            IncludeName = name,
+                            KnownIncludes = _knownIncludes.ToArray()
+                        };
                     }
                 }
             }
@@ -487,7 +483,7 @@ namespace Searchlight
                 // Do we end on a close parenthesis?
                 if (expectCloseParenthesis && token == StringConstants.CLOSE_PARENTHESIS)
                 {
-                    return working;
+                    return CheckConjunctions(working);
                 }
 
                 // If not, we must have a conjunction
@@ -524,8 +520,23 @@ namespace Searchlight
                 throw new OpenClause { OriginalFilter = filter };
             }
 
-            // Here's your clause!
-            return working;
+            // Let's verify that the clause is fully valid first before accepting it
+            return CheckConjunctions(working);
+        }
+
+        private static List<BaseClause> CheckConjunctions(List<BaseClause> clauses)
+        {
+            var conjunctions = (from item in clauses where item.Conjunction != ConjunctionType.NONE select item.Conjunction)
+                .Distinct();
+            if (conjunctions.Count() > 1)
+            {
+                throw new InconsistentConjunctionException()
+                {
+                    InconsistentClause = string.Join(" ", from item in clauses select item + " " + (item.Conjunction == ConjunctionType.NONE ? string.Empty : item.Conjunction.ToString())).TrimEnd(),
+                };
+            }
+
+            return clauses;
         }
 
         /// <summary>
@@ -655,19 +666,19 @@ namespace Searchlight
                         Value = ParseParameter(columnInfo, valueToken, filter, tokens)
                     };
 
-                    if (c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
-                                                                || c.Operation == OperationType.Contains)
+                    if ((c.Operation == OperationType.StartsWith || c.Operation == OperationType.EndsWith
+                                                                 || c.Operation == OperationType.Contains) &&
+                        (c.Column.FieldType != typeof(string)))
                     {
-                        if (c.Column.FieldType != typeof(string))
+                        throw new FieldTypeMismatch()
                         {
-                            throw new FieldTypeMismatch() { 
-                                FieldName = c.Column.FieldName, 
-                                FieldType = c.Column.FieldType.ToString(), 
-                                FieldValue = valueToken, 
-                                OriginalFilter = filter
-                            };
-                        }
+                            FieldName = c.Column.FieldName,
+                            FieldType = c.Column.FieldType.ToString(),
+                            FieldValue = valueToken,
+                            OriginalFilter = filter
+                        };
                     }
+
                     return c;
             }
         }
@@ -698,7 +709,7 @@ namespace Searchlight
             var fieldType = column.FieldType;
             try
             {
-                // For nullable types, note that the fieldvaluetoken will always be non-null.
+                // For nullable types, note that the field value token will always be non-null.
                 // This is because the safe parser will throw an exception if there is no token after a query expression.
                 // The only way to test against null is to use the special query expression "<field> IS NULL" or "<field> IS NOT NULL".
                 // The proper way to unroll this is to reconsider the field type as the first generic argument to the nullable object

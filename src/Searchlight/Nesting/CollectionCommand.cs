@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Searchlight.Exceptions;
 
@@ -51,7 +49,7 @@ namespace Searchlight.Nesting
             if (_parentTable == null) throw new InvalidCollection() { TableName = "Unknown", CollectionName = _fieldName, CollectionErrorMessage = "Table not found" };
             var parentKey = _parentTable.IdentifyColumn(_collection.KeyName);
             if (parentKey == null) throw new InvalidCollection() { TableName = _parentTable.TableName, CollectionName = _fieldName, CollectionErrorMessage = $"Local key column {_collection.KeyName} not found" };
-            var foreignTable = _parentTable.Engine?.FindTable(_collection.ForeignTableName ?? _property?.PropertyType?.GetElementType()?.Name);
+            var foreignTable = _parentTable.Engine?.FindTable(_collection.ForeignTableName ?? _property?.PropertyType.GetElementType()?.Name);
             if (foreignTable == null) throw new InvalidCollection() { TableName = _parentTable.TableName, CollectionName = _fieldName, CollectionErrorMessage = "Foreign table (collection table) not found" };
             var fkName = _collection.ForeignTableKey ?? _collection.KeyName;
             var foreignKey = foreignTable.IdentifyColumn(fkName);

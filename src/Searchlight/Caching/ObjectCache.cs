@@ -42,7 +42,7 @@ namespace Searchlight.Caching
                     if (_item == null || _next_cache_time < DateTime.UtcNow)
                     {
 
-                        // To avoid having multiple calls detect cache aging, next cache time is reset immediately; 
+                        // To avoid having multiple calls detect cache aging, next cache time is reset immediately.
                         // We won't trigger again on age until RetrieveCacheSet finishes
                         _next_cache_time = DateTime.MaxValue;
 
