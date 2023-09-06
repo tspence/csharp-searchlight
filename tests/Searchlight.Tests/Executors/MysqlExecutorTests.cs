@@ -2,39 +2,38 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Npgsql;
-using NpgsqlTypes;
+using MySql.Data.MySqlClient;
 using Searchlight.Query;
 using Searchlight.Tests.Models;
-using Testcontainers.PostgreSql;
+using Testcontainers.MySql;
 
 namespace Searchlight.Tests.Executors;
 
 [TestClass]
-public class PostgresExecutorTests
+public class MysqlExecutorTests
 {
     private DataSource _src;
     private string _connectionString;
     private Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> _executor;
-    private PostgreSqlContainer _container;
+    private MySqlContainer _container;
     private List<EmployeeObj> _list;
 
     [TestInitialize]
     public async Task SetupClient()
     {
         _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
-        _container = new PostgreSqlBuilder()
+        _container = new MySqlBuilder()
             .Build();
         await _container.StartAsync();
         _connectionString = _container.GetConnectionString();
         
         // Construct the database schema and insert some test data
-        await using (var connection = new NpgsqlConnection(_connectionString))
+        await using (var connection = new MySqlConnection(_connectionString))
         {
             await connection.OpenAsync();
             
             // Create basic table
-            await using (var command = new NpgsqlCommand("CREATE TABLE employeeobj (name text null, id int not null, hired timestamp with time zone, paycheck numeric, onduty bool)", connection))
+            await using (var command = new MySqlCommand("CREATE TABLE EmployeeObj (name text null, id int not null, hired timestamp, paycheck decimal, onduty bit)", connection))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -42,13 +41,13 @@ public class PostgresExecutorTests
             // Insert rows
             foreach (var record in EmployeeObj.GetTestList())
             {
-                await using (var command = new NpgsqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
+                await using (var command = new MySqlCommand("INSERT INTO EmployeeObj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
                 {
-                    command.Parameters.AddWithValue("@name", NpgsqlDbType.Text, (object)record.name ?? DBNull.Value);
-                    command.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, record.id);
-                    command.Parameters.AddWithValue("@hired", NpgsqlDbType.TimestampTz, record.hired);
-                    command.Parameters.AddWithValue("@paycheck", NpgsqlDbType.Numeric, record.paycheck);
-                    command.Parameters.AddWithValue("@onduty", NpgsqlDbType.Boolean, record.onduty);
+                    command.Parameters.AddWithValue("@name", (object)record.name ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@id", record.id);
+                    command.Parameters.AddWithValue("@hired", record.hired);
+                    command.Parameters.AddWithValue("@paycheck", record.paycheck);
+                    command.Parameters.AddWithValue("@onduty", record.onduty);
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -58,18 +57,17 @@ public class PostgresExecutorTests
         _list = EmployeeObj.GetTestList();
         _executor = async syntax =>
         {
-            var sql = syntax.ToPostgresCommand();
+            var sql = syntax.ToMySqlCommand();
             var result = new List<EmployeeObj>();
-            await using (var connection = new NpgsqlConnection(_connectionString))
+            await using (var connection = new MySqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                await using (var command = new NpgsqlCommand(sql.CommandText, connection))
+                await using (var command = new MySqlCommand(sql.CommandText, connection))
                 {
                     foreach (var p in sql.Parameters)
                     {
                         var type = sql.ParameterTypes[p.Key];
-                        command.Parameters.AddWithValue(p.Key, ConvertNpgsqlType(sql.ParameterTypes[p.Key]),
-                            type == typeof(DateTime) ? ((DateTime)p.Value).ToUniversalTime() : p.Value);
+                        command.Parameters.AddWithValue(p.Key, type == typeof(DateTime) ? ((DateTime)p.Value).ToUniversalTime() : p.Value);
                     }
 
                     try
@@ -89,7 +87,7 @@ public class PostgresExecutorTests
                     }
                     catch (Exception ex)
                     {
-                        Assert.Fail($"Postgres executor generated invalid SQL: {ex}");
+                        Assert.Fail($"MySQL executor generated invalid SQL: {ex}");
                     }
                 }
             }
@@ -100,32 +98,6 @@ public class PostgresExecutorTests
                 records = result.ToArray(),
             };
         };
-    }
-
-    private NpgsqlDbType ConvertNpgsqlType(Type parameterType)
-    {
-        if (parameterType == typeof(bool))
-        {
-            return NpgsqlDbType.Boolean;
-        }
-        else if (parameterType == typeof(string))
-        {
-            return NpgsqlDbType.Text;
-        }
-        else if (parameterType == typeof(Int32))
-        {
-            return NpgsqlDbType.Integer;
-        }
-        else if (parameterType == typeof(decimal))
-        {
-            return NpgsqlDbType.Numeric;
-        }
-        else if (parameterType == typeof(DateTime))
-        {
-            return NpgsqlDbType.TimestampTz;
-        }
-
-        throw new Exception("Not recognized type");
     }
 
     [TestCleanup]
