@@ -56,6 +56,7 @@ namespace Searchlight.Tests.Executors
             await suite.PageNumberNoPageSize();
             await suite.PageSizeNoPageNumber();
             await suite.PageSizeAndPageNumber();
+            await suite.EnumTranslation();
         }
 
         /// <summary>
@@ -629,6 +630,13 @@ namespace Searchlight.Tests.Executors
             var result = await _executor(syntax);
 
             Assert.AreEqual(result.records.Length, 1);
+        }
+
+        private async Task EnumTranslation()
+        {
+            var syntax = _src.Parse("type eq FullTime");
+            var result = await _executor(syntax);
+            Assert.IsTrue(result.records.Any());
         }
     }
 }

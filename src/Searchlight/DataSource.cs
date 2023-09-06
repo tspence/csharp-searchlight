@@ -65,7 +65,7 @@ namespace Searchlight
         /// <returns></returns>
         public DataSource WithColumn(string columnName, Type columnType)
         {
-            return WithRenamingColumn(columnName, columnName, null, columnType);
+            return WithRenamingColumn(columnName, columnName, null, columnType, null);
         }
 
         /// <summary>
@@ -76,9 +76,9 @@ namespace Searchlight
         /// <param name="aliases"></param>
         /// <param name="columnType"></param>
         /// <returns></returns>
-        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType)
+        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType, Type enumType)
         {
-            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType);
+            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType, enumType);
             _columns.Add(columnInfo);
 
             // Allow the API caller to either specify either the model name or one of the aliases
@@ -205,9 +205,10 @@ namespace Searchlight
                         if (filter != null)
                         {
                             // If this is a renaming column, add it appropriately
-                            Type t = filter.FieldType ?? pi.PropertyType;
-                            src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name,
-                                filter.Aliases ?? Array.Empty<string>(), t);
+                            var t = filter.FieldType ?? pi.PropertyType;
+                            var columnName = filter.OriginalName ?? pi.Name;
+                            var aliases = filter.Aliases ?? Array.Empty<string>();
+                            src.WithRenamingColumn(pi.Name, columnName, aliases, t, filter.EnumType);
                         }
 
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();
@@ -770,6 +771,11 @@ namespace Searchlight
                         }
                         return computedValue;
                     }
+                }
+
+                if (column.EnumType != null)
+                {
+                    return ConstantValue.From(Enum.Parse(column.EnumType, valueToken));
                 }
 
                 // All other types use a basic type changer

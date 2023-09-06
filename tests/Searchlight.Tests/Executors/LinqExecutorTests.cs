@@ -27,7 +27,7 @@ namespace Searchlight.Tests.Executors
         public void SetupTests()
         {
             _list = EmployeeObj.GetTestList();
-            _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+            _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Strict);
             _linq = async tree => 
             {
                 await Task.CompletedTask;

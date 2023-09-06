@@ -163,6 +163,11 @@ namespace Searchlight
                     // Set up LINQ expressions for this object
                     var valueType = criteria.Column.FieldType;
                     field = Expression.Property(select, criteria.Column.FieldName);
+                    if (field.Type.IsEnum)
+                    {
+                        valueType = field.Type;
+                    }
+                    
                     value = Expression.Constant(rawValue, valueType);
                     switch (criteria.Operation)
                     {

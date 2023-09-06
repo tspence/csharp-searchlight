@@ -11,12 +11,31 @@ namespace Searchlight.Tests.Models
     [SearchlightModel(DefaultSort = nameof(name))]
     public class EmployeeObj
     {
+        public enum EmployeeType
+        {
+            FullTime,
+            PartTime,
+            Contract
+        }
+        
+        [SearchlightField(FieldType = typeof(string))]
         public string name { get; set; }
+        
+        [SearchlightField(FieldType = typeof(int))]
         public int id { get; set; }
+        
+        [SearchlightField(FieldType = typeof(DateTime))]
         public DateTime hired { get; set; }
+        
         [BsonRepresentation(BsonType.Decimal128)]
+        [SearchlightField(FieldType = typeof(decimal))]
         public decimal paycheck { get; set; }
+        
+        [SearchlightField(FieldType = typeof(bool))]
         public bool onduty { get; set; }
+        
+        [SearchlightField(FieldType = typeof(int), EnumType = typeof(EmployeeType))]
+        public EmployeeType type { get; set; }
 
         public static List<EmployeeObj> GetTestList()
         {
@@ -30,7 +49,8 @@ namespace Searchlight.Tests.Models
                     id = 2,
                     name = "Bob Rogers",
                     onduty = true,
-                    paycheck = 1000.00m
+                    paycheck = 1000.00m,
+                    type = EmployeeType.FullTime
                 },
                 new()
                 {
@@ -38,7 +58,8 @@ namespace Searchlight.Tests.Models
                     id = 3,
                     name = "Charlie Prentiss",
                     onduty = false,
-                    paycheck = 800.0m
+                    paycheck = 800.0m,
+                    type = EmployeeType.PartTime
                 },
                 new()
                 {
@@ -46,7 +67,8 @@ namespace Searchlight.Tests.Models
                     id = 4,
                     name = "Danielle O'Shea",
                     onduty = false,
-                    paycheck = 1200.0m
+                    paycheck = 1200.0m,
+                    type = EmployeeType.Contract
                 },
                 new()
                 {
