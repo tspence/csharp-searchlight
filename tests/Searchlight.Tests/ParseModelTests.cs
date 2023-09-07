@@ -234,15 +234,7 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("BookCopy"));
             
             // This is the list of expected errors
-            Assert.AreEqual(4, engine.ModelErrors.Count);
-            Assert.IsTrue(engine.ModelErrors.Any(err =>
-            {
-                if (err is InvalidDefaultSort defSort)
-                {
-                    return (defSort.Table == "EmployeeObj");
-                }
-                return false;
-            }));
+            Assert.AreEqual(3, engine.ModelErrors.Count);
             Assert.IsTrue(engine.ModelErrors.Any(err =>
             {
                 if (err is DuplicateName duplicateName)

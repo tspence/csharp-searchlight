@@ -636,7 +636,16 @@ namespace Searchlight.Tests.Executors
         {
             var syntax = _src.Parse("type eq FullTime");
             var result = await _executor(syntax);
-            Assert.IsTrue(result.records.Any());
+            Assert.AreEqual(8, result.records.Length);
+
+            // Both string name and underlying type work
+            syntax = _src.Parse("type eq 0");
+            result = await _executor(syntax);
+            Assert.AreEqual(8, result.records.Length);
+            
+            syntax = _src.Parse("type eq Contract");
+            result = await _executor(syntax);
+            Assert.AreEqual(1, result.records.Length);
         }
     }
 }
