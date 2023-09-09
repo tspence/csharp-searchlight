@@ -23,7 +23,7 @@ namespace Searchlight.Parsing
             Aliases = aliases;
             if (enumType != null && !enumType.IsEnum)
             {
-                throw new ArgumentException("Must specify and enum type", nameof(enumType));
+                throw new ArgumentException("Must specify an enum type", nameof(enumType));
             }
 
             EnumType = enumType;
