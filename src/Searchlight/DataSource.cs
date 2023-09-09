@@ -775,7 +775,8 @@ namespace Searchlight
 
                 if (column.EnumType != null)
                 {
-                    return ConstantValue.From(Enum.Parse(column.EnumType, valueToken));
+                    var parsed = Enum.Parse(column.EnumType, valueToken);
+                    return ConstantValue.From(Convert.ChangeType(parsed, fieldType));
                 }
 
                 // All other types use a basic type changer
@@ -784,9 +785,9 @@ namespace Searchlight
             catch
             {
                 throw new FieldTypeMismatch {
-                    FieldName = column.FieldName, 
-                    FieldType = fieldType.ToString(), 
-                    FieldValue = valueToken, 
+                    FieldName = column.FieldName,
+                    FieldType = fieldType.ToString(),
+                    FieldValue = valueToken,
                     OriginalFilter = originalFilter
                 };
             }

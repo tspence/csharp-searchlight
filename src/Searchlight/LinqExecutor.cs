@@ -166,6 +166,7 @@ namespace Searchlight
                     if (field.Type.IsEnum)
                     {
                         valueType = field.Type;
+                        rawValue = Enum.Parse(valueType, rawValue.ToString());
                     }
                     
                     value = Expression.Constant(rawValue, valueType);

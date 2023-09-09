@@ -21,7 +21,7 @@ public class MysqlExecutorTests
     [TestInitialize]
     public async Task SetupClient()
     {
-        _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+        _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Strict);
         _container = new MySqlBuilder()
             .Build();
         await _container.StartAsync();
@@ -33,7 +33,10 @@ public class MysqlExecutorTests
             await connection.OpenAsync();
             
             // Create basic table
-            await using (var command = new MySqlCommand("CREATE TABLE EmployeeObj (name text null, id int not null, hired timestamp, paycheck decimal, onduty bit)", connection))
+            await using (var command =
+                         new MySqlCommand(
+                             "CREATE TABLE EmployeeObj (name text null, id int not null, hired timestamp, paycheck decimal, onduty bit, employeetype int not null)",
+                             connection))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -41,13 +44,14 @@ public class MysqlExecutorTests
             // Insert rows
             foreach (var record in EmployeeObj.GetTestList())
             {
-                await using (var command = new MySqlCommand("INSERT INTO EmployeeObj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
+                await using (var command = new MySqlCommand("INSERT INTO EmployeeObj (name, id, hired, paycheck, onduty, employeetype) VALUES (@name, @id, @hired, @paycheck, @onduty, @employeetype)", connection))
                 {
                     command.Parameters.AddWithValue("@name", (object)record.name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@id", record.id);
                     command.Parameters.AddWithValue("@hired", record.hired);
                     command.Parameters.AddWithValue("@paycheck", record.paycheck);
                     command.Parameters.AddWithValue("@onduty", record.onduty);
+                    command.Parameters.AddWithValue("@employeetype", record.employeeType);
                     await command.ExecuteNonQueryAsync();
                 }
             }
