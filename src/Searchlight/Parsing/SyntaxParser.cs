@@ -8,6 +8,9 @@ using Searchlight.Query;
 
 namespace Searchlight.Parsing
 {
+    /// <summary>
+    /// Static class for syntax parsing
+    /// </summary>
     public static class SyntaxParser
     {
         /// <summary>
@@ -517,7 +520,27 @@ namespace Searchlight.Parsing
                         return computedValue;
                     }
                 }
-
+                
+                // Special case for enum types
+                if (column.EnumType != null || fieldType.IsEnum)
+                {
+                    try
+                    {
+                        var parsed = Enum.Parse(column.EnumType ?? fieldType, valueToken);
+                        return ConstantValue.From(Convert.ChangeType(parsed, fieldType));
+                    }
+                    catch
+                    {
+                        syntax.AddError(new InvalidToken
+                        {
+                            BadToken = valueToken,
+                            ExpectedTokens = Enum.GetNames(column.EnumType ?? fieldType),
+                            OriginalFilter = tokens.OriginalText,
+                        });
+                        return null;
+                    }
+                }
+                
                 // All other types use a basic type changer
                 return ConstantValue.From(Convert.ChangeType(valueToken, fieldType));
             }
