@@ -24,8 +24,8 @@ namespace Searchlight.Query
         public string DirectionStr()
         {
             return Direction == SortDirection.Ascending
-                ? StringConstants.ASCENDING_ABR
-                : StringConstants.DESCENDING_ABR;
+                ? StringConstants.ASCENDING_ABBR
+                : StringConstants.DESCENDING_ABBR;
         }
     }
 }
