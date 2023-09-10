@@ -36,7 +36,7 @@ public class SqlServerExecutorTests
             // Create basic table
             using (var command =
                    new SqlCommand(
-                       "CREATE TABLE employeeobj (name nvarchar(255) null, id int not null, hired datetime not null, paycheck decimal not null, onduty bit not null, employeetype tinyint null DEFAULT 0)",
+                       "CREATE TABLE employeeobj (name nvarchar(255) null, id int not null, hired datetime not null, paycheck decimal not null, onduty bit not null, employeetype int null DEFAULT 0)",
                        connection))
             {
                 await command.ExecuteNonQueryAsync();
@@ -100,6 +100,7 @@ public class SqlServerExecutorTests
                                 hired = reader.GetDateTime("hired"),
                                 paycheck = reader.GetDecimal("paycheck"),
                                 onduty = reader.GetBoolean("onduty"),
+                                employeeType = (EmployeeObj.EmployeeType)reader.GetInt32(5),
                             });
                         }
                     }

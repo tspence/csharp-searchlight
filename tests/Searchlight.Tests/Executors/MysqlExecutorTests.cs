@@ -86,6 +86,7 @@ public class MysqlExecutorTests
                                 hired = reader.GetDateTime(2),
                                 paycheck = reader.GetDecimal(3),
                                 onduty = reader.GetBoolean(4),
+                                employeeType = (EmployeeObj.EmployeeType)reader.GetInt32(5),
                             });
                         }
                     }
