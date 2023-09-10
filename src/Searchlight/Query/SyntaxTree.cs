@@ -59,5 +59,56 @@ namespace Searchlight.Query
         /// For pagination, how large is each page?
         /// </summary>
         public int? PageSize { get; set; }
+        
+        /// <summary>
+        /// List of errors encountered during parsing
+        /// </summary>
+        public List<Exception> Errors { get; set; }
+
+        /// <summary>
+        /// Add an error to the list of problems encountered 
+        /// </summary>
+        internal void AddError(SearchlightException error)
+        {
+            if (Errors == null)
+            {
+                Errors = new List<Exception>();
+            }
+
+            Errors.Add(error);
+        }
+        
+        /// <summary>
+        /// Verify that the next token matches a single expected value
+        /// </summary>
+        internal bool Expect(string expectedToken, string actual, string originalFilter)
+        {
+            return Expect(new string[] { expectedToken }, actual, originalFilter);
+        }
+
+        /// <summary>
+        /// Verify that the next token is contained within a list
+        /// </summary>
+        internal bool Expect(string[] expectedTokens, string actual, string originalFilter)
+        {
+            if (expectedTokens != null && !expectedTokens.Contains(actual.ToUpperInvariant()))
+            {
+                AddError(new InvalidToken() { BadToken = actual, ExpectedTokens = expectedTokens, OriginalFilter = originalFilter });
+                return false;
+            }
+
+            return true;
+        }
+
+        internal bool Expect<T>(Dictionary<string, T> expectedTokens, string actual, string originalFilter, out T value)
+        {
+            if (expectedTokens.TryGetValue(actual.ToUpperInvariant(), out value))
+            {
+                return true;
+            }
+
+            AddError(new InvalidToken() { BadToken = actual, ExpectedTokens = expectedTokens.Keys.ToArray(), OriginalFilter = originalFilter });
+            return false;
+        }
     }
 }

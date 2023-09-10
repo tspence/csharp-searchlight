@@ -77,7 +77,7 @@ namespace Searchlight.Tests.Executors
             var documentSerializer = serializerRegistry.GetSerializer<EmployeeObj>();
 
             // Act
-            var syntax = _src.Parse("id eq 1");
+            var syntax = _src.ParseFilter("id eq 1");
             var results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             var filter = results.Render(documentSerializer, serializerRegistry);
 
@@ -86,7 +86,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual("_id", filter.Names.FirstOrDefault());
 
             // Act
-            syntax = _src.Parse("id > 2");
+            syntax = _src.ParseFilter("id > 2");
             results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             filter = results.Render(documentSerializer, serializerRegistry);
 
@@ -96,7 +96,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual("_id", filter.Names.FirstOrDefault());
 
             // Act
-            syntax = _src.Parse("id < 3");
+            syntax = _src.ParseFilter("id < 3");
             results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             filter = results.Render(documentSerializer, serializerRegistry);
 
@@ -106,7 +106,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual("_id", filter.Names.FirstOrDefault());
 
             // Act
-            syntax = _src.Parse("id >= 4");
+            syntax = _src.ParseFilter("id >= 4");
             results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             filter = results.Render(documentSerializer, serializerRegistry);
 
@@ -116,7 +116,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual("_id", filter.Names.FirstOrDefault());
 
             // Act
-            syntax = _src.Parse("id <= 5");
+            syntax = _src.ParseFilter("id <= 5");
             results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             filter = results.Render(documentSerializer, serializerRegistry);
 
@@ -126,7 +126,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual("_id", filter.Names.FirstOrDefault());
 
             // Act
-            syntax = _src.Parse("name contains 'New Order'");
+            syntax = _src.ParseFilter("name contains 'New Order'");
             results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             // { $text : { "$search" : "name", "$language" : "New Order" } }
             filter = results.Render(documentSerializer, serializerRegistry);
@@ -144,7 +144,7 @@ namespace Searchlight.Tests.Executors
             var documentSerializer = serializerRegistry.GetSerializer<EmployeeObj>();
 
             // Act
-            var syntax = _src.Parse("id between 1 and 5");
+            var syntax = _src.ParseFilter("id between 1 and 5");
             var results = MongoDbExecutor.BuildMongoFilter<EmployeeObj>(syntax.Filter);
             // { "_id" : { "$gte" : 1, "$lte" : 5 } }
             var filter = results.Render(documentSerializer, serializerRegistry);
@@ -160,7 +160,7 @@ namespace Searchlight.Tests.Executors
         [TestMethod]
         public async Task GreaterThanQuery()
         {
-            var syntax = _src.Parse("name gt 'b'");
+            var syntax = _src.ParseFilter("name gt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -181,7 +181,7 @@ namespace Searchlight.Tests.Executors
         [TestMethod]
         public async Task GreaterThanOrEqualQuery()
         {
-            var syntax = _src.Parse("name ge 'bob rogers'");
+            var syntax = _src.ParseFilter("name ge 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -204,7 +204,7 @@ namespace Searchlight.Tests.Executors
         [TestMethod]
         public async Task LessThanQuery()
         {
-            var syntax = _src.Parse("name lt 'b'");
+            var syntax = _src.ParseFilter("name lt 'b'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -224,7 +224,7 @@ namespace Searchlight.Tests.Executors
         [TestMethod]
         public async Task LessThanOrEqualQuery()
         {
-            var syntax = _src.Parse("name le 'bob rogers'");
+            var syntax = _src.ParseFilter("name le 'bob rogers'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
@@ -245,7 +245,7 @@ namespace Searchlight.Tests.Executors
         [TestMethod]
         public async Task StringEqualsCaseInsensitive()
         {
-            var syntax = _src.Parse("name eq 'ALICE SMITH'");
+            var syntax = _src.ParseFilter("name eq 'ALICE SMITH'");
 
             // TODO: MongoDB string comparisons are case sensitive.  When this is corrected, update assertions
             var result = await syntax.QueryMongo(_collection);
@@ -255,7 +255,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual(0, result.records.Length);
 
             // Try the inverse
-            syntax = _src.Parse("name not eq 'ALICE SMITH'");
+            syntax = _src.ParseFilter("name not eq 'ALICE SMITH'");
             result = await syntax.QueryMongo(_collection);
             Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
@@ -266,7 +266,7 @@ namespace Searchlight.Tests.Executors
         public async Task BasicCriteria()
         {
             // Construct a simple query and check that it comes out correct
-            var syntax = _src.Parse("id gt 1 and paycheck le 1000");
+            var syntax = _src.ParseFilter("id gt 1 and paycheck le 1000");
             Assert.AreEqual(2, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.AND, syntax.Filter[0].Conjunction);
             Assert.AreEqual("id", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
