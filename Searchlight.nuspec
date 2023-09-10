@@ -2,7 +2,7 @@
 <package >
 	<metadata>
 		<id>Searchlight</id>
-		<version>1.0.1</version>
+		<version>1.0.2</version>
 		<title>Searchlight</title>
 		<authors>Ted Spence</authors>
 		<owners>Ted Spence</owners>
@@ -17,12 +17,11 @@
 		<summary>A friendly and readable domain specific query language for your API.</summary>
 		<icon>docs/icons8-searchlight-90.png</icon>
 		<releaseNotes>
-			# 1.0.1
-			July 30, 2023
+			# 1.0.2
+			September 10, 2023
 
-			Added test containers for MySQL.
-			Revised some tests for clock drift.
-			Improved overall testing for clause string conversion.
+			* Added support for autocomplete.
+			* Fixed issues with handling of enum clauses in queries.
 		</releaseNotes>
 		<copyright>Copyright 2013 - 2023</copyright>
     	<tags>REST query language abstract syntax tree parser sql-injection protection friendly readable domain-specific DSL</tags>

@@ -14,12 +14,20 @@ namespace Searchlight.Parsing
         /// <param name="columnName">The name of the column in the database</param>
         /// <param name="aliases">If this field is known by other names, list them here</param>
         /// <param name="columnType">The raw type of the column in the database</param>
-        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType, string description)
+        /// <param name="enumType">The type of the enum that the column is mapped to</param>
+        /// <param name="description">A description of the column for autocomplete</param>
+        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType, Type enumType, string description)
         {
             FieldName = filterName;
             OriginalName = columnName;
             FieldType = columnType;
             Aliases = aliases;
+            if (enumType != null && !enumType.IsEnum)
+            {
+                throw new ArgumentException("Must specify an enum type", nameof(enumType));
+            }
+
+            EnumType = enumType;
             Description = description;
         }
 
@@ -43,6 +51,12 @@ namespace Searchlight.Parsing
         /// </summary>
         public Type FieldType { get; private set; }
         
+        /// <summary>
+        /// When the user specifies a field to be an enum, the parameter must be mapped by this type
+        /// ex. The field type is int and enum is CarType { Sedan = 0, SUV = 1 } so "Sedan" should translate to 0
+        /// </summary>
+        public Type EnumType { get; private set; }
+
         /// <summary>
         /// Detailed field documentation for autocomplete, if provided.
         /// </summary>
