@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Searchlight.Autocomplete;
 using Searchlight.Exceptions;
+using Searchlight.Parsing;
 using Searchlight.Query;
 
 namespace Searchlight
@@ -121,6 +123,13 @@ namespace Searchlight
         public SyntaxTree Parse(FetchRequest request)
         {
             var source = FindTable(request.table);
+            if (source == null)
+            {
+                throw new TableNotFoundException()
+                {
+                    TableName = request.table,
+                };
+            }
             if (request.pageSize == null)
             {
                 request.pageSize = DefaultPageSize;
@@ -136,7 +145,94 @@ namespace Searchlight
                     throw new InvalidPageSize { PageSize = $"larger than the allowed maximum pageSize, {MaximumPageSize}"};
                 }
             }
-            return source?.Parse(request);
+            return SyntaxParser.Parse(source, request);
+        }
+
+        /// <summary>
+        /// When typing in a search box in a user interface, call this function to get suggestions.
+        /// </summary>
+        /// <param name="table">The table being searched</param>
+        /// <param name="filter">The filter statement used</param>
+        /// <param name="cursorPosition">The position </param>
+        /// <returns></returns>
+        public CompletionList AutocompleteFilter(string table, string filter, int cursorPosition)
+        {
+            var source = FindTable(table);
+            var completion = new CompletionList() { items = new List<CompletionItem>() };
+            
+            // If the user hasn't typed anything, just give them a list of fields
+            if (cursorPosition == 0 || string.IsNullOrWhiteSpace(filter))
+            {
+                return AutocompleteFields(source, null);
+            }
+
+            // Trim the autocomplete to the cursor position
+            var trimmedFilter = filter.Substring(0, cursorPosition);
+            var request = new FetchRequest()
+            {
+                table = table,
+                filter = trimmedFilter,
+            };
+            var syntax = SyntaxParser.TryParse(source, request);
+            if (syntax.Errors != null && syntax.Errors.Count == 1)
+            {
+                var e = syntax.Errors[0];
+                if (e is InvalidToken invalidToken)
+                {
+                    foreach (var token in invalidToken.ExpectedTokens.OrderBy(s => s))
+                    {
+                        if (invalidToken.BadToken == null || token.StartsWith(invalidToken.BadToken,
+                                StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            completion.items.Add(new CompletionItem()
+                            {
+                                label = token,
+                                deprecated = false,
+                                detail = null,
+                                kind = CompletionItemKind.Keyword,
+                            });
+                        }
+                    }
+
+                    return completion;
+                }
+
+                if (e is FieldNotFound fieldNotFound)
+                {
+                    return AutocompleteFields(source, fieldNotFound.FieldName);
+                }
+
+                if (e is TrailingConjunction trailingConjunction)
+                {
+                    return AutocompleteFields(source, null);
+                }
+            }
+
+            // Uncertain how to handle this; let's give no advice
+            return completion;
+        }
+
+        private CompletionList AutocompleteFields(DataSource source, string prefix)
+        {
+            var completion = new CompletionList()
+            {
+                items = new List<CompletionItem>(),
+            };
+            foreach (var field in source._columns.OrderBy(c => c.FieldName))
+            {
+                if (prefix == null || field.FieldName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    completion.items.Add(new CompletionItem()
+                    {
+                        label = field.FieldName,
+                        kind = CompletionItemKind.Field,
+                        detail = field.Description,
+                        deprecated = false,
+                    });
+                }
+            }
+
+            return completion;
         }
 
         /// <summary>

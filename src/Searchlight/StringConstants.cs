@@ -66,6 +66,11 @@ namespace Searchlight
         };
 
         /// <summary>
+        /// The list of clause connectors that are permitted - only two!
+        /// </summary>
+        public static readonly string[] CLAUSE_JOINS = new string[] { "AND", "OR" };
+
+        /// <summary>
         /// Represents the list of single-character operators for tokenization
         /// </summary>
         public static readonly char[] SINGLE_CHARACTER_OPERATORS = new char[] { '=', '>', '<', '(', ')', ',', '!' };
@@ -88,14 +93,14 @@ namespace Searchlight
         /// <summary>
         /// Represents descending sort
         /// </summary>
-        public static readonly string DESCENDING = "DESC";
-        public static readonly string DESCENDING_ABR = "DESCENDING";
+        public static readonly string DESCENDING = "DESCENDING";
+        public static readonly string DESCENDING_ABBR = "DESC";
 
         /// <summary>
         /// Represents ascending sort
         /// </summary>
-        public static readonly string ASCENDING = "ASC";
-        public static readonly string ASCENDING_ABR = "ASCENDING";
+        public static readonly string ASCENDING = "ASCENDING";
+        public static readonly string ASCENDING_ABBR = "ASC";
 
         /// <summary>
         /// User specified an inverse operation

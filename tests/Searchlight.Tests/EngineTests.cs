@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Searchlight.Exceptions;
 
 namespace Searchlight.Tests
@@ -27,6 +28,22 @@ namespace Searchlight.Tests
         }
         
         [TestMethod]
+        public void TestUnknownTable()
+        {
+            var engine = new SearchlightEngine().AddClass(typeof(TestTableAliases));
+            Assert.IsNull(engine.FindTable("SomeReallyUnknownTable"));
+            
+            // Parsing for this table should fail
+            var badRequest = new FetchRequest()
+            {
+                table = "AnotherReallyUnknownTable",
+                filter = "field eq value"
+            };
+            var ex = Assert.ThrowsException<TableNotFoundException>(() => engine.Parse(badRequest));
+            Assert.AreEqual(badRequest.table, ex.TableName);
+        }
+        
+        [TestMethod]
         public void Test_MaxPSUpdatedFromDefault()
         {
             var engine = new SearchlightEngine() { MaximumPageSize = 50 };
@@ -43,9 +60,11 @@ namespace Searchlight.Tests
         [TestMethod]
         public void Test_SettingRequestPageSizeWhenNotSpecified()
         {
-            var engine = new SearchlightEngine();
-            engine.Parse(mockFetchRequest);
-            Assert.IsTrue(mockFetchRequest.pageSize == engine.MaximumPageSize); }
+            var source = new DataSource() { TableName = "tableau" };
+            var engine = new SearchlightEngine().AddDataSource(source);
+            engine.Parse(new FetchRequest() { table = "tableau" });
+            Assert.IsTrue(mockFetchRequest.pageSize == engine.MaximumPageSize); 
+        }
 
         [TestMethod]
         public void Test_ParsingRequestWithInvalidPageSize()
@@ -55,9 +74,11 @@ namespace Searchlight.Tests
             {
                 MaximumPageSize = 1000
             };
+            var source = new DataSource() { TableName = "tableau" };
+            engine.AddDataSource(source);
             Assert.ThrowsException<InvalidPageSize>(() => engine.Parse(mockFetchRequest));
         }
-
+        
         [TestMethod]
         public void Test_DefaultPageSize()
         {

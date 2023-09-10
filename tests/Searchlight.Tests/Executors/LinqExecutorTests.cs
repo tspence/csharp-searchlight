@@ -58,20 +58,20 @@ namespace Searchlight.Tests.Executors
             var list = CompatibleEmployeeObj.GetCompatibleList();
 
             // Try a few queries and sorts that _can_ work on a compatible type
-            var syntax = _src.Parse("name startswith c");
+            var syntax = _src.ParseFilter("name startswith c");
             var result = syntax.QueryCollection(list);
             Assert.AreEqual("Charlie Compatible", result.records[0].name);
             
-            syntax = _src.Parse("name startswith c", null, "onduty asc");
+            syntax = _src.Parse(new FetchRequest() { filter = "name startswith c", order = "onduty asc" });
             result = syntax.QueryCollection(list);
             Assert.AreEqual("Charlie Compatible", result.records[0].name);
 
             // Now try a query and a sort that won't work
-            syntax = _src.Parse("name startswith c and id = 57 and hired > 2020-02-01 and onduty = false");
+            syntax = _src.ParseFilter("name startswith c and id = 57 and hired > 2020-02-01 and onduty = false");
             var ex = Assert.ThrowsException<FieldTypeMismatch>(() => { _ = syntax.QueryCollection(list); });
             Assert.AreEqual("id on type CompatibleEmployeeObj", ex.FieldName);
 
-            syntax = _src.Parse("name startswith c", null, "id asc");
+            syntax = _src.Parse(new FetchRequest() { filter = "name startswith c", order = "id asc" });
             ex = Assert.ThrowsException<FieldTypeMismatch>(() => { _ = syntax.QueryCollection(list); });
             Assert.AreEqual("id on type CompatibleEmployeeObj", ex.FieldName);
         }
@@ -80,7 +80,7 @@ namespace Searchlight.Tests.Executors
         public void QueryIncompatibleCollection()
         {
             var list = IncompatibleEmployeeObj.GetIncompatibleList();
-            var syntax = _src.Parse("name startswith a");
+            var syntax = _src.ParseFilter("name startswith a");
             syntax.PageSize = 1;
             syntax.PageNumber = 2;
 

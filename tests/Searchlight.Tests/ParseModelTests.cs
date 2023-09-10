@@ -78,7 +78,7 @@ namespace Searchlight.Tests
 
             // Attempt to query a field that does exist, but is not permitted to be queried
             var anotherFilter = "NotASearchlightField = 'Hello'";
-            var clauses = source.ParseFilter(anotherFilter);
+            var clauses = source.ParseFilter(anotherFilter).Filter;
             Assert.AreEqual(1, clauses.Count);
             var cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
@@ -106,21 +106,21 @@ namespace Searchlight.Tests
                     1]); // Example: "This field was originally known as DescriptionText, but our new standards made us change it"
 
             // Attempt to query a field using its old name
-            var clauses = source.ParseFilter("desription contains 'Blockchain'");
+            var clauses = source.ParseFilter("desription contains 'Blockchain'").Filter;
             Assert.AreEqual(1, clauses.Count);
             var cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
             Assert.AreEqual("Description", cc.Column.FieldName);
 
             // Attempt to query a field using its old name
-            clauses = source.ParseFilter("DescriptionText contains 'Blockchain'");
+            clauses = source.ParseFilter("DescriptionText contains 'Blockchain'").Filter;
             Assert.AreEqual(1, clauses.Count);
             cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
             Assert.AreEqual("Description", cc.Column.FieldName);
 
             // Attempt to query a field using its old name
-            clauses = source.ParseFilter("Description contains 'Blockchain'");
+            clauses = source.ParseFilter("Description contains 'Blockchain'").Filter;
             Assert.AreEqual(1, clauses.Count);
             cc = clauses[0] as CriteriaClause;
             Assert.IsNotNull(cc);
@@ -200,7 +200,7 @@ namespace Searchlight.Tests
         public void TestDefaultSort()
         {
             var source = DataSource.Create(null, typeof(TestWithDefaultSort), AttributeMode.Strict);
-            var query = source.Parse(null, null);
+            var query = source.Parse( null);
             Assert.AreEqual(1, query.OrderBy.Count);
             Assert.AreEqual("Name", query.OrderBy[0].Column.FieldName);
             Assert.AreEqual(SortDirection.Ascending, query.OrderBy[0].Direction);
@@ -273,18 +273,18 @@ namespace Searchlight.Tests
         public void BooleanFieldWithStringOperators()
         {
             var src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
-            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty contains 's'"); });
-            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty contains True"); });
-            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty startswith True"); });
-            Assert.ThrowsException<FieldTypeMismatch>(() => { src.Parse("OnDuty endswith True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.ParseFilter("OnDuty contains 's'"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.ParseFilter("OnDuty contains True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.ParseFilter("OnDuty startswith True"); });
+            Assert.ThrowsException<FieldTypeMismatch>(() => { src.ParseFilter("OnDuty endswith True"); });
         }
         
         [TestMethod]
         public void InQueryEmptyList()
         {
             var src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
-            Assert.ThrowsException<EmptyClause>(() => src.Parse("name in ()"));
-            Assert.ThrowsException<EmptyClause>(() => src.Parse("paycheck > 1 AND name in ()"));
+            Assert.ThrowsException<EmptyClause>(() => src.ParseFilter("name in ()"));
+            Assert.ThrowsException<EmptyClause>(() => src.ParseFilter("paycheck > 1 AND name in ()"));
         }
 
         [TestMethod]
@@ -422,7 +422,7 @@ namespace Searchlight.Tests
         public async Task QueryComputedCriteria()
         {
             var source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
-            var syntax = source.Parse("hired > TODAY - 30");
+            var syntax = source.ParseFilter("hired > TODAY - 30");
             Assert.AreEqual(1, syntax.Filter.Count);
             var cc = syntax.Filter[0] as CriteriaClause;
             Assert.IsNotNull(cc);
@@ -432,7 +432,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(-30, ic.Offset);
 
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
-            syntax = source.Parse("hired > NOW + 1");
+            syntax = source.ParseFilter("hired > NOW + 1");
             Assert.AreEqual(1, syntax.Filter.Count);
             cc = syntax.Filter[0] as CriteriaClause;
             Assert.IsNotNull(cc);
@@ -451,7 +451,7 @@ namespace Searchlight.Tests
             Assert.IsTrue(timeSpan.TotalMilliseconds >= 1);
 
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
-            syntax = source.Parse("hired > TOMORROW + 0");
+            syntax = source.ParseFilter("hired > TOMORROW + 0");
             Assert.AreEqual(1, syntax.Filter.Count);
             cc = syntax.Filter[0] as CriteriaClause;
             Assert.IsNotNull(cc);
@@ -461,7 +461,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(0, ic.Offset);
             
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
-            syntax = source.Parse("hired > YESTERDAY - 0");
+            syntax = source.ParseFilter("hired > YESTERDAY - 0");
             Assert.AreEqual(1, syntax.Filter.Count);
             cc = syntax.Filter[0] as CriteriaClause;
             Assert.IsNotNull(cc);
@@ -471,7 +471,7 @@ namespace Searchlight.Tests
             Assert.AreEqual(0, ic.Offset);
             
             source = DataSource.Create(null, typeof(TestWithDateField), AttributeMode.Strict);
-            syntax = source.Parse("hired BETWEEN YESTERDAY - 14 AND YESTERDAY - 7");
+            syntax = source.ParseFilter("hired BETWEEN YESTERDAY - 14 AND YESTERDAY - 7");
             Assert.AreEqual(1, syntax.Filter.Count);
             var bc = syntax.Filter[0] as BetweenClause;
             Assert.IsNotNull(bc);

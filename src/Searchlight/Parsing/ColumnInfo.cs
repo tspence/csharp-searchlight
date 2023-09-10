@@ -14,12 +14,13 @@ namespace Searchlight.Parsing
         /// <param name="columnName">The name of the column in the database</param>
         /// <param name="aliases">If this field is known by other names, list them here</param>
         /// <param name="columnType">The raw type of the column in the database</param>
-        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType)
+        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType, string description)
         {
             FieldName = filterName;
             OriginalName = columnName;
             FieldType = columnType;
             Aliases = aliases;
+            Description = description;
         }
 
         /// <summary>
@@ -41,5 +42,10 @@ namespace Searchlight.Parsing
         /// When the user compares a field to a parameter, the parameter must be convertable to this type
         /// </summary>
         public Type FieldType { get; private set; }
+        
+        /// <summary>
+        /// Detailed field documentation for autocomplete, if provided.
+        /// </summary>
+        public string Description { get; private set; }
     }
 }

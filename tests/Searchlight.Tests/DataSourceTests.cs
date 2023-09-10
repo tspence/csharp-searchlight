@@ -7,19 +7,14 @@ namespace Searchlight.Tests
     [TestClass]
     public class DataSourceTests
     {
-        private readonly DataSource _source;
-
-        public DataSourceTests()
-        {
-            _source = new DataSource()
-                .WithColumn("a", typeof(String))
-                .WithColumn("b", typeof(Int32))
-                .WithColumn("colLong", typeof(Int64))
-                .WithColumn("colNullableGuid", typeof(Nullable<Guid>))
-                .WithColumn("colULong", typeof(UInt64))
-                .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
-                .WithColumn("colGuid", typeof(Guid));
-        }
+        private readonly DataSource _source = new DataSource()
+            .WithColumn("a", typeof(String))
+            .WithColumn("b", typeof(Int32))
+            .WithColumn("colLong", typeof(Int64))
+            .WithColumn("colNullableGuid", typeof(Nullable<Guid>))
+            .WithColumn("colULong", typeof(UInt64))
+            .WithColumn("colNullableULong", typeof(Nullable<UInt64>))
+            .WithColumn("colGuid", typeof(Guid));
 
         [TestMethod]
         public void IncorrectFieldValueType()
@@ -30,6 +25,15 @@ namespace Searchlight.Tests
             Assert.AreEqual("System.Int32", ex.FieldType);
             Assert.AreEqual("Hello!", ex.FieldValue);
             Assert.AreEqual(originalFilter, ex.OriginalFilter);
+        }
+
+        [TestMethod]
+        public void UnterminatedLiteral()
+        {
+            string originalFilter = "a = 'test and colLong eq 0";
+            var ex = Assert.ThrowsException<UnterminatedString>(() => _source.ParseFilter(originalFilter));
+            Assert.AreEqual(originalFilter, ex.OriginalFilter);
+            Assert.AreEqual(4, ex.StartPosition);
         }
 
         [TestMethod]
@@ -117,7 +121,7 @@ namespace Searchlight.Tests
             });
 
             // Realistic example of a quirky but valid customer request
-            var clauses = _source.ParseFilter("(a = 'test' OR b = 1)");
+            var clauses = _source.ParseFilter("(a = 'test' OR b = 1)").Filter;
             Assert.IsTrue(clauses[0] is CompoundClause);
             Assert.AreEqual("(a Equals test OR b Equals 1)", clauses[0].ToString());
             Assert.AreEqual(clauses.Count, 1);
@@ -133,10 +137,11 @@ namespace Searchlight.Tests
         [TestMethod]
         public void ParseGteLte()
         {
-            var clauses = _source.ParseFilter("(a gte 'test' OR b lte 1)");
+            var clauses = _source.ParseFilter("(a gte 'test' OR b lte 1)").Filter;
             Assert.IsTrue(clauses[0] is CompoundClause);
             Assert.AreEqual(clauses.Count, 1);
             var cc = clauses[0] as CompoundClause;
+            Assert.IsNotNull(cc);
             Assert.AreEqual(cc.Children.Count, 2);
             Assert.IsTrue(cc.Children[0] is CriteriaClause);
             Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause)cc.Children[0]).Operation);

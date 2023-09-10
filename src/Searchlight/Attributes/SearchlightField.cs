@@ -27,5 +27,10 @@ namespace Searchlight
         /// If this field is presented to the user as an enum, use this source enum to parse the value before converting to fieldType for querying
         /// </summary>
         public Type EnumType { get; set; }
+        
+        /// <summary>
+        /// (optional) If you wish to use Searchlight autocomplete, you can provide a documentation block here.
+        /// </summary>
+        public string Description { get; set; }
     }
 }
