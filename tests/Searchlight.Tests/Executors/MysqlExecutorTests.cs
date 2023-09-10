@@ -113,5 +113,8 @@ public class MysqlExecutorTests
     public async Task EmployeeTestSuite()
     {
         await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _executor);
+
+        _src.Engine = new SearchlightEngine { StringComparison = StringComparison.Ordinal };
+        await Executors.EmployeeTestSuite.CaseSensitiveStringTestSuite(_src, _list, _executor);
     }
 }

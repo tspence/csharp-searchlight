@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Searchlight.Parsing;
 using Searchlight.Query;
 
@@ -149,6 +150,7 @@ namespace Searchlight
             Expression field;
             Expression value;
             Expression result;
+            var comparison = src?.Engine?.StringComparison ?? StringComparison.OrdinalIgnoreCase;
 
             var t = typeof(T);
 
@@ -173,7 +175,7 @@ namespace Searchlight
                                     // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("Equals",
                                         new [] { typeof(string), typeof(string), typeof(StringComparison) }),
-                                    field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase));
+                                    field, value, Expression.Constant(comparison));
                             }
                             else
                             {
@@ -191,7 +193,7 @@ namespace Searchlight
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
-                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                            field, value, Expression.Constant(comparison)),
                                         Expression.Constant(0)));
                             }
                             else
@@ -210,7 +212,7 @@ namespace Searchlight
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
-                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                            field, value, Expression.Constant(comparison)),
                                         Expression.Constant(0)));
                             }
                             else
@@ -229,7 +231,7 @@ namespace Searchlight
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
-                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                            field, value, Expression.Constant(comparison)),
                                         Expression.Constant(0)));
                             }
                             else
@@ -248,7 +250,7 @@ namespace Searchlight
                                                 {
                                                     typeof(string), typeof(string), typeof(StringComparison)
                                                 }),
-                                            field, value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                            field, value, Expression.Constant(comparison)),
                                         Expression.Constant(0)));
                             }
                             else
@@ -262,7 +264,7 @@ namespace Searchlight
                                     // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("StartsWith",
                                         new [] { typeof(string), typeof(StringComparison) }),
-                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                    value, Expression.Constant(comparison)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
@@ -274,7 +276,7 @@ namespace Searchlight
                                     // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("EndsWith",
                                         new [] { typeof(string), typeof(StringComparison) }),
-                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                    value, Expression.Constant(comparison)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );
@@ -285,7 +287,7 @@ namespace Searchlight
                                     // ReSharper disable once AssignNullToNotNullAttribute
                                     typeof(string).GetMethod("Contains",
                                         new [] { typeof(string), typeof(StringComparison) }),
-                                    value, Expression.Constant(StringComparison.OrdinalIgnoreCase)),
+                                    value, Expression.Constant(comparison)),
                                 Expression.MakeCatchBlock(typeof(Exception), null,
                                     Expression.Constant(false, typeof(Boolean)), null)
                             );

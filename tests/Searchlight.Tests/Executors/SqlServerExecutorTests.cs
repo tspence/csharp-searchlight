@@ -154,5 +154,12 @@ public class SqlServerExecutorTests
     public async Task EmployeeTestSuite()
     {
         await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _postgres);
+        
+        _src.Engine = new SearchlightEngine
+        {
+            StringComparison = StringComparison.Ordinal,
+            Collation = "SQL_Latin1_General_CP1_CS_AS"
+        };
+        await Executors.EmployeeTestSuite.CaseSensitiveStringTestSuite(_src, _list, _postgres);
     }
 }

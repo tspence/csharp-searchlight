@@ -40,6 +40,12 @@ namespace Searchlight.Tests.Executors
         {
             await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _linq);
             await Executors.EmployeeTestSuite.CaseInsensitiveStringTestSuite(_src, _list, _linq);
+
+            _src.Engine = new SearchlightEngine { StringComparison = StringComparison.OrdinalIgnoreCase };
+            await Executors.EmployeeTestSuite.CaseInsensitiveStringTestSuite(_src, _list, _linq);
+            
+            _src.Engine = new SearchlightEngine { StringComparison = StringComparison.Ordinal };
+            await Executors.EmployeeTestSuite.CaseSensitiveStringTestSuite(_src, _list, _linq);
         }
         
         // =========================================================
