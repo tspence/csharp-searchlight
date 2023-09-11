@@ -65,15 +65,15 @@ namespace Searchlight
         /// <returns></returns>
         public DataSource WithColumn(string columnName, Type columnType)
         {
-            return WithRenamingColumn(columnName, columnName, null, columnType, null);
+            return WithRenamingColumn(columnName, columnName, null, columnType, null, null);
         }
 
         /// <summary>
         /// Add a column to this definition
         /// </summary>
-        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType, string description)
+        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType, Type enumType, string description)
         {
-            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType, description);
+            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType, enumType, description);
             _columns.Add(columnInfo);
 
             // Allow the API caller to either specify either the model name or one of the aliases
@@ -200,9 +200,10 @@ namespace Searchlight
                         if (filter != null)
                         {
                             // If this is a renaming column, add it appropriately
-                            Type t = filter.FieldType ?? pi.PropertyType;
-                            src.WithRenamingColumn(pi.Name, filter.OriginalName ?? pi.Name,
-                                filter.Aliases ?? Array.Empty<string>(), t, filter.Description);
+                            var t = filter.FieldType ?? pi.PropertyType;
+                            var columnName = filter.OriginalName ?? pi.Name;
+                            var aliases = filter.Aliases ?? Array.Empty<string>();
+                            src.WithRenamingColumn(pi.Name, columnName, aliases, t, filter.EnumType, filter.Description);
                         }
 
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();

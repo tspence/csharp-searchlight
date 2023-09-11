@@ -22,7 +22,7 @@ public class SqlServerExecutorTests
     [TestInitialize]
     public async Task SetupClient()
     {
-        _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+        _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Strict);
         _container = new MsSqlBuilder()
             .Build();
         await _container.StartAsync();
@@ -32,9 +32,12 @@ public class SqlServerExecutorTests
         using (var connection = new SqlConnection(_connectionString))
         {
             await connection.OpenAsync();
-            
+
             // Create basic table
-            using (var command = new SqlCommand("CREATE TABLE employeeobj (name nvarchar(255) null, id int not null, hired datetime not null, paycheck decimal not null, onduty bit not null)", connection))
+            using (var command =
+                   new SqlCommand(
+                       "CREATE TABLE employeeobj (name nvarchar(255) null, id int not null, hired datetime not null, paycheck decimal not null, onduty bit not null, employeetype int null DEFAULT 0)",
+                       connection))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -42,13 +45,14 @@ public class SqlServerExecutorTests
             // Insert rows
             foreach (var record in EmployeeObj.GetTestList())
             {
-                using (var command = new SqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
+                using (var command = new SqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty, employeetype) VALUES (@name, @id, @hired, @paycheck, @onduty, @employeetype)", connection))
                 {
                     command.Parameters.AddWithValue("@name", (object)record.name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@id", record.id);
                     command.Parameters.AddWithValue("@hired", record.hired);
                     command.Parameters.AddWithValue("@paycheck", record.paycheck);
                     command.Parameters.AddWithValue("@onduty", record.onduty);
+                    command.Parameters.AddWithValue("@employeetype", record.employeeType);
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -96,6 +100,7 @@ public class SqlServerExecutorTests
                                 hired = reader.GetDateTime("hired"),
                                 paycheck = reader.GetDecimal("paycheck"),
                                 onduty = reader.GetBoolean("onduty"),
+                                employeeType = (EmployeeObj.EmployeeType)reader.GetInt32(5),
                             });
                         }
                     }

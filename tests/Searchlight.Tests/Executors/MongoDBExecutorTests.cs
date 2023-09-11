@@ -25,7 +25,7 @@ namespace Searchlight.Tests.Executors
         [TestInitialize]
         public async Task SetupMongoClient()
         {
-            _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+            _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Strict);
             var options = new MongoRunnerOptions();
             _runner = MongoRunner.Run(options);
 

@@ -22,7 +22,7 @@ public class PostgresExecutorTests
     [TestInitialize]
     public async Task SetupClient()
     {
-        _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Loose);
+        _src = DataSource.Create(null, typeof(EmployeeObj), AttributeMode.Strict);
         _container = new PostgreSqlBuilder()
             .Build();
         await _container.StartAsync();
@@ -34,7 +34,10 @@ public class PostgresExecutorTests
             await connection.OpenAsync();
             
             // Create basic table
-            await using (var command = new NpgsqlCommand("CREATE TABLE employeeobj (name text null, id int not null, hired timestamp with time zone, paycheck numeric, onduty bool)", connection))
+            await using (var command =
+                         new NpgsqlCommand(
+                             "CREATE TABLE employeeobj (name text null, id int not null, hired timestamp with time zone, paycheck numeric, onduty bool, employeetype int not null)",
+                             connection))
             {
                 await command.ExecuteNonQueryAsync();
             }
@@ -42,13 +45,14 @@ public class PostgresExecutorTests
             // Insert rows
             foreach (var record in EmployeeObj.GetTestList())
             {
-                await using (var command = new NpgsqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty) VALUES (@name, @id, @hired, @paycheck, @onduty)", connection))
+                await using (var command = new NpgsqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty, employeetype) VALUES (@name, @id, @hired, @paycheck, @onduty, @employeetype)", connection))
                 {
                     command.Parameters.AddWithValue("@name", NpgsqlDbType.Text, (object)record.name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@id", NpgsqlDbType.Integer, record.id);
                     command.Parameters.AddWithValue("@hired", NpgsqlDbType.TimestampTz, record.hired);
                     command.Parameters.AddWithValue("@paycheck", NpgsqlDbType.Numeric, record.paycheck);
                     command.Parameters.AddWithValue("@onduty", NpgsqlDbType.Boolean, record.onduty);
+                    command.Parameters.AddWithValue("@employeetype", NpgsqlDbType.Integer, (int)record.employeeType);
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -84,6 +88,7 @@ public class PostgresExecutorTests
                                 hired = reader.GetDateTime(2),
                                 paycheck = reader.GetDecimal(3),
                                 onduty = reader.GetBoolean(4),
+                                employeeType = (EmployeeObj.EmployeeType)reader.GetInt32(5),
                             });
                         }
                     }
@@ -108,19 +113,19 @@ public class PostgresExecutorTests
         {
             return NpgsqlDbType.Boolean;
         }
-        else if (parameterType == typeof(string))
+        if (parameterType == typeof(string))
         {
             return NpgsqlDbType.Text;
         }
-        else if (parameterType == typeof(Int32))
+        if (parameterType == typeof(Int32))
         {
             return NpgsqlDbType.Integer;
         }
-        else if (parameterType == typeof(decimal))
+        if (parameterType == typeof(decimal))
         {
             return NpgsqlDbType.Numeric;
         }
-        else if (parameterType == typeof(DateTime))
+        if (parameterType == typeof(DateTime))
         {
             return NpgsqlDbType.TimestampTz;
         }

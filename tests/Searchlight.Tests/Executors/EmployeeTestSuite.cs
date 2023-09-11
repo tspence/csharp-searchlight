@@ -58,6 +58,7 @@ namespace Searchlight.Tests.Executors
             await suite.PageNumberNoPageSize();
             await suite.PageSizeNoPageNumber();
             await suite.PageSizeAndPageNumber();
+            await suite.EnumTranslation();
         }
 
         /// <summary>
@@ -668,6 +669,22 @@ namespace Searchlight.Tests.Executors
             var result = await _executor(syntax);
 
             Assert.AreEqual(result.records.Length, 1);
+        }
+        
+        private async Task EnumTranslation()
+        {
+            var syntax = _src.ParseFilter("employeetype eq FullTime");
+            var result = await _executor(syntax);
+            Assert.AreEqual(8, result.records.Length);
+
+            // Both string name and underlying type work
+            syntax = _src.ParseFilter("employeetype eq 0");
+            result = await _executor(syntax);
+            Assert.AreEqual(8, result.records.Length);
+
+            syntax = _src.ParseFilter("employeetype eq Contract");
+            result = await _executor(syntax);
+            Assert.AreEqual(1, result.records.Length);
         }
     }
 }

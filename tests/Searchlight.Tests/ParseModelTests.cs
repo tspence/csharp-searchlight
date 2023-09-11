@@ -234,15 +234,7 @@ namespace Searchlight.Tests
             Assert.IsNotNull(engine.FindTable("BookCopy"));
             
             // This is the list of expected errors
-            Assert.AreEqual(4, engine.ModelErrors.Count);
-            Assert.IsTrue(engine.ModelErrors.Any(err =>
-            {
-                if (err is InvalidDefaultSort defSort)
-                {
-                    return (defSort.Table == "EmployeeObj");
-                }
-                return false;
-            }));
+            Assert.AreEqual(3, engine.ModelErrors.Count);
             Assert.IsTrue(engine.ModelErrors.Any(err =>
             {
                 if (err is DuplicateName duplicateName)
@@ -507,6 +499,49 @@ namespace Searchlight.Tests
             var ex2 = Assert.ThrowsException<InconsistentConjunctionException>(() => source.ParseFilter(impreciseRoot));
             Assert.AreEqual("Name Equals Alice OR Name Equals Bob AND Description Contains employee", ex2.InconsistentClause);
             Assert.IsTrue(ex2.ErrorMessage.StartsWith("Mixing AND and OR conjunctions in the same statement results in an imprecise query."));
+        }
+
+        public enum TestEnumValueCategory
+        {
+            None = 0,
+            Special = 1,
+            Generic = 2,
+        }
+        
+        [SearchlightModel(DefaultSort = "Name ascending")]
+        public class TestClassWithEnumValues
+        {
+            [SearchlightField(OriginalName = "field_name")]
+            public string Name { get; set; }
+            [SearchlightField(OriginalName = "field_category")]
+            public TestEnumValueCategory Category { get; set; }
+        }
+        
+        
+        [TestMethod]
+        public void TestValidEnumFilters()
+        {
+            var source = DataSource.Create(null, typeof(TestClassWithEnumValues), AttributeMode.Strict);
+            var columns = source.GetColumnDefinitions().ToArray();
+            Assert.AreEqual(2, columns.Length);
+            Assert.AreEqual("Name", columns[0].FieldName);
+            Assert.AreEqual(typeof(string), columns[0].FieldType);
+            Assert.AreEqual("Category", columns[1].FieldName);
+            Assert.AreEqual(typeof(TestEnumValueCategory), columns[1].FieldType);
+
+            // Query for a valid category
+            var syntax1 = source.ParseFilter("category = None");
+            Assert.IsNotNull(syntax1);
+
+            // Query using the raw integer value, which is generally not advised but we accept it for historical reasons
+            var syntax2 = source.ParseFilter("category = 0");
+            Assert.IsNotNull(syntax2);
+
+            // Query for a non-valid category
+            var ex2 = Assert.ThrowsException<InvalidToken>(() => source.ParseFilter("category = InvalidValue"));
+            Assert.AreEqual("InvalidValue", ex2.BadToken);
+            CollectionAssert.AreEqual(new string[] { "None", "Special", "Generic" }, ex2.ExpectedTokens);
+            Assert.AreEqual("The filter statement contained an unexpected token, 'InvalidValue'. Searchlight expects to find one of these next: None, Special, Generic", ex2.ErrorMessage);
         }
     }
 }
