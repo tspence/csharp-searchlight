@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -173,5 +174,13 @@ public class SqlServerExecutorTests
         results = await _postgres(syntax);
         
         Assert.AreEqual(1, results.records.Length);
+        
+        syntax = _src.ParseFilter("dims.\"test\" is not null");
+        syntax.OrderBy = _src.ParseOrderBy("dims.\"test\" asc");
+        results = await _postgres(syntax);
+        
+        Assert.AreEqual(3, results.records.Length);
+        // make sure the list starts with lowest value test dimensions
+        Assert.AreEqual(4, results.records.First().id);
     }
 }

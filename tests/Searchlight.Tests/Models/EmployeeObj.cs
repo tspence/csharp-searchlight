@@ -83,6 +83,7 @@ public class EmployeeObj
                 onduty = false,
                 paycheck = 1200.0m,
                 employeeType = EmployeeType.FullTime,
+                dims = new Dictionary<string, string> { {"test", "a sort"} }
             },
             new()
             {

@@ -242,7 +242,7 @@ namespace Searchlight
                         return
                             $"{columnName} {(ic.Negated ? "NOT " : string.Empty)}IN ({string.Join(", ", paramValues)})";
                     case IsNullClause inc:
-                        return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";
+                        return $"{columnName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";
                     default:
                         throw new Exception("Invalid comparison type.");
                 }

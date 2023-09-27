@@ -164,7 +164,7 @@ namespace Searchlight.Parsing
                         FieldName = colName.Value, KnownFields = source.ColumnNames().ToArray(), OriginalFilter = orderBy
                     });
                 }
-                si.Column.JsonKey = jsonKey;
+                if (si.Column != null) si.Column.JsonKey = jsonKey;
 
                 // Was that the last token?
                 if (tokens.TokenQueue.Count == 0) break;
