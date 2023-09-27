@@ -65,22 +65,21 @@ namespace Searchlight
         /// <returns></returns>
         public DataSource WithColumn(string columnName, Type columnType)
         {
-            return WithRenamingColumn(columnName, columnName, null, columnType, null, null);
+            return WithRenamingColumn(new ColumnInfo(columnName, columnName, null, columnType, null, null, false));
         }
 
         /// <summary>
         /// Add a column to this definition
         /// </summary>
-        public DataSource WithRenamingColumn(string filterName, string columnName, string[] aliases, Type columnType, Type enumType, string description)
+        public DataSource WithRenamingColumn(ColumnInfo columnInfo)
         {
-            var columnInfo = new ColumnInfo(filterName, columnName, aliases, columnType, enumType, description);
             _columns.Add(columnInfo);
 
             // Allow the API caller to either specify either the model name or one of the aliases
-            AddName(filterName, columnInfo);
-            if (aliases != null)
+            AddName(columnInfo.FieldName, columnInfo);
+            if (columnInfo.Aliases != null)
             {
-                foreach (var alias in aliases)
+                foreach (var alias in columnInfo.Aliases)
                 {
                     AddName(alias, columnInfo);
                 }
@@ -153,6 +152,26 @@ namespace Searchlight
             return ci;
         }
 
+        public void TryParseJsonColumn(string colToken, out string column, out string jsonKey)
+        {
+            if (colToken.Contains("."))
+            {
+                var chunks = colToken.Split(new[] { '.' }, 2);
+                if (chunks.Length != 2)
+                {
+                    throw new InvalidToken();
+                }
+
+                column = chunks[0];
+                jsonKey = chunks[1].Trim('"');
+            }
+            else
+            {
+                column = colToken;
+                jsonKey = string.Empty;
+            }
+        }
+
 
         /// <summary>
         /// Create a searchlight data source based on an in-memory collection
@@ -203,7 +222,7 @@ namespace Searchlight
                             var t = filter.FieldType ?? pi.PropertyType;
                             var columnName = filter.OriginalName ?? pi.Name;
                             var aliases = filter.Aliases ?? Array.Empty<string>();
-                            src.WithRenamingColumn(pi.Name, columnName, aliases, t, filter.EnumType, filter.Description);
+                            src.WithRenamingColumn(new ColumnInfo(pi.Name, columnName, aliases, t, filter.EnumType, filter.Description, filter.IsJson));
                         }
 
                         var collection = pi.GetCustomAttributes<SearchlightCollection>().FirstOrDefault();
@@ -211,10 +230,16 @@ namespace Searchlight
                         {
                             src.Commands.Add(new CollectionCommand(src, collection, pi));
                         }
+
+                        // Add check here for JSON column
+                        // Make something like SearchlightJsonFieldAttribute
+                        // iterate through top level keys and add them as columns?
+                        // if the value is not a primitive, what should we do? force cast to string?
+                        
                     }
                 }
             }
-            
+
             // default sort cannot be null and must be a valid column
             if (src.DefaultSort != null)
             {
@@ -225,19 +250,19 @@ namespace Searchlight
                     if (syntax.Errors != null && syntax.Errors.Count > 0)
                     {
                         throw new InvalidDefaultSort
-                            {Table = src.TableName, DefaultSort = src.DefaultSort};
+                        { Table = src.TableName, DefaultSort = src.DefaultSort };
                     }
                 }
                 catch
                 {
                     throw new InvalidDefaultSort
-                        {Table = src.TableName, DefaultSort = src.DefaultSort};
+                    { Table = src.TableName, DefaultSort = src.DefaultSort };
                 }
             }
             else
             {
                 throw new InvalidDefaultSort
-                    {Table = src.TableName, DefaultSort = "NULL"};
+                { Table = src.TableName, DefaultSort = "NULL" };
             }
 
             // Calculate the list of known "include" commands

@@ -9,11 +9,6 @@ namespace Searchlight.Query
     public class CriteriaClause : BaseClause
     {
         /// <summary>
-        /// The field being tested
-        /// </summary>
-        public ColumnInfo Column { get; set; }
-
-        /// <summary>
         /// Operation for testing
         /// </summary>
         public OperationType Operation { get; set; }

@@ -1,4 +1,5 @@
-﻿
+﻿using Searchlight.Parsing;
+
 namespace Searchlight.Query
 {
     /// <summary>
@@ -6,6 +7,11 @@ namespace Searchlight.Query
     /// </summary>
     public class BaseClause
     {
+        /// <summary>
+        /// The field being tested
+        /// </summary>
+        public ColumnInfo Column { get; set; }
+        
         /// <summary>
         /// This value is true if the result of this test is to be inverted
         /// </summary>

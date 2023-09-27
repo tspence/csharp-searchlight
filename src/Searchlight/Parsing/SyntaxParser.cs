@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Searchlight.Exceptions;
 using Searchlight.Expressions;
@@ -153,7 +154,9 @@ namespace Searchlight.Parsing
 
                 // Identify the field being sorted
                 var colName = tokens.TokenQueue.Dequeue();
-                si.Column = source.IdentifyColumn(colName.Value);
+                
+                source.TryParseJsonColumn(colName.Value, out var column, out var jsonKey);
+                si.Column = source.IdentifyColumn(column);
                 if (si.Column == null)
                 {
                     syntax.AddError(new FieldNotFound()
@@ -161,6 +164,7 @@ namespace Searchlight.Parsing
                         FieldName = colName.Value, KnownFields = source.ColumnNames().ToArray(), OriginalFilter = orderBy
                     });
                 }
+                si.Column.JsonKey = jsonKey;
 
                 // Was that the last token?
                 if (tokens.TokenQueue.Count == 0) break;
@@ -337,7 +341,12 @@ namespace Searchlight.Parsing
             }
 
             // Identify the field name -- is it on the approved list?
-            var columnInfo = source.IdentifyColumn(fieldToken.Value);
+            // the format for json is field."key"
+            var colToken = fieldToken.Value;
+            var jsonKey = string.Empty;
+
+            source.TryParseJsonColumn(colToken, out colToken, out jsonKey);
+            var columnInfo = source.IdentifyColumn(colToken);
             if (columnInfo == null)
             {
                 if (string.Equals(fieldToken.Value, StringConstants.CLOSE_PARENTHESIS))
@@ -348,6 +357,8 @@ namespace Searchlight.Parsing
                 syntax.AddError(new FieldNotFound() { FieldName = fieldToken.Value, KnownFields = source.ColumnNames().ToArray(), OriginalFilter = tokens.OriginalText });
                 return null;
             }
+
+            columnInfo.JsonKey = jsonKey;
 
             // Allow "NOT" tokens here
             var negated = false;

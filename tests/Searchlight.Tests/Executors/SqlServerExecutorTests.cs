@@ -4,6 +4,7 @@ using System.Data;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Searchlight.Query;
 using Searchlight.Tests.Models;
 using Testcontainers.MsSql;
@@ -36,7 +37,7 @@ public class SqlServerExecutorTests
             // Create basic table
             using (var command =
                    new SqlCommand(
-                       "CREATE TABLE employeeobj (name nvarchar(255) null, id int not null, hired datetime not null, paycheck decimal not null, onduty bit not null, employeetype int null DEFAULT 0)",
+                       "CREATE TABLE employeeobj (name nvarchar(255) null, id int not null, hired datetime not null, paycheck decimal not null, onduty bit not null, employeetype int null DEFAULT 0, dims nvarchar(max) null)",
                        connection))
             {
                 await command.ExecuteNonQueryAsync();
@@ -45,14 +46,16 @@ public class SqlServerExecutorTests
             // Insert rows
             foreach (var record in EmployeeObj.GetTestList())
             {
-                using (var command = new SqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty, employeetype) VALUES (@name, @id, @hired, @paycheck, @onduty, @employeetype)", connection))
+                using (var command = new SqlCommand("INSERT INTO employeeobj (name, id, hired, paycheck, onduty, employeetype, dims) VALUES (@name, @id, @hired, @paycheck, @onduty, @employeetype, @dims)", connection))
                 {
+                    var test = JsonConvert.SerializeObject(record.dims);
                     command.Parameters.AddWithValue("@name", (object)record.name ?? DBNull.Value);
                     command.Parameters.AddWithValue("@id", record.id);
                     command.Parameters.AddWithValue("@hired", record.hired);
                     command.Parameters.AddWithValue("@paycheck", record.paycheck);
                     command.Parameters.AddWithValue("@onduty", record.onduty);
                     command.Parameters.AddWithValue("@employeetype", record.employeeType);
+                    command.Parameters.AddWithValue("@dims", test == "null" ? DBNull.Value : test);
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -159,5 +162,16 @@ public class SqlServerExecutorTests
     public async Task EmployeeTestSuite()
     {
         await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _postgres);
+        
+        var syntax = _src.ParseFilter("dims.\"test\" eq 'value'");
+        var results = await _postgres(syntax);
+
+        Assert.AreEqual(2, results.records.Length);
+
+        syntax = _src.ParseFilter("dims.\"test <> test\" eq 'value'");
+        syntax.OrderBy = _src.ParseOrderBy("dims.\"test <> test\" desc");
+        results = await _postgres(syntax);
+        
+        Assert.AreEqual(1, results.records.Length);
     }
 }

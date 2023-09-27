@@ -27,11 +27,21 @@ namespace Searchlight.Parsing
             // Go through each character
             var i = 0;
             var inToken = false;
+            var inQuotes = false;
             while (i < line.Length)
             {
                 var c = line[i];
 
-                if (char.IsWhiteSpace(c))
+                if (c.Equals('"'))
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (inQuotes)
+                {
+                    sb.Append(c);
+                    inToken = true;
+                }
+                else if (char.IsWhiteSpace(c))
                 {
                     // Whitespace characters always end a token)
                     if (inToken)
@@ -59,7 +69,8 @@ namespace Searchlight.Parsing
                     {
                         tokens.TokenQueue.Enqueue(new Token(line.Substring(i, 2), i));
                         i++;
-                    } else if (c == '<' || c == '>')
+                    }
+                    else if (c == '<' || c == '>')
                     {
                         tokens.TokenQueue.Enqueue(new Token(c.ToString(), i));
                     }
@@ -111,11 +122,8 @@ namespace Searchlight.Parsing
                 else
                 {
                     // Normal characters just get added to the token
-                    if (char.IsWhiteSpace(c) == false && !IsSpecialChar(c))
-                    {
-                        sb.Append(c);
-                        inToken = true;
-                    }
+                    sb.Append(c);
+                    inToken = true;
                 }
 
                 // Move to the next char
@@ -126,6 +134,11 @@ namespace Searchlight.Parsing
             if (inToken)
             {
                 tokens.TokenQueue.Enqueue(new Token(sb.ToString(), i - sb.Length));
+            }
+
+            if (inQuotes)
+            {
+                tokens.HasUnterminatedLiteral = true;
             }
 
             // Here's your tokenized list

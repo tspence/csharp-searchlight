@@ -10,11 +10,6 @@ namespace Searchlight.Query
     public class InClause : BaseClause
     {
         /// <summary>
-        /// The field to test
-        /// </summary>
-        public ColumnInfo Column { get; set; }
-
-        /// <summary>
         /// The list of values to test against
         /// </summary>
         public List<IExpressionValue> Values { get; set; }

@@ -37,6 +37,9 @@ public class EmployeeObj
     [BsonRepresentation(BsonType.Int32)]
     [SearchlightField(FieldType = typeof(int), EnumType = typeof(EmployeeType))]
     public EmployeeType employeeType { get; set; }
+    
+    [SearchlightField(FieldType = typeof(string), IsJson = true)]
+    public Dictionary<string, string> dims { get; set; }
 
     public static List<EmployeeObj> GetTestList()
     {
@@ -50,6 +53,7 @@ public class EmployeeObj
                 onduty = true,
                 paycheck = 1000.00m, 
                 employeeType = EmployeeType.FullTime,
+                dims = new Dictionary<string, string> { {"test <> test", "value"} }
             },
             new()
             {
@@ -59,6 +63,7 @@ public class EmployeeObj
                 onduty = true,
                 paycheck = 1000.00m,
                 employeeType = EmployeeType.PartTime,
+                dims = new Dictionary<string, string> { {"test", "value"} }
             },
             new()
             {
@@ -68,6 +73,7 @@ public class EmployeeObj
                 onduty = false,
                 paycheck = 800.0m,
                 employeeType = EmployeeType.Contract,
+                dims = new Dictionary<string, string> { {"test", "value"} }
             },
             new()
             {

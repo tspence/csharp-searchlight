@@ -159,7 +159,14 @@ namespace Searchlight
 
                 var sort = list[i];
                 var dir = sort.Direction == SortDirection.Ascending ? "ASC" : "DESC";
-                sb.Append($"{sort.Column.OriginalName} {dir}");
+
+                var columnName = sort.Column.OriginalName;
+                if (sort.Column.IsJson)
+                {
+                    columnName = $"JSON_VALUE({sort.Column.OriginalName}, '$.\"{sort.Column.JsonKey}\"')";
+                }
+                
+                sb.Append($"{columnName} {dir}");
             }
 
             return sb.ToString();
@@ -209,6 +216,38 @@ namespace Searchlight
         /// <exception cref="Exception"></exception>
         private static string RenderClause(SqlDialect dialect, BaseClause clause, SqlQuery sql)
         {
+            if (clause?.Column?.IsJson ?? false)
+            {
+                // JSON_VALUE(EmployeeObj.dims, '$."test"')
+                var columnName = $"JSON_VALUE({sql.Syntax.Source.TableName}.{clause.Column.OriginalName}, '$.\"{clause.Column.JsonKey}\"')";
+
+                switch (clause)
+                {
+                    case CompoundClause compoundClause:
+                        return $"({RenderJoinedClauses(dialect, compoundClause.Children, sql)})";
+                    case CriteriaClause cc:
+                        var rawValue = cc.Value.GetValue();
+                        switch (cc.Operation)
+                        {
+                            case OperationType.Equals:
+                            case OperationType.NotEqual:
+                                return RenderComparisonClause(columnName, cc.Negated, cc.Operation,
+                                    sql.AddParameter(rawValue, cc.Column.FieldType));
+                            default:
+                                throw new Exception("Incorrect clause type");
+                        }
+                    case InClause ic:
+                        var paramValues =
+                            from v in ic.Values select sql.AddParameter(v.GetValue(), ic.Column.FieldType);
+                        return
+                            $"{columnName} {(ic.Negated ? "NOT " : string.Empty)}IN ({string.Join(", ", paramValues)})";
+                    case IsNullClause inc:
+                        return $"{inc.Column.OriginalName} IS {(inc.Negated ? "NOT NULL" : "NULL")}";
+                    default:
+                        throw new Exception("Invalid comparison type.");
+                }
+            }
+            
             switch (clause)
             {
                 case BetweenClause bc:
@@ -228,6 +267,7 @@ namespace Searchlight
                         case OperationType.NotEqual:
                             return RenderComparisonClause(cc.Column.OriginalName, cc.Negated, cc.Operation, sql.AddParameter(rawValue, cc.Column.FieldType));
                         case OperationType.Contains:
+                            
                             return RenderLikeClause(dialect, cc, sql, rawValue, "%", "%");
                         case OperationType.StartsWith:
                             return RenderLikeClause(dialect, cc, sql, rawValue, string.Empty, "%");

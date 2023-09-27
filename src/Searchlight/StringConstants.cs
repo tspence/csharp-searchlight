@@ -79,6 +79,11 @@ namespace Searchlight
         /// Represents a single quote character for tokenization of strings
         /// </summary>
         public static readonly char SINGLE_QUOTE = '\'';
+        
+        /// <summary>
+        /// Represents a double quote character for tokenization of strings
+        /// </summary>
+        public static readonly char DOUBLE_QUOTE = '"';
 
         /// <summary>
         /// Represents an open parenthesis character for tokenization of strings

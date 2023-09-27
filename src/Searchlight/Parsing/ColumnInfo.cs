@@ -16,7 +16,7 @@ namespace Searchlight.Parsing
         /// <param name="columnType">The raw type of the column in the database</param>
         /// <param name="enumType">The type of the enum that the column is mapped to</param>
         /// <param name="description">A description of the column for autocomplete</param>
-        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType, Type enumType, string description)
+        public ColumnInfo(string filterName, string columnName, string[] aliases, Type columnType, Type enumType, string description, bool isJson)
         {
             FieldName = filterName;
             OriginalName = columnName;
@@ -29,12 +29,18 @@ namespace Searchlight.Parsing
 
             EnumType = enumType;
             Description = description;
+            IsJson = isJson;
         }
 
         /// <summary>
         /// This is the name of the field that the user provides in the filter text
         /// </summary>
         public string FieldName { get; private set; }
+
+        /// <summary>
+        /// This is the key for the JSON 
+        /// </summary>
+        public string JsonKey { get; set; } = string.Empty;
 
         /// <summary>
         /// This is the name of the field that the user provides in the filter text
@@ -56,6 +62,11 @@ namespace Searchlight.Parsing
         /// ex. The field type is int and enum is CarType { Sedan = 0, SUV = 1 } so "Sedan" should translate to 0
         /// </summary>
         public Type EnumType { get; private set; }
+        
+        /// <summary>
+        /// Specifies that this text column contains JSON
+        /// </summary>
+        public bool IsJson { get; set; }
 
         /// <summary>
         /// Detailed field documentation for autocomplete, if provided.

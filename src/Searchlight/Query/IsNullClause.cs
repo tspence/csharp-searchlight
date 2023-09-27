@@ -8,11 +8,6 @@ namespace Searchlight.Query
     public class IsNullClause : BaseClause
     {
         /// <summary>
-        /// The field being tested
-        /// </summary>
-        public ColumnInfo Column { get; set; }
-        
-        /// <summary>
         /// Render this criteria in a readable string
         /// </summary>
         public override string ToString()
