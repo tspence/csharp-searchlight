@@ -68,7 +68,7 @@ namespace Searchlight
         /// <summary>
         /// Whether or not to use case sensitive comparisons
         ///
-        /// Note: Odd numbers in the StringComparison enum are case sensitive
+        /// Note: Odd numbers in the StringComparison enum are case insensitive
         /// </summary>
         public bool CaseSensitiveComparison => (int)StringComparison % 2 == 0;
 
