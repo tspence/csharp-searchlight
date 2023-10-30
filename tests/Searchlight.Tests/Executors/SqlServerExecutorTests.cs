@@ -15,7 +15,7 @@ public class SqlServerExecutorTests
 {
     private DataSource _src;
     private string _connectionString;
-    private Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> _postgres;
+    private Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> _executor;
     private List<EmployeeObj> _list;
     private MsSqlContainer _container;
 
@@ -60,7 +60,7 @@ public class SqlServerExecutorTests
 
         // Keep track of the correct result expectations and execution process
         _list = EmployeeObj.GetTestList();
-        _postgres = async syntax =>
+        _executor = async syntax =>
         {
             var sql = syntax.ToSqlServerCommand();
             var result = new List<EmployeeObj>();
@@ -158,13 +158,13 @@ public class SqlServerExecutorTests
     [TestMethod]
     public async Task EmployeeTestSuite()
     {
-        await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _postgres);
-        
+        await Executors.EmployeeTestSuite.BasicTestSuite(_src, _list, _executor);
+
         _src.Engine = new SearchlightEngine
         {
             StringComparison = StringComparison.Ordinal,
             Collation = "SQL_Latin1_General_CP1_CS_AS"
         };
-        await Executors.EmployeeTestSuite.CaseSensitiveStringTestSuite(_src, _list, _postgres);
+        await Executors.EmployeeTestSuite.CaseSensitiveStringTestSuite(_src, _list, _executor);
     }
 }
