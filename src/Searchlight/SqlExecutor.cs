@@ -62,7 +62,7 @@ namespace Searchlight
         private static SqlQuery CreateSql(SqlDialect dialect, SyntaxTree query, SearchlightEngine engine)
         {
             var sql = new SqlQuery() { Syntax = query };
-            sql.WhereClause = RenderJoinedClauses(dialect, query.Filter, sql);
+            sql.WhereClause = RenderJoinedClauses(dialect, query.Filter, sql, engine);
             sql.OrderByClause = RenderOrderByClause(query.OrderBy);
 
             // Sanity test - is the query too complicated to be safe to run?
@@ -171,8 +171,9 @@ namespace Searchlight
         /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
+        /// <param name="engine"></param>
         /// <returns></returns>
-        private static string RenderJoinedClauses(SqlDialect dialect, List<BaseClause> clause, SqlQuery sql)
+        private static string RenderJoinedClauses(SqlDialect dialect, List<BaseClause> clause, SqlQuery sql, SearchlightEngine engine)
         {
             var sb = new StringBuilder();
             for (var i = 0; i < clause.Count; i++)
@@ -193,7 +194,7 @@ namespace Searchlight
                     }
                 }
 
-                sb.Append(RenderClause(dialect, clause[i], sql));
+                sb.Append(RenderClause(dialect, clause[i], sql, engine));
             }
 
             return sb.ToString();
@@ -205,9 +206,10 @@ namespace Searchlight
         /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
+        /// <param name="engine"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        private static string RenderClause(SqlDialect dialect, BaseClause clause, SqlQuery sql)
+        private static string RenderClause(SqlDialect dialect, BaseClause clause, SqlQuery sql, SearchlightEngine engine)
         {
             switch (clause)
             {
@@ -215,7 +217,7 @@ namespace Searchlight
                     return
                         $"{bc.Column.OriginalName} {(bc.Negated ? "NOT " : "")}BETWEEN {sql.AddParameter(bc.LowerValue.GetValue(), bc.Column.FieldType)} AND {sql.AddParameter(bc.UpperValue.GetValue(), bc.Column.FieldType)}";
                 case CompoundClause compoundClause:
-                    return $"({RenderJoinedClauses(dialect, compoundClause.Children, sql)})";
+                    return $"({RenderJoinedClauses(dialect, compoundClause.Children, sql, engine)})";
                 case CriteriaClause cc:
                     var rawValue = cc.Value.GetValue();
                     switch (cc.Operation)
@@ -226,7 +228,8 @@ namespace Searchlight
                         case OperationType.LessThan:
                         case OperationType.LessThanOrEqual:
                         case OperationType.NotEqual:
-                            return RenderComparisonClause(cc.Column.OriginalName, cc.Negated, cc.Operation, sql.AddParameter(rawValue, cc.Column.FieldType));
+                            return RenderComparisonClause(dialect, cc,
+                                sql.AddParameter(rawValue, cc.Column.FieldType), engine);
                         case OperationType.Contains:
                             return RenderLikeClause(dialect, cc, sql, rawValue, "%", "%");
                         case OperationType.StartsWith:
@@ -257,15 +260,51 @@ namespace Searchlight
             { OperationType.GreaterThanOrEqual, new Tuple<string, string>(">=", "<") },
         };
         
-        private static string RenderComparisonClause(string column, bool negated, OperationType op, string parameter)
+        private static string RenderComparisonClause(SqlDialect dialect, CriteriaClause cc, string parameter, SearchlightEngine engine)
         {
+            var op = cc.Operation;
+            var negated = cc.Negated;
+            var column = cc.Column.OriginalName;
+            var fieldType = cc.Column.FieldType;
+            
             if (!CanonicalOps.TryGetValue(op, out var opstrings))
             {
                 throw new Exception($"Invalid comparison type {op}");
             }
 
             var operationSymbol = negated ? opstrings.Item2 : opstrings.Item1;
-            return $"{column} {operationSymbol} {parameter}";
+
+            if (engine.CaseSensitiveComparison)
+            {
+                switch (dialect)
+                {
+                    case SqlDialect.MicrosoftSqlServer:
+                        if (string.IsNullOrEmpty(engine.Collation))
+                        {
+                            throw new InvalidEngineSetting(nameof(SearchlightEngine.Collation));
+                        }
+                        
+                        return $"{column} {operationSymbol} {parameter} COLLATE {engine.Collation}";
+                    case SqlDialect.MySql:
+                        return $"{column} {operationSymbol} BINARY {parameter}";
+                    case SqlDialect.PostgreSql:
+                    default:
+                        return $"{column} {operationSymbol} {parameter}";
+                }
+            }
+
+            // Case insensitive comparison
+            switch (dialect)
+            {
+                case SqlDialect.PostgreSql:
+                    return fieldType == typeof(string)
+                        ? $"LOWER({column}) {operationSymbol} LOWER({parameter})"
+                        : $"{column} {operationSymbol} {parameter}";
+                case SqlDialect.MySql:
+                case SqlDialect.MicrosoftSqlServer:
+                default:
+                    return $"{column} {operationSymbol} {parameter}";
+            }
         }
 
         private static string RenderLikeClause(SqlDialect dialect, CriteriaClause clause, SqlQuery sql, object rawValue,
@@ -285,8 +324,29 @@ namespace Searchlight
             var escapeCommand = dialect == SqlDialect.MicrosoftSqlServer ? " ESCAPE '\\'" : string.Empty;
             var notCommand = clause.Negated ? "NOT " : "";
             var likeValue = prefix + EscapeLikeValue(stringValue) + suffix;
-            return
-                $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}{escapeCommand}";
+
+            if (!(sql.Syntax?.Source?.Engine?.CaseSensitiveComparison ?? false))
+                return
+                    $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}{escapeCommand}";
+
+            switch (dialect)
+            {
+                case SqlDialect.MySql:
+                    return
+                        $"{clause.Column.OriginalName} {notCommand}{likeCommand} BINARY {sql.AddParameter(likeValue, clause.Column.FieldType)}{escapeCommand}";
+                case SqlDialect.MicrosoftSqlServer:
+                    if (string.IsNullOrEmpty(sql.Syntax?.Source?.Engine?.Collation))
+                    {
+                        throw new InvalidEngineSetting(nameof(SearchlightEngine.Collation));
+                    }
+
+                    return
+                        $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}{escapeCommand} COLLATE {sql.Syntax.Source.Engine.Collation}";
+                case SqlDialect.PostgreSql:
+                default:
+                    return
+                        $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}{escapeCommand}";
+            }
         }
 
         private static string EscapeLikeValue(string stringValue)

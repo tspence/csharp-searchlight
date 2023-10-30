@@ -66,6 +66,23 @@ namespace Searchlight
         public bool useNoCount { get; set; } = true;
 
         /// <summary>
+        /// Whether or not to use case sensitive comparisons
+        ///
+        /// Note: Odd numbers in the StringComparison enum are case insensitive
+        /// </summary>
+        public bool CaseSensitiveComparison => (int)StringComparison % 2 == 0;
+
+        /// <summary>
+        /// The string comparison for the engine
+        /// </summary>
+        public StringComparison StringComparison { get; set; } = StringComparison.OrdinalIgnoreCase;
+
+        /// <summary>
+        /// The collation to use for case sensitive comparisons, must be specified for SQL Server
+        /// </summary>
+        public string Collation { get; set; } = string.Empty;
+
+        /// <summary>
         /// Adds a new class to the engine
         /// </summary>
         /// <param name="type"></param>

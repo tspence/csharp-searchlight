@@ -16,6 +16,7 @@ namespace Searchlight.Tests.Executors
         private readonly DataSource _src;
         private readonly List<EmployeeObj> _list;
         private readonly Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> _executor;
+        private readonly StringComparison _comparison;
 
         private EmployeeTestSuite(DataSource src, List<EmployeeObj> list,
             Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> executor)
@@ -23,6 +24,7 @@ namespace Searchlight.Tests.Executors
             _src = src;
             _list = list;
             _executor = executor;
+            _comparison = src?.Engine?.StringComparison ?? StringComparison.OrdinalIgnoreCase;
         }
 
         /// <summary>
@@ -74,6 +76,23 @@ namespace Searchlight.Tests.Executors
             await suite.GreaterThanQuery();
             await suite.GreaterThanOrEqualQuery();
             await suite.StringEqualsCaseInsensitive();
+        }
+        
+        /// <summary>
+        /// Validates correctness of this executor's ability to execute case insensitive string comparisons
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="list"></param>
+        /// <param name="executor"></param>
+        public static async Task CaseSensitiveStringTestSuite(DataSource src, List<EmployeeObj> list,
+            Func<SyntaxTree, Task<FetchResult<EmployeeObj>>> executor)
+        {
+            var suite = new EmployeeTestSuite(src, list, executor);
+            await suite.LessThanOrEqualQuery(true);
+            await suite.LessThanQuery(true);
+            await suite.GreaterThanQuery(true);
+            await suite.GreaterThanOrEqualQuery(true);
+            await suite.StringEqualsCaseSensitive();
         }
 
         private async Task QueryListCollection()
@@ -200,7 +219,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual(2, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(e.name.EndsWith("s", StringComparison.OrdinalIgnoreCase));
+                Assert.IsTrue(e.name.EndsWith("s", _comparison));
             }
         }
 
@@ -219,7 +238,7 @@ namespace Searchlight.Tests.Executors
             Assert.AreEqual(9, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(e != null && e.name.Contains('s', StringComparison.OrdinalIgnoreCase));
+                Assert.IsTrue(e != null && e.name.Contains('s', _comparison));
             }
 
             // Now test the opposite
@@ -229,7 +248,7 @@ namespace Searchlight.Tests.Executors
             foreach (var e in results.records)
             {
                 Assert.IsTrue(
-                    e != null && (e.name == null || !e.name.Contains('s', StringComparison.OrdinalIgnoreCase)));
+                    e != null && (e.name == null || !e.name.Contains('s', _comparison)));
             }
             
             // Test for the presence of special characters that might cause problems for parsing
@@ -242,77 +261,81 @@ namespace Searchlight.Tests.Executors
             }
         }
 
-        private async Task GreaterThanQuery()
+        private async Task GreaterThanQuery(bool caseSensitive = false)
         {
-            var syntax = _src.ParseFilter("name gt 'b'");
+            var parameter = caseSensitive ? "B" : "b";
+            var syntax = _src.ParseFilter($"name gt '{parameter}'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThan, ((CriteriaClause)syntax.Filter[0]).Operation);
-            Assert.AreEqual("b", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
+            Assert.AreEqual(parameter, ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
             Assert.AreEqual(8, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) > 0);
+                Assert.IsTrue(string.Compare(e.name, parameter, _comparison) > 0);
             }
         }
-
-        private async Task GreaterThanOrEqualQuery()
+        
+        private async Task GreaterThanOrEqualQuery(bool caseSensitive = false)
         {
-            var syntax = _src.ParseFilter("name ge 'bob rogers'");
+            var parameter = caseSensitive ? "Bob Rogers" : "bob rogers";
+            var syntax = _src.ParseFilter($"name ge '{parameter}'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.GreaterThanOrEqual, ((CriteriaClause)syntax.Filter[0]).Operation);
-            Assert.AreEqual("bob rogers", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
+            Assert.AreEqual(parameter, ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
             Assert.AreEqual(7, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
-                    StringComparison.CurrentCultureIgnoreCase) >= 0);
+                Assert.IsTrue(string.Compare(e.name[..parameter.Length], parameter,
+                    _comparison) >= 0);
             }
         }
 
-        private async Task LessThanQuery()
+        private async Task LessThanQuery(bool caseSensitive = false)
         {
-            var syntax = _src.ParseFilter("name lt 'b'");
+            var parameter = caseSensitive ? "B" : "b";
+            var syntax = _src.ParseFilter($"name lt '{parameter}'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThan, ((CriteriaClause)syntax.Filter[0]).Operation);
-            Assert.AreEqual("b", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
+            Assert.AreEqual(parameter, ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
             Assert.AreEqual(1, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name, "b", StringComparison.CurrentCultureIgnoreCase) < 0);
+                Assert.IsTrue(string.Compare(e.name, parameter, _comparison) < 0);
             }
         }
 
-        private async Task LessThanOrEqualQuery()
+        private async Task LessThanOrEqualQuery(bool caseSensitive = false)
         {
-            var syntax = _src.ParseFilter("name le 'bob rogers'");
+            var parameter = caseSensitive ? "Bob Rogers" : "bob rogers";
+            var syntax = _src.ParseFilter($"name le '{parameter}'");
             Assert.AreEqual(1, syntax.Filter.Count);
             Assert.AreEqual(ConjunctionType.NONE, syntax.Filter[0].Conjunction);
             Assert.AreEqual("name", ((CriteriaClause)syntax.Filter[0]).Column.FieldName);
             Assert.AreEqual(OperationType.LessThanOrEqual, ((CriteriaClause)syntax.Filter[0]).Operation);
-            Assert.AreEqual("bob rogers", ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
+            Assert.AreEqual(parameter, ((CriteriaClause)syntax.Filter[0]).Value.GetValue());
 
             // Execute the query and ensure that each result matches
             var results = await _executor(syntax);
             Assert.AreEqual(3, results.records.Length);
             foreach (var e in results.records)
             {
-                Assert.IsTrue(string.Compare(e.name[.."bob rogers".Length], "bob rogers",
-                    StringComparison.CurrentCultureIgnoreCase) <= 0);
+                Assert.IsTrue(string.Compare(e.name[..parameter.Length], parameter,
+                    _comparison) <= 0);
             }
         }
 
@@ -415,6 +438,22 @@ namespace Searchlight.Tests.Executors
             Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
             Assert.IsNotNull(result);
             Assert.AreEqual(_list.Count - 1, result.records.Length);
+        }
+        
+        private async Task StringEqualsCaseSensitive()
+        {
+            var syntax = _src.ParseFilter("name eq 'ALICE SMITH'");
+            var result = await _executor(syntax);
+
+            Assert.IsFalse(result.records.Any(p => p.name == "Alice Smith"));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(0, result.records.Length);
+            
+            syntax = _src.ParseFilter("name eq 'Alice Smith'");
+            result = await _executor(syntax);
+            Assert.IsTrue(result.records.Any(p => p.name == "Alice Smith"));
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.records.Length);
         }
 
         private async Task DefinedDateOperators()
