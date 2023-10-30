@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Searchlight.Exceptions;
 using Searchlight.Query;
 
@@ -172,6 +171,7 @@ namespace Searchlight
         /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
+        /// <param name="engine"></param>
         /// <returns></returns>
         private static string RenderJoinedClauses(SqlDialect dialect, List<BaseClause> clause, SqlQuery sql, SearchlightEngine engine)
         {
@@ -206,6 +206,7 @@ namespace Searchlight
         /// <param name="dialect"></param>
         /// <param name="clause"></param>
         /// <param name="sql"></param>
+        /// <param name="engine"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         private static string RenderClause(SqlDialect dialect, BaseClause clause, SqlQuery sql, SearchlightEngine engine)
@@ -324,7 +325,7 @@ namespace Searchlight
             var notCommand = clause.Negated ? "NOT " : "";
             var likeValue = prefix + EscapeLikeValue(stringValue) + suffix;
 
-            if (!sql.Syntax?.Source?.Engine?.CaseSensitiveComparison ?? true)
+            if (!(sql.Syntax?.Source?.Engine?.CaseSensitiveComparison ?? false))
                 return
                     $"{clause.Column.OriginalName} {notCommand}{likeCommand} {sql.AddParameter(likeValue, clause.Column.FieldType)}{escapeCommand}";
 
